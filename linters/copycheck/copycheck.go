@@ -10,9 +10,9 @@ import (
 	"sort"
 	"strings"
 
-	"360.cn/apollo/apollo/gocode/copycode/job"
-	"360.cn/apollo/apollo/gocode/copycode/output"
-	"360.cn/apollo/apollo/gocode/copycode/syntax"
+	"github.com/wgliang/goreporter/linters/copycheck/job"
+	"github.com/wgliang/goreporter/linters/copycheck/output"
+	"github.com/wgliang/goreporter/linters/copycheck/syntax"
 )
 
 const defaultThreshold = 15

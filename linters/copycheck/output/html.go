@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"sort"
 
-	"360.cn/apollo/apollo/gocode/copycode/syntax"
+	"github.com/wgliang/goreporter/linters/copycheck/syntax"
 )
 
 type HtmlPrinter struct {

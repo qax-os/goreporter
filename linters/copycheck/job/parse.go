@@ -3,8 +3,8 @@ package job
 import (
 	"log"
 
-	"360.cn/apollo/apollo/gocode/copycode/syntax"
-	"360.cn/apollo/apollo/gocode/copycode/syntax/golang"
+	"github.com/wgliang/goreporter/linters/copycheck/syntax"
+	"github.com/wgliang/goreporter/linters/copycheck/syntax/golang"
 )
 
 func Parse(fchan chan string) chan []*syntax.Node {

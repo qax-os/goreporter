@@ -3,7 +3,7 @@ package syntax
 import (
 	"crypto/sha1"
 
-	"360.cn/apollo/apollo/gocode/copycode/suffixtree"
+	"github.com/wgliang/goreporter/linters/copycheck/suffixtree"
 )
 
 type Node struct {

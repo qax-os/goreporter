@@ -57,7 +57,7 @@ var (
 	avg  = true
 )
 
-func Cyclo(packagePath string) []string {
+func Cyclo(packagePath string) ([]string, string) {
 	log.SetFlags(0)
 	log.SetPrefix("cyclo: ")
 	flag.Usage = usage
@@ -69,9 +69,9 @@ func Cyclo(packagePath string) []string {
 	stats := analyze(args)
 	sort.Sort(byComplexity(stats))
 	// written := writeStats(os.Stdout, stats)
-
+	packageAvg := "0"
 	if avg {
-		showAverage(stats)
+		packageAvg = getAverage(stats)
 	}
 
 	if over > 0 {
@@ -83,7 +83,7 @@ func Cyclo(packagePath string) []string {
 		result = append(result, stat.String())
 	}
 
-	return result
+	return result, packageAvg
 }
 
 func analyze(paths []string) []stat {
@@ -140,6 +140,10 @@ func writeStats(w io.Writer, sortedStats []stat) int {
 
 func showAverage(stats []stat) {
 	fmt.Printf("Average: %.3g\n", average(stats))
+}
+
+func getAverage(stats []stat) string {
+	return fmt.Sprintf("%.2f", average(stats))
 }
 
 func average(stats []stat) float64 {

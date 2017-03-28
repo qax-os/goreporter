@@ -5,7 +5,7 @@ import (
 	"go/parser"
 	"go/token"
 
-	"360.cn/apollo/apollo/gocode/copycode/syntax"
+	"github.com/wgliang/goreporter/linters/copycheck/syntax"
 )
 
 const (
