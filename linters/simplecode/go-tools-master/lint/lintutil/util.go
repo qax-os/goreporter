@@ -5,7 +5,7 @@
 // https://developers.google.com/open-source/licenses/bsd.
 
 // Package lintutil provides helpers for writing linter command lines.
-package lintutil // import "github.com/wgliang/goreporter/linters/simplecode/lint/lintutil"
+package lintutil // import "honnef.co/go/tools/lint/lintutil"
 
 import (
 	"errors"
@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wgliang/goreporter/linters/simplecode/lint"
+	"honnef.co/go/tools/lint"
 
 	"github.com/kisielk/gotool"
 	"golang.org/x/tools/go/loader"
@@ -132,7 +132,7 @@ func FlagSet(name string) *flag.FlagSet {
 	return flags
 }
 
-func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
+func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) {
 	tags := fs.Lookup("tags").Value.(flag.Getter).Get().(string)
 	ignore := fs.Lookup("ignore").Value.(flag.Getter).Get().(string)
 	tests := fs.Lookup("tests").Value.(flag.Getter).Get().(bool)
@@ -162,8 +162,6 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
 		ParserMode: parser.ParseComments,
 		ImportPkgs: map[string]bool{},
 	}
-
-	simpleCode := make([]string, 0)
 	if goFiles {
 		conf.CreateFromFilenames("adhoc", paths...)
 		lprog, err := conf.Load()
@@ -172,8 +170,9 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
 		}
 		ps := runner.lint(lprog)
 		for _, p := range ps {
+			runner.unclean = true
 			pos := lprog.Fset.Position(p.Position)
-			simpleCode = append(simpleCode, fmt.Sprintf("%v: %s", relativePositionString(pos), p.Text))
+			fmt.Printf("%v: %s\n", relativePositionString(pos), p.Text)
 		}
 	} else {
 		for _, path := range paths {
@@ -185,11 +184,14 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
 		}
 		ps := runner.lint(lprog)
 		for _, p := range ps {
+			runner.unclean = true
 			pos := lprog.Fset.Position(p.Position)
-			simpleCode = append(simpleCode, fmt.Sprintf("%v: %s", relativePositionString(pos), p.Text))
+			fmt.Printf("%v: %s\n", relativePositionString(pos), p.Text)
 		}
 	}
-	return simpleCode
+	if runner.unclean {
+		os.Exit(1)
+	}
 }
 
 func shortPath(path string) string {

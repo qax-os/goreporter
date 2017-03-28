@@ -5,7 +5,7 @@
 // https://developers.google.com/open-source/licenses/bsd.
 
 // Package lintutil provides helpers for writing linter command lines.
-package lintutil // import "github.com/wgliang/goreporter/linters/simplecode/lint/lintutil"
+package lintutil // import "github.com/wgliang/goreporter/linters/staticscan/lint/lintutil"
 
 import (
 	"errors"
@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wgliang/goreporter/linters/simplecode/lint"
+	"github.com/wgliang/goreporter/linters/staticscan/lint"
 
 	"github.com/kisielk/gotool"
 	"golang.org/x/tools/go/loader"
@@ -155,6 +155,7 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
 		fmt.Fprintln(os.Stderr, err)
 		runner.unclean = true
 	}
+	staticScan := make([]string, 0)
 	ctx := build.Default
 	ctx.BuildTags = runner.tags
 	conf := &loader.Config{
@@ -162,8 +163,6 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
 		ParserMode: parser.ParseComments,
 		ImportPkgs: map[string]bool{},
 	}
-
-	simpleCode := make([]string, 0)
 	if goFiles {
 		conf.CreateFromFilenames("adhoc", paths...)
 		lprog, err := conf.Load()
@@ -172,8 +171,9 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
 		}
 		ps := runner.lint(lprog)
 		for _, p := range ps {
+			runner.unclean = true
 			pos := lprog.Fset.Position(p.Position)
-			simpleCode = append(simpleCode, fmt.Sprintf("%v: %s", relativePositionString(pos), p.Text))
+			staticScan = append(staticScan, fmt.Sprintf("%v: %s", relativePositionString(pos), p.Text))
 		}
 	} else {
 		for _, path := range paths {
@@ -185,11 +185,12 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) []string {
 		}
 		ps := runner.lint(lprog)
 		for _, p := range ps {
+			runner.unclean = true
 			pos := lprog.Fset.Position(p.Position)
-			simpleCode = append(simpleCode, fmt.Sprintf("%v: %s", relativePositionString(pos), p.Text))
+			staticScan = append(staticScan, fmt.Sprintf("%v: %s", relativePositionString(pos), p.Text))
 		}
 	}
-	return simpleCode
+	return staticScan
 }
 
 func shortPath(path string) string {
