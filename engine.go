@@ -2,7 +2,7 @@ package main
 
 import (
 	// "bytes"
-	// "encoding/json"
+	"encoding/json"
 	"fmt"
 	// "html/template"
 	// "io/ioutil"
@@ -19,7 +19,7 @@ import (
 	"github.com/wgliang/goreporter/linters/cyclo"
 	// "github.com/wgliang/goreporter/linters/deadcode"
 	// "github.com/wgliang/goreporter/linters/errorcheck"
-	// "github.com/wgliang/goreporter/linters/simplecode"
+	"github.com/wgliang/goreporter/linters/simplecode"
 	"github.com/wgliang/goreporter/linters/staticscan"
 	// "github.com/wgliang/goreporter/linters/structcheck"
 	"github.com/wgliang/goreporter/linters/unittest"
@@ -40,14 +40,14 @@ func NewReporter() *Reporter {
 	return &Reporter{}
 }
 
-func (r *Reporter) Engine(projectPath string, exceptPackages string) {
+func (r *Reporter) Engine(projectPath string, exceptPackages string) []byte {
 	fmt.Println("start code quality assessment...")
 
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	r.Project = projectName(projectPath)
 	var wg sync.WaitGroup
 
 	// run linter:unit test
@@ -96,8 +96,11 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 				packageTest.Coverage = "0%"
 				countCover = countCover + 1
 			}
+
 			packagesTestDetail[pkgName] = packageTest
-			packagesRaceDetail[pkgName] = unitRaceRes[pkgName]
+			if len(unitRaceRes[pkgName]) > 0 {
+				packagesRaceDetail[pkgName] = unitRaceRes[pkgName]
+			}
 		}
 		r.UnitTestx.PackagesTestDetail = packagesTestDetail
 		r.UnitTestx.AvgCover = fmt.Sprintf("%.1f", sumCover/float64(countCover)) + "%"
@@ -113,10 +116,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	}
 	wg.Add(1)
 	go func() {
-		cycloRes := make(map[string]Cyclo, 0)
+		cycloRes := make(map[string]Cycloi, 0)
 		for pkgName, pkgPath := range dirsAll {
 			cyclo, avg := cyclo.Cyclo(pkgPath)
-			cycloRes[pkgName] = Cyclo{
+			cycloRes[pkgName] = Cycloi{
 				Average: avg,
 				Result:  cyclo,
 			}
@@ -126,19 +129,19 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		fmt.Println("cyclo over!")
 	}()
 
-	// fmt.Println("simpling code...")
-	// wg.Add(1)
-	// go func() {
-	// 	simples := simplecode.SimpleCode(projectPath)
-	// 	simpleTips := make(map[string][]string, 0)
-	// 	for _, tips := range simples {
-	// 		index := strings.Index(tips, ":")
-	// 		simpleTips[PackageAbsPathExceptSuffix(tips[0:index])] = append(simpleTips[PackageAbsPathExceptSuffix(tips[0:index])], tips)
-	// 	}
-	// 	r.SimpleTips = simpleTips
-	// 	wg.Done()
-	// }()
-	// fmt.Println("simpled code!")
+	fmt.Println("simpling code...")
+	wg.Add(1)
+	go func() {
+		simples := simplecode.SimpleCode(projectPath)
+		simpleTips := make(map[string][]string, 0)
+		for _, tips := range simples {
+			index := strings.Index(tips, ":")
+			simpleTips[PackageAbsPathExceptSuffix(tips[0:index])] = append(simpleTips[PackageAbsPathExceptSuffix(tips[0:index])], tips)
+		}
+		r.SimpleTips = simpleTips
+		wg.Done()
+	}()
+	fmt.Println("simpled code!")
 
 	fmt.Println("checking copy code...")
 	wg.Add(1)
@@ -165,6 +168,15 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	}()
 
 	wg.Wait()
-
 	fmt.Println("finished code quality assessment...")
+	return r.formateReport2Json()
+}
+
+func (r *Reporter) formateReport2Json() []byte {
+	report, err := json.Marshal(r)
+	if err != nil {
+		fmt.Println("json err:", err)
+	}
+	fmt.Println(string(report))
+	return report
 }
