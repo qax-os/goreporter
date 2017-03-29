@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wgliang/goreporter/linters/simplecode/lint"
+	"github.com/wgliang/goreporter/linters/staticscan/lint"
 
 	"golang.org/x/tools/go/types/typeutil"
 )

@@ -3,7 +3,7 @@ package simple
 import (
 	"testing"
 
-	"github.com/wgliang/goreporter/linters/simplecode/lint/testutil"
+	"github.com/wgliang/goreporter/linters/staticscan/lint/testutil"
 )
 
 func TestAll(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	// "fmt"
 	// "os"
 
-	"github.com/wgliang/goreporter/linters/simplecode/lint/lintutil"
 	"github.com/wgliang/goreporter/linters/simplecode/simple"
+	"github.com/wgliang/goreporter/linters/staticscan/lint/lintutil"
 )
 
 func SimpleCode(prohectPath string) []string {
