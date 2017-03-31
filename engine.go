@@ -1,23 +1,18 @@
 package main
 
 import (
-	// "bytes"
 	"encoding/json"
 	"fmt"
-	// "html/template"
-	// "io/ioutil"
-	// "math"
-	// "os"
-	// "path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
-	// "time"
 	"sync"
+
 	// "github.com/wgliang/goreporter/linters/aligncheck"
 	"github.com/wgliang/goreporter/linters/copycheck"
 	"github.com/wgliang/goreporter/linters/cyclo"
-	// "github.com/wgliang/goreporter/linters/deadcode"
+	"github.com/wgliang/goreporter/linters/deadcode"
+	"github.com/wgliang/goreporter/linters/depend"
 	// "github.com/wgliang/goreporter/linters/errorcheck"
 	"github.com/wgliang/goreporter/linters/simplecode"
 	"github.com/wgliang/goreporter/linters/staticscan"
@@ -40,7 +35,7 @@ func NewReporter() *Reporter {
 	return &Reporter{}
 }
 
-func (r *Reporter) Engine(projectPath string, exceptPackages string) []byte {
+func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	fmt.Println("start code quality assessment...")
 
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
@@ -53,58 +48,81 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) []byte {
 	// run linter:unit test
 	wg.Add(1)
 	go func() {
-		packagesTestDetail := make(map[string]PackageTest, 0)
-		packagesRaceDetail := make(map[string][]string, 0)
 		fmt.Println("running unit test...")
+		packagesTestDetail := struct {
+			Values map[string]PackageTest
+			mux    *sync.RWMutex
+		}{make(map[string]PackageTest, 0), new(sync.RWMutex)}
+		packagesRaceDetail := struct {
+			Values map[string][]string
+			mux    *sync.RWMutex
+		}{make(map[string][]string, 0), new(sync.RWMutex)}
+
 		sumCover := 0.0
 		countCover := 0
+		var pkg sync.WaitGroup
 		for pkgName, pkgPath := range dirsUnitTest {
-			unitTestRes, unitRaceRes := unittest.UnitTest(pkgPath)
-			var packageTest PackageTest
-			if len(unitTestRes) >= 1 {
-				testres := unitTestRes[pkgName]
-				if len(testres) > 5 {
-					if testres[0] == "ok" {
-						packageTest.IsPass = true
-					} else {
-						packageTest.IsPass = false
-					}
-					timeLen := len(testres[2])
-					if timeLen > 1 {
-						time, err := strconv.ParseFloat(testres[2][:(timeLen-1)], 64)
-						if err == nil {
-							packageTest.Time = time
+			pkg.Add(1)
+			go func(pkgName, pkgPath string) {
+				unitTestRes, unitRaceRes := unittest.UnitTest(pkgPath)
+				var packageTest PackageTest
+				if len(unitTestRes) >= 1 {
+					testres := unitTestRes[pkgName]
+					if len(testres) > 5 {
+						if testres[0] == "ok" {
+							packageTest.IsPass = true
 						} else {
-							fmt.Println(err)
+							packageTest.IsPass = false
 						}
-					}
-					packageTest.Coverage = testres[4]
+						timeLen := len(testres[2])
+						if timeLen > 1 {
+							time, err := strconv.ParseFloat(testres[2][:(timeLen-1)], 64)
+							if err == nil {
+								packageTest.Time = time
+							} else {
+								fmt.Println(err)
+							}
+						}
+						packageTest.Coverage = testres[4]
 
-					coverLen := len(testres[4])
-					if coverLen > 1 {
-						coverFloat, _ := strconv.ParseFloat(testres[4][:(coverLen-1)], 64)
-						sumCover = sumCover + coverFloat
-						countCover = countCover + 1
+						coverLen := len(testres[4])
+						if coverLen > 1 {
+							coverFloat, _ := strconv.ParseFloat(testres[4][:(coverLen-1)], 64)
+							sumCover = sumCover + coverFloat
+							countCover = countCover + 1
+						} else {
+							countCover = countCover + 1
+						}
 					} else {
+						packageTest.Coverage = "0%"
 						countCover = countCover + 1
 					}
 				} else {
 					packageTest.Coverage = "0%"
 					countCover = countCover + 1
 				}
-			} else {
-				packageTest.Coverage = "0%"
-				countCover = countCover + 1
-			}
+				packagesTestDetail.mux.Lock()
+				packagesTestDetail.Values[pkgName] = packageTest
+				packagesTestDetail.mux.Unlock()
 
-			packagesTestDetail[pkgName] = packageTest
-			if len(unitRaceRes[pkgName]) > 0 {
-				packagesRaceDetail[pkgName] = unitRaceRes[pkgName]
-			}
+				if len(unitRaceRes[pkgName]) > 0 {
+					packagesRaceDetail.mux.Lock()
+					packagesRaceDetail.Values[pkgName] = unitRaceRes[pkgName]
+					packagesRaceDetail.mux.Unlock()
+				}
+				pkg.Done()
+			}(pkgName, pkgPath)
 		}
-		r.UnitTestx.PackagesTestDetail = packagesTestDetail
+
+		pkg.Wait()
+		packagesTestDetail.mux.Lock()
+		r.UnitTestx.PackagesTestDetail = packagesTestDetail.Values
+		packagesTestDetail.mux.Unlock()
 		r.UnitTestx.AvgCover = fmt.Sprintf("%.1f", sumCover/float64(countCover)) + "%"
-		r.UnitTestx.PackagesRaceDetail = packagesRaceDetail
+		packagesRaceDetail.mux.Lock()
+		r.UnitTestx.PackagesRaceDetail = packagesRaceDetail.Values
+		packagesRaceDetail.mux.Unlock()
+
 		wg.Done()
 		fmt.Println("unit test over!")
 	}()
@@ -167,9 +185,42 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) []byte {
 		fmt.Println("staticscan over!")
 	}()
 
+	fmt.Println("creating depend graph...")
+	wg.Add(1)
+	go func() {
+		r.DependGraph = depend.Depend(projectPath, exceptPackages)
+		wg.Done()
+		fmt.Println("created depend graph")
+	}()
+
+	fmt.Println("checking dead code...")
+	wg.Add(1)
+	go func() {
+		r.DeadCode = deadcode.DeadCode(projectPath)
+		wg.Done()
+		fmt.Println("checked dead code")
+	}()
+
+	fmt.Println("getting import packages...")
+	var importPkgs []string
+	wg.Add(1)
+	go func() {
+		importPkgs = unittest.GoListWithImportPackages(projectPath)
+		wg.Done()
+	}()
+
 	wg.Wait()
+
+	// get all no unit test packages
+	noTestPackage := make([]string, 0)
+	for i := 0; i < len(importPkgs); i++ {
+		if _, ok := r.UnitTestx.PackagesTestDetail[importPkgs[i]]; !ok {
+			noTestPackage = append(noTestPackage, importPkgs[i])
+		}
+	}
+	r.NoTestPkg = noTestPackage
+
 	fmt.Println("finished code quality assessment...")
-	return r.formateReport2Json()
 }
 
 func (r *Reporter) formateReport2Json() []byte {
@@ -177,6 +228,6 @@ func (r *Reporter) formateReport2Json() []byte {
 	if err != nil {
 		fmt.Println("json err:", err)
 	}
-	fmt.Println(string(report))
+
 	return report
 }
