@@ -2,17 +2,26 @@ package unittest
 
 import (
 	"bytes"
-	"fmt"
+	"log"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
+
+var system string
+
+func init() {
+	if runtime.GOOS == `windows` {
+		system = `\`
+	} else {
+		system = `/`
+	}
+}
 
 func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, packageTestRaceResults map[string][]string) {
 	packageUnitTestResults = make(map[string][]string, 0)
 	packageTestRaceResults = make(map[string][]string, 0)
-
-	fmt.Println("Testing package " + packagePath + " ...")
 
 	packageName := PackageAbsPath(packagePath)
 	if "" == packageName {
@@ -21,8 +30,12 @@ func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, p
 	out, err := GoTestWithCoverAndRace(packagePath)
 	if err != nil {
 		if !strings.Contains(out, "==================") {
-			fmt.Println(err)
+			log.Println("Unit-Testing Package:", packageName, ":", err)
+		} else {
+			log.Println("Unit-Testing Package:", packageName, ": pass")
 		}
+	} else {
+		log.Println("Unit-Testing Package:", packageName, ": pass")
 	}
 
 	if out == "" || !strings.Contains(out, "ok") {
@@ -60,18 +73,57 @@ func GoTestWithCoverAndRace(packagePath string) (packageUnitResult string, err e
 	err = cmd.Run()
 	if err != nil {
 		if !strings.Contains(out.String(), "==================") {
-			fmt.Println(err)
 			return "", err
 		}
 	}
-	fmt.Println(err)
+
 	return out.String(), err
+}
+
+// run go list -cover
+func GoListWithImportPackages(packagePath string) (importPackages []string) {
+	importPackages = make([]string, 0)
+	cmd := exec.Command("go", "list", "-f", `'{{ join .Imports " " }}'`, packagePath)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	// cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Println(err)
+		return importPackages
+	}
+	packages := strings.Fields(out.String())
+
+	var out2 bytes.Buffer
+	cmd = exec.Command("go", "list", "std")
+	cmd.Stdout = &out2
+	// cmd.Stderr = os.Stderr
+	err = cmd.Run()
+	if err != nil {
+		log.Println(err)
+		return importPackages
+	}
+	stdPackages := strings.Split(out2.String(), "\n")
+	mapStdPackages := make(map[string]string, 0)
+	for i := 0; i < len(stdPackages); i++ {
+		mapStdPackages[stdPackages[i]] = stdPackages[i]
+	}
+	// remove std package
+	for i := 0; i < len(packages); i++ {
+		if strings.Contains(packages[i], system) && !strings.Contains(packages[i], "vendor") {
+			if _, ok := mapStdPackages[packages[i]]; !ok {
+				importPackages = append(importPackages, strings.Replace(packages[i], "'", "", -1))
+			}
+		}
+	}
+
+	return importPackages
 }
 
 func PackageAbsPath(path string) (packagePath string) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	packagePathIndex := strings.Index(absPath, "src")
 	if -1 != packagePathIndex {

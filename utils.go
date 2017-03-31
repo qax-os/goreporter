@@ -1,11 +1,44 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 )
+
+func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp string) {
+	t, err := template.New("skylar-apollo").Parse(tpl)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	var out bytes.Buffer
+	err = t.Execute(&out, htmlData)
+	if err != nil {
+		fmt.Println(err)
+	}
+	projectName := projectName(projectPath)
+	if savePath != "" {
+		htmlpath := strings.Replace(savePath+system+projectName+"-"+timestamp+".html", system+system, system, -1)
+		fmt.Println(htmlpath)
+		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
+		if err != nil {
+			fmt.Println(err)
+		}
+	} else {
+		//默认当前目录名为email.html
+		htmlpath := projectName + "-" + timestamp + ".html"
+		fmt.Println(htmlpath)
+		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+}
 
 func DirList(path string, suffix, expect string) (dirs map[string]string, err error) {
 	dirs = make(map[string]string, 0)
@@ -82,9 +115,9 @@ func projectName(projectPath string) (project string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	projectPathIndex := strings.Index(absPath, "src")
+	projectPathIndex := strings.Index(absPath, "360.cn")
 	if -1 != projectPathIndex {
-		project = absPath[(projectPathIndex + 4):]
+		project = absPath[(projectPathIndex + 7):]
 	}
 
 	return project

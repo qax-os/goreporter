@@ -5,12 +5,15 @@ import (
 )
 
 type Reporter struct {
-	Project    string              `json:"project"`
-	UnitTestx  UnitTest            `json:"unit_test"`
-	Cyclox     map[string]Cycloi   `json:"cyclo"`
-	SimpleTips map[string][]string `json:"simple_tips"`
-	CopyTips   [][]string          `json:"copy_tips"`
-	ScanTips   map[string][]string `json:"scan_tips"`
+	Project     string              `json:"project"`
+	UnitTestx   UnitTest            `json:"unit_test"`
+	Cyclox      map[string]Cycloi   `json:"cyclo"`
+	SimpleTips  map[string][]string `json:"simple_tips"`
+	CopyTips    [][]string          `json:"copy_tips"`
+	ScanTips    map[string][]string `json:"scan_tips"`
+	DependGraph string              `json:"depend_graph"`
+	DeadCode    []string            `json:"dead_code"`
+	NoTestPkg   []string            `json:"no_test_package"`
 }
 
 type UnitTest struct {
@@ -41,12 +44,6 @@ type File struct {
 	Color     string
 	CycloVal  string
 	CycloInfo string
-}
-
-type Package struct {
-	PackageName string
-	FileLen     string
-	Files       []File
 }
 
 type Copycode struct {
@@ -89,7 +86,7 @@ type HtmlData struct {
 	Project               string
 	Score                 int
 	Tests                 string
-	TestSummaryCoverAvg   int64
+	TestSummaryCoverAvg   string
 	Races                 []Race
 	NoTests               string
 	Simples               string
@@ -117,14 +114,14 @@ type ApolloMeta struct {
 	Endtime        string `json:"endtime"`
 }
 
-type OptionMeta struct {
-	Branch     string `json:"branch"`
-	CommitID   string `json:"commitID"`
-	CommitUser string `json:"commitUser"`
-	User       string `json:"user"`
-}
+// type OptionMeta struct {
+// 	Branch     string `json:"branch"`
+// 	CommitID   string `json:"commitID"`
+// 	CommitUser string `json:"commitUser"`
+// 	User       string `json:"user"`
+// }
 
-type Value struct {
-	Filepath string     `json:"filepath"`
-	Meta     ApolloMeta `json:"meta"`
-}
+// type Value struct {
+// 	Filepath string     `json:"filepath"`
+// 	Meta     ApolloMeta `json:"meta"`
+// }

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"runtime"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,26 +21,21 @@ import (
 	// "github.com/wgliang/goreporter/linters/varcheck"
 )
 
-var system string
-
-func init() {
-	if runtime.GOOS == `windows` {
-		system = `\`
-	} else {
-		system = `/`
-	}
-}
+var (
+	system string
+	tpl    string
+)
 
 func NewReporter() *Reporter {
 	return &Reporter{}
 }
 
 func (r *Reporter) Engine(projectPath string, exceptPackages string) {
-	fmt.Println("start code quality assessment...")
+	log.Println("start code quality assessment...")
 
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	r.Project = projectName(projectPath)
 	var wg sync.WaitGroup
@@ -48,7 +43,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	// run linter:unit test
 	wg.Add(1)
 	go func() {
-		fmt.Println("running unit test...")
+		log.Println("running unit test...")
 		packagesTestDetail := struct {
 			Values map[string]PackageTest
 			mux    *sync.RWMutex
@@ -80,7 +75,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 							if err == nil {
 								packageTest.Time = time
 							} else {
-								fmt.Println(err)
+								log.Println(err)
 							}
 						}
 						packageTest.Coverage = testres[4]
@@ -124,13 +119,13 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		packagesRaceDetail.mux.Unlock()
 
 		wg.Done()
-		fmt.Println("unit test over!")
+		log.Println("unit test over!")
 	}()
 
-	fmt.Println("computing cyclo...")
+	log.Println("computing cyclo...")
 	dirsAll, err := DirList(projectPath, ".go", exceptPackages)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	wg.Add(1)
 	go func() {
@@ -144,10 +139,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		r.Cyclox = cycloRes
 		wg.Done()
-		fmt.Println("cyclo over!")
+		log.Println("cyclo over!")
 	}()
 
-	fmt.Println("simpling code...")
+	log.Println("simpling code...")
 	wg.Add(1)
 	go func() {
 		simples := simplecode.SimpleCode(projectPath)
@@ -159,18 +154,18 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.SimpleTips = simpleTips
 		wg.Done()
 	}()
-	fmt.Println("simpled code!")
+	log.Println("simpled code!")
 
-	fmt.Println("checking copy code...")
+	log.Println("checking copy code...")
 	wg.Add(1)
 	go func() {
 		x := copycheck.CopyCheck(projectPath, "_test.go")
 		r.CopyTips = x
 		wg.Done()
-		fmt.Println("checked copy code!")
+		log.Println("checked copy code!")
 	}()
 
-	fmt.Println("running staticscan...")
+	log.Println("running staticscan...")
 	wg.Add(1)
 	go func() {
 		staticscan.StaticScan(projectPath)
@@ -182,26 +177,26 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		r.ScanTips = scanTips
 		wg.Done()
-		fmt.Println("staticscan over!")
+		log.Println("staticscan over!")
 	}()
 
-	fmt.Println("creating depend graph...")
+	log.Println("creating depend graph...")
 	wg.Add(1)
 	go func() {
 		r.DependGraph = depend.Depend(projectPath, exceptPackages)
 		wg.Done()
-		fmt.Println("created depend graph")
+		log.Println("created depend graph")
 	}()
 
-	fmt.Println("checking dead code...")
+	log.Println("checking dead code...")
 	wg.Add(1)
 	go func() {
 		r.DeadCode = deadcode.DeadCode(projectPath)
 		wg.Done()
-		fmt.Println("checked dead code")
+		log.Println("checked dead code")
 	}()
 
-	fmt.Println("getting import packages...")
+	log.Println("getting import packages...")
 	var importPkgs []string
 	wg.Add(1)
 	go func() {
@@ -220,13 +215,13 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	}
 	r.NoTestPkg = noTestPackage
 
-	fmt.Println("finished code quality assessment...")
+	log.Println("finished code quality assessment...")
 }
 
 func (r *Reporter) formateReport2Json() []byte {
 	report, err := json.Marshal(r)
 	if err != nil {
-		fmt.Println("json err:", err)
+		log.Println("json err:", err)
 	}
 
 	return report

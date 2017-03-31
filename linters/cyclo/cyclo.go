@@ -58,8 +58,6 @@ var (
 )
 
 func Cyclo(packagePath string) ([]string, string) {
-	log.SetFlags(0)
-	log.SetPrefix("cyclo: ")
 	flag.Usage = usage
 	args := []string{packagePath}
 	if len(args) == 0 {
@@ -139,7 +137,7 @@ func writeStats(w io.Writer, sortedStats []stat) int {
 }
 
 func showAverage(stats []stat) {
-	fmt.Printf("Average: %.3g\n", average(stats))
+	log.Printf("Average: %.3g\n", average(stats))
 }
 
 func getAverage(stats []stat) string {

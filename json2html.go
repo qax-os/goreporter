@@ -3,14 +3,16 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"html/template"
+	"log"
 	"strconv"
 	"strings"
 )
 
-func Json2Html(jsonData []byte, path string) (HtmlData, error) {
+func (r *Reporter) Json2Html() (HtmlData, error) {
 	var structData Reporter
 	var htmlData HtmlData
+	jsonData := r.formateReport2Json()
 	if jsonData == nil {
 		return htmlData, errors.New("json is null")
 	}
@@ -36,9 +38,10 @@ func Json2Html(jsonData []byte, path string) (HtmlData, error) {
 
 	stringTestJson, err := json.Marshal(testHtmlRes)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	htmlData.Tests = string(stringTestJson)
+	htmlData.TestSummaryCoverAvg = structData.UnitTestx.AvgCover
 
 	// convert cyclo result
 	cycloHtmlRes := make([]Cyclo, 0)
@@ -65,7 +68,7 @@ func Json2Html(jsonData []byte, path string) (HtmlData, error) {
 
 	stringCycloJson, err := json.Marshal(cycloHtmlRes)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	htmlData.Cyclos = string(stringCycloJson)
 
@@ -87,9 +90,9 @@ func Json2Html(jsonData []byte, path string) (HtmlData, error) {
 
 	stringSimpleJson, err := json.Marshal(simpleHtmlRes)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
-	htmlData.Cyclos = string(stringSimpleJson)
+	htmlData.Simples = string(stringSimpleJson)
 
 	// convert scan code result
 	scanHtmlRes := make([]Scan, 0)
@@ -111,9 +114,9 @@ func Json2Html(jsonData []byte, path string) (HtmlData, error) {
 
 	scanSimpleJson, err := json.Marshal(scanHtmlRes)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
-	fmt.Println(string(scanSimpleJson))
+	log.Println(string(scanSimpleJson))
 	// scan := string(scanSimpleJson)
 
 	// convert copy code result
@@ -128,8 +131,38 @@ func Json2Html(jsonData []byte, path string) (HtmlData, error) {
 
 	stringCopyJson, err := json.Marshal(copyHtmlRes)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	htmlData.Copycodes = string(stringCopyJson)
+
+	// convert simple code result
+	deadcodeHtmlRes := make([]Deadcode, 0)
+	for _, deadcodeInfo := range structData.DeadCode {
+		// TODO: convert string into map[pkgName]string
+		pathIndex := strings.Index(deadcodeInfo, ":")
+		pathIndexh := strings.Index(deadcodeInfo[(pathIndex+1):], ":")
+		if pathIndex > 0 && len(deadcodeInfo) > (pathIndex+pathIndexh+2) {
+			deadCode := Deadcode{
+				Path: absPath(deadcodeInfo[0:(pathIndex + pathIndexh + 1)]),
+				Info: deadcodeInfo[(pathIndex + pathIndexh + 2):],
+			}
+			deadcodeHtmlRes = append(deadcodeHtmlRes, deadCode)
+		}
+	}
+
+	stringDeadCodeJson, err := json.Marshal(deadcodeHtmlRes)
+	if err != nil {
+		log.Println(err)
+	}
+	htmlData.Deadcodes = string(stringDeadCodeJson)
+
+	// convert depend graph
+	htmlData.DepGraph = template.HTML(structData.DependGraph)
+	stringNoTestJson, err := json.Marshal(structData.NoTestPkg)
+	if err != nil {
+		log.Println(err)
+	}
+	htmlData.NoTests = string(stringNoTestJson)
+
 	return htmlData, nil
 }
