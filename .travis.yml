@@ -10,9 +10,8 @@ go:
   - tip
 
 script:
-  - go vet ./...
   - go test -v -coverprofile=coverage.txt -covermode=atomic
   - go build
-  
+
 after_success:
   - bash <(curl -s https://codecov.io/bash)
