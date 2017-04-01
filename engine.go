@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"html/template"
+	"io/ioutil"
 	"log"
 	"strconv"
 	"strings"
@@ -17,6 +20,7 @@ import (
 	"github.com/wgliang/goreporter/linters/simplecode"
 	"github.com/wgliang/goreporter/linters/staticscan"
 	// "github.com/wgliang/goreporter/linters/structcheck"
+	"github.com/wgliang/goreporter/linters/spellcheck"
 	"github.com/wgliang/goreporter/linters/unittest"
 	// "github.com/wgliang/goreporter/linters/varcheck"
 )
@@ -196,6 +200,14 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		log.Println("checked dead code")
 	}()
 
+	log.Println("checking spell error...")
+	wg.Add(1)
+	go func() {
+		r.SpellError = spellcheck.SpellCheck(projectPath, exceptPackages)
+		wg.Done()
+		log.Println("checked spell error")
+	}()
+
 	log.Println("getting import packages...")
 	var importPkgs []string
 	wg.Add(1)
@@ -225,4 +237,54 @@ func (r *Reporter) formateReport2Json() []byte {
 	}
 
 	return report
+}
+
+func (r *Reporter) SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp string) {
+	t, err := template.New("skylar-apollo").Parse(tpl)
+	if err != nil {
+		log.Println(err)
+	}
+
+	var out bytes.Buffer
+	err = t.Execute(&out, htmlData)
+	if err != nil {
+		log.Println(err)
+	}
+	projectName := projectName(projectPath)
+	if savePath != "" {
+		htmlpath := strings.Replace(savePath+system+projectName+"-"+timestamp+".html", system+system, system, -1)
+		log.Println(htmlpath)
+		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
+		if err != nil {
+			log.Println(err)
+		}
+	} else {
+		//默认当前目录名为email.html
+		htmlpath := projectName + "-" + timestamp + ".html"
+		log.Println(htmlpath)
+		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func (r *Reporter) SaveAsJson(projectPath, savePath, timestamp string) {
+	jsonData := r.formateReport2Json()
+
+	projectName := projectName(projectPath)
+	if savePath != "" {
+		jsonpath := strings.Replace(savePath+system+projectName+"-"+timestamp+".json", system+system, system, -1)
+		err := ioutil.WriteFile(jsonpath, jsonData, 0666)
+		if err != nil {
+			log.Println(err)
+		}
+	} else {
+		//默认当前目录名为email.html
+		jsonpath := projectName + "-" + timestamp + ".json"
+		err := ioutil.WriteFile(jsonpath, jsonData, 0666)
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }

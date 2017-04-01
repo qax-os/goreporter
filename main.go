@@ -21,6 +21,8 @@ var (
 	meta = flag.String("m", "{}", "project meta information.")
 	// template
 	tplpath = flag.String("t", "", "project meta information.")
+	// report formate
+	formate = flag.String("r", "", "project report formate(json/html).")
 )
 
 func init() {
@@ -69,5 +71,9 @@ func main() {
 		log.Println("Json2Html error")
 		return
 	}
-	SaveAsHtml(htmlData, *project, *report, startTime)
+	if *formate == "json" {
+		reporter.SaveAsJson(*project, *report, startTime)
+	} else {
+		reporter.SaveAsHtml(htmlData, *project, *report, startTime)
+	}
 }

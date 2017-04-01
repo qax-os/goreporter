@@ -2,7 +2,6 @@ package depend
 
 import (
 	"bytes"
-	"flag"
 	"fmt"
 	"go/build"
 	"io/ioutil"
@@ -44,7 +43,6 @@ func Depend(path, expect string) string {
 
 	pkgs = make(map[string]*build.Package)
 	ids = make(map[string]int)
-	flag.Parse()
 
 	args := []string{path}
 

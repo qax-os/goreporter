@@ -14,6 +14,7 @@ type Reporter struct {
 	DependGraph string              `json:"depend_graph"`
 	DeadCode    []string            `json:"dead_code"`
 	NoTestPkg   []string            `json:"no_test_package"`
+	SpellError  []string            `json:"spell_error"`
 }
 
 type UnitTest struct {

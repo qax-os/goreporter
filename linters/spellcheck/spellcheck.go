@@ -136,7 +136,7 @@ func SpellCheck(projectPath, except string) []string {
 	//
 	*ignores = except
 	if len(*ignores) > 0 {
-		r.RemoveRule(strings.Split(*ignores, ","))
+		r.RemoveRule(strings.Split(*ignores, ";"))
 	}
 
 	//
