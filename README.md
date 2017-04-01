@@ -1,3 +1,5 @@
+![goreporter](./logo.png)
+
 # goreporter
 
 [![Build Status](https://travis-ci.org/wgliang/goreporter.svg?branch=master)](https://travis-ci.org/wgliang/goreporter)
