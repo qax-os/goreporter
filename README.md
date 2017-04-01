@@ -41,4 +41,4 @@ There are two options for installing goreporter.
 ## Credits
 
 Templates is desigend by liufeifei
-
+Logo is desigend by [xuri](https://github.com/Luxurioust)
