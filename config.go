@@ -35,10 +35,10 @@ type Cycloi struct {
 }
 
 type Test struct {
-	Path   string  `json:path`
-	Result int     `json:result`
-	Time   float64 `json:time`
-	Cover  float64 `json:cover`
+	Path   string  `json:"path"`
+	Result int     `json:"result"`
+	Time   float64 `json:"time"`
+	Cover  float64 `json:"cover"`
 }
 
 type File struct {
@@ -60,18 +60,18 @@ type Race struct {
 }
 
 type Simple struct {
-	Path string `json:path`
-	Info string `json:info`
+	Path string `json:"path"`
+	Info string `json:"info"`
 }
 
 type Scan struct {
-	Path string `json:path`
-	Info string `json:info`
+	Path string `json:"path"`
+	Info string `json:"info"`
 }
 
 type Deadcode struct {
-	Path string `json:path`
-	Info string `json:info`
+	Path string `json:"path"`
+	Info string `json:"info"`
 }
 type CycloInfo struct {
 	Comp int
