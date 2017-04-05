@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_Dep(t *testing.T) {
-	h := Dep("../gotest", "")
+func Test_Depend(t *testing.T) {
+	h := Depend("../../../goreporter", "")
 	fmt.Println(h)
 }
