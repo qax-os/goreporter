@@ -23,19 +23,19 @@ Generate golang code quality test report.This is a tool that concurrently runs a
 - [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 - [godepgraph](https://github.com/kisielk/godepgraph) - Godepgraph is a program for generating a dependency graph of Go packages.
 
-## Template file
+## Supported template
 
-goreporter now supports a html template file which can be loaded via
-`-t <file>`.
+- html template file which can be loaded via `-t <file>`.
 
 ## Installing
 
 There are two options for installing goreporter.
 
-1. Install a stable version, eg. `go get -u github.com/wgliang/goreporter/tree/version-1.0.0`.
-   I will generally only tag a new stable version when it has passed the Travis
-  regression tests. The downside is that the binary will be called `goreporter.version-1.0.0`.
-2. Install from HEAD with: `go get -u github.com/wgliang/goreporter`.
+- 1. Install a stable version, eg. `go get -u github.com/wgliang/goreporter/tree/version-1.0.0`.
+   I will generally only tag a new stable version when it has passed the Travis regression tests. 
+     The downside is that the binary will be called `goreporter.version-1.0.0`.
+
+- 2. Install from HEAD with: `go get -u github.com/wgliang/goreporter`.
    This has the downside that changes to goreporter may break.
 
 ## Credits
