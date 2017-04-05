@@ -56,7 +56,7 @@ Install goreporter (see above).
 Run it:
 
 ```
-$ gometalinter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
+$ goreporter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
 ```
 
 ## Credits
