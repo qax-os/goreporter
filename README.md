@@ -9,6 +9,17 @@
 
 Generate golang code quality test report.This is a tool that concurrently runs a whole bunch of those linters and normalises their output to a report:
 
+<!-- MarkdownTOC -->
+
+- [Supported linters](#supported-linters)
+- [Supported template](#supported-template)
+- [Installing](#installing)
+- [Credits](#credits)
+- [Quickstart](#quickstart)
+- [Credits](#credits)
+
+<!-- /MarkdownTOC -->
+
 ## Supported linters
 
 - [unittest](https://github.com/wgliang/goreporter/tree/master/linters/unittest) - Golang unit test status.
@@ -37,6 +48,16 @@ There are two options for installing goreporter.
 
 - 2. Install from HEAD with: `go get -u github.com/wgliang/goreporter`.
    This has the downside that changes to goreporter may break.
+
+## Quickstart
+
+Install goreporter (see above).
+
+Run it:
+
+```
+$ gometalinter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
+```
 
 ## Credits
 
