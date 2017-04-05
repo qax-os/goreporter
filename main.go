@@ -17,8 +17,6 @@ var (
 	report = flag.String("d", "", "path of report.")
 	// except packages,multiple packages are separated by semicolons
 	except = flag.String("e", "", "except packages.")
-	// meta information
-	meta = flag.String("m", "{}", "project meta information.")
 	// template
 	tplpath = flag.String("t", "", "project meta information.")
 	// report formate
@@ -57,10 +55,6 @@ func main() {
 
 	if *except == "" {
 		log.Println("There are no packages that are excepted, review all items of the package")
-	}
-
-	if *meta == "" {
-		log.Println("There is no review of attribute information, using default settings")
 	}
 
 	startTime := strconv.FormatInt(time.Now().Unix(), 10)
