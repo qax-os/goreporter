@@ -3,7 +3,6 @@
 # goreporter
 
 [![Build Status](https://travis-ci.org/wgliang/goreporter.svg?branch=master)](https://travis-ci.org/wgliang/goreporter)
-[![codecov](https://codecov.io/gh/wgliang/goreporter/branch/master/graph/badge.svg)](https://codecov.io/gh/wgliang/goreporter)
 [![GoDoc](https://godoc.org/github.com/wgliang/goreporter?status.svg)](https://godoc.org/github.com/wgliang/goreporter)
 [![License](https://img.shields.io/badge/LICENSE-Apache2.0-ff69b4.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
