@@ -417,10 +417,10 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 	</head>
 	<body>
 		<div>
-			<h1>测试报告</h1>
+			<h1>TestReport</h1>
 			<div class="content">
 				<div class="summary">
-					<span>分数:</span>
+					<span>Score:</span>
 					<div class="cry">
 			  			<div class="teardrop"></div>
 			  			<div class="bun">
@@ -452,92 +452,92 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 				</div>
 				<ul>
 					<li>
-						<span>项目: </span>
+						<span>Project</span>
 						<span id="project"></span>
 					</li>
 					<li>
-						<span>单元测试</span>
+						<span>UnitTest</span>
 						<span>
 							<div>
-								<span>平均覆盖率：</span>
+								<span>AvgCover:</span>
 								<span class="emphasize-num" id="testCover"></span>
 								<span>%</span>
 							</div>
 							<div>
-								<span>包覆盖率：</span>
+								<span>PkgCover:</span>
 								<span class="emphasize-num" id="testPkgCover"></span>
 								<span>%</span>
 							</div>
 						</span>
 					</li>
 					<li>
-						<span>代码测试</span>
+						<span>CodeTest</span>
 						<span>
 							<div>
-								<span>提示总数：</span>
+								<span>Tips:</span>
 								<span class="emphasize-num" id="gosimpleInfoNum"></span>
 							</div>
 						</span>
 					</li>
 					<li>
-						<span>无效代码</span>
+						<span>DeadCode</span>
 						<span>
 							<div>
-								<span>提示总数：</span>
+								<span>Tips:</span>
 								<span class="emphasize-num" id="deadcodeInfoNum"></span>
 							</div>
 						</span>
 
 					</li>
 					<li>
-						<span>相同代码</span>
+						<span>CopyCode</span>
 						<span>
 							<div>
-								<span>提示总数：</span>
+								<span>Tips:</span>
 								<span class="emphasize-num" id="copycodeInfoNum"></span>
 							</div>
 						</span>
 					</li>
 					<li>
-						<span>圈复杂度</span>
+						<span>Cyclo</span>
 						<span>
 							<div>
 								<span>15~50：</span>
 								<span class="emphasize-num" id="mediumCycleNum"></span>
 							</div>
 							<div>
-								<span>50以上：</span>
+								<span>50+：</span>
 								<span class="emphasize-num" id="highCycleNum"></span>
 							</div>
 						</span>
 					</li>
 				</ul>
 				<div class="gotest subcontent">
-					<h2>单元测试</h2>
+					<h2>UnitTest</h2>
 					<div class="inline-block gotest-chart">
 						<div id="gotestChart">
 						</div>
 					</div>
 					<div class="inline-block list">
 						<div class="list-container">
-							<h3>缺少单元测试的包列表：</h3>
+							<h3>NoUnitTestPackages</h3>
 							<ul id="gotestList">
 							</ul>
 						</div>
 					</div>
 				</div>
 				<div class="gosimple subcontent">
-					<h2>代码精简</h2>
+					<h2>SimpleCode</h2>
 					<div class="inline-block" id="gosimpleChart">
 					</div>
 					<div class="inline-block">
-						<h3>详细信息<span style="font-size: 12px; margin-left: 5px;">(点击左侧图形获取详细信息)</span></h3>
+						<h3>Detail<span style="font-size: 12px; margin-left: 5px;">(Click on the left side of the graph for more information)</span></h3>
 						<div class="list-content">
 							<table id="gosimpleTable">
 								<thead>
 									<tr>
-										<th>路径</th>
-										<th>信息</th>
+										<th>Path</th>
+										<th>Info</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -548,13 +548,13 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 				</div>
 				<div class="code-container subcontent">
 					<div class="inline-block deadcode">
-						<h2>无效代码</h2>
+						<h2>DeadCode</h2>
 						<div class="content-container">
 							<table id="deadcodeTable">
 								<thead>
 									<tr>
-										<th>目录</th>
-										<th>信息</th>
+										<th>Path</th>
+										<th>Info</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -564,23 +564,23 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 						</div>
 					</div>
 					<div class="inline-block copycode">
-						<h2>相同代码</h2>
+						<h2>CopyCode</h2>
 						<div class="content-container" id="copycodeList">
 						</div>
 					</div>
 				</div>
 				<div class="gocyclo subcontent">
-					<h2>圈复杂度</h2>
+					<h2>Cyclo</h2>
 					<div class="inline-block" id="gocycleChart">
 					</div>
 					<div class="inline-block" id="gocycleList">
-						<h3>圈复杂度超过15分的信息<span style="font-size: 12px; margin-left: 5px;">(点击左侧图形获取详细信息)</span></h3>
+						<h3>15+<span style="font-size: 12px; margin-left: 5px;">(Click on the left side of the graph for more information)</span></h3>
 						<div class="content-container">
 							<table>
 								<thead>
 									<tr>
-										<th>信息</th>
-										<th>分数</th>
+										<th>Info</th>
+										<th>Cyclo</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -661,7 +661,7 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 				        alignTicks: false
 					},
 					title: {
-						text: '单元测试结果',
+						text: 'UnitTestResult',
 				        style: {
 				            fontSize: "16px"
 				        }
@@ -676,7 +676,7 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 						min: 0,
 						ceiling: 100,
 				        title: {
-				            text: '覆盖率(%)',
+				            text: 'cover(%)',
 				            align: 'high'
 				        },
 				        labels: {
@@ -685,7 +685,7 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 					},{
 				        min: 0,
 				        title:{
-				            text: '时间(s)',
+				            text: 'time(s)',
 				            align: 'high'
 				        },
 				        opposite: true
@@ -707,10 +707,10 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 				        enabled: false
 				    },
 				    series: [{
-				        name: '覆盖率',
+				        name: 'cover',
 				        data: resData.gotest.gotest_result.cover
 				    },{
-				        name: '时间',
+				        name: 'time',
 				        data: resData.gotest.gotest_result.time,
 				        yAxis: 1
 				    }]
@@ -723,7 +723,7 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 			            type: 'column'
 			        },
 			        title: {
-			            text: '代码测试结果一览',
+			            text: 'CodeTestSummary',
 			            style: {
 			                fontSize: "16px"
 			            }
@@ -741,7 +741,7 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 			        yAxis: {
 			            min: 0,
 			            title: {
-			                text: 'info数量'
+			                text: 'infoNum'
 			            }
 			        },
 			        legend: {
@@ -769,7 +769,7 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 			            }
 			        },
 			        series: [{
-			            name: 'info数量',
+			            name: 'infoNum',
 			            data: resData.gosimple_result.data_render,
 			            dataLabels: {
 			                enabled: true,

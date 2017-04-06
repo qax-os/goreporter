@@ -30,15 +30,15 @@ type PackageTest struct {
 }
 
 type Cycloi struct {
-	Average string   `json:"average"`
-	Result  []string `json:"result"`
+	Average string
+	Result  []string
 }
 
 type Test struct {
-	Path   string  `json:"path"`
-	Result int     `json:"result"`
-	Time   float64 `json:"time"`
-	Cover  float64 `json:"cover"`
+	Path   string
+	Result int
+	Time   float64
+	Cover  float64
 }
 
 type File struct {
@@ -60,18 +60,18 @@ type Race struct {
 }
 
 type Simple struct {
-	Path string `json:"path"`
-	Info string `json:"info"`
+	Path string
+	Info string
 }
 
 type Scan struct {
-	Path string `json:"path"`
-	Info string `json:"info"`
+	Path string
+	Info string
 }
 
 type Deadcode struct {
-	Path string `json:"path"`
-	Info string `json:"info"`
+	Path string
+	Info string
 }
 type CycloInfo struct {
 	Comp int
