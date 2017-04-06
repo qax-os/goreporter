@@ -6,7 +6,7 @@
 [![GoDoc](https://godoc.org/github.com/wgliang/goreporter?status.svg)](https://godoc.org/github.com/wgliang/goreporter)
 [![License](https://img.shields.io/badge/LICENSE-Apache2.0-ff69b4.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
-Generate golang code quality test report.This is a tool that concurrently runs a whole bunch of those linters and normalises their output to a report:
+A Golang tool that does static analysis, unit testing, code review and generate code quality report. This is a tool that concurrently runs a whole bunch of those linters and normalises their output to a report:
 
 <!-- MarkdownTOC -->
 
