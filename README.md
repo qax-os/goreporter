@@ -67,6 +67,10 @@ $ goreporter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName]
 
 ## Example
 
+```
+$ goreporter -p ../goreporter -d ../goreporter -t ./templates/template.html
+```
+
 ### Summary
 ![summary](./doc/summary.jpeg)
 
