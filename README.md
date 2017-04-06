@@ -38,6 +38,7 @@ Generate golang code quality test report.This is a tool that concurrently runs a
 - [gosimple](https://github.com/dominikh/go-tools/tree/master/cmd/gosimple) - Report simplifications in code.
 - [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 - [godepgraph](https://github.com/kisielk/godepgraph) - Godepgraph is a program for generating a dependency graph of Go packages.
+- [misspell](https://github.com/client9/misspell) - Correct commonly misspelled English words... quickly.
 
 ## Supported template
 
