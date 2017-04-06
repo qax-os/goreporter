@@ -68,16 +68,16 @@ $ goreporter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName]
 ## Example
 
 ### Summary
-![summary](./doc/summary.jpg)
+![summary](./doc/summary.jpeg)
 
 ### UnitTest
-![unittest](./doc/unittest.jpg)
+![unittest](./doc/unittest.jpeg)
 
 ### SimpleCode
-![simplecode](./doc/simplecode.jpg)
+![simplecode](./doc/simplecode.jpeg)
 
 ### DeadCode & CopyCode
-![deadcodeandcopycode](./doc/deadcodeandcopycode.jpg)
+![deadcodeandcopycode](./doc/deadcodeandcopycode.jpeg)
 
 ## Credits
 
