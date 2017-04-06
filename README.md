@@ -16,6 +16,11 @@ Generate golang code quality test report.This is a tool that concurrently runs a
 - [Installing](#installing)
 - [Credits](#credits)
 - [Quickstart](#quickstart)
+- [Example](#example)
+	- [Summary](#summary)
+	- [UnitTest](#unittest)
+	- [SimpleCode](#simplecode)
+	- [DeadCode & CopyCode](#deadcodeandcopycode)
 - [Credits](#credits)
 
 <!-- /MarkdownTOC -->
@@ -58,6 +63,20 @@ Run it:
 ```
 $ goreporter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
 ```
+
+## Example
+
+### Summary
+![summary](./doc/summary.jepg)
+
+### UnitTest
+![unittest](./doc/unittest.jepg)
+
+### SimpleCode
+![simplecode](./doc/simplecode.jepg)
+
+### DeadCode & CopyCode
+![deadcodeandcopycode](./doc/deadcodeandcopycode.jepg)
 
 ## Credits
 
