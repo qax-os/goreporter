@@ -72,10 +72,6 @@ $ goreporter -p ../goreporter -d ../goreporter -t ./templates/template.html
 ```
 you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-report.html)
 
-## Report-example
-
-[Example-Report](http://fiisio.me/pages/goreporter-report.html)
-
 ### Summary
 ![summary](./doc/summary.jpeg)
 
@@ -87,6 +83,10 @@ you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-rep
 
 ### DeadCode & CopyCode
 ![deadcodeandcopycode](./doc/deadcodeandcopycode.jpeg)
+
+## Report-example
+
+[Example-Report](http://fiisio.me/pages/goreporter-report.html)
 
 ## Credits
 
