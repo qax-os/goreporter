@@ -72,7 +72,7 @@ $ goreporter -p ../goreporter -d ../goreporter -t ./templates/template.html
 ```
 you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-report.html)
 
-### Report-example
+## Report-example
 
 [Example-Report](http://fiisio.me/pages/goreporter-report.html)
 
