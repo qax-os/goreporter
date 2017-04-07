@@ -9,6 +9,7 @@ import (
 
 func DirList(path string, suffix, expect string) (dirs map[string]string, err error) {
 	dirs = make(map[string]string, 0)
+	path = absPath(path)
 	_, err = os.Stat(path)
 	if err != nil {
 		log.Fatal("dir path is invalid")

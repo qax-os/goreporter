@@ -348,7 +348,7 @@ func (r *Reporter) Grade() int {
 
 func (r *Reporter) SaveAsJson(projectPath, savePath, timestamp string) {
 	jsonData := r.formateReport2Json()
-
+	savePath = absPath(savePath)
 	projectName := projectName(projectPath)
 	if savePath != "" {
 		jsonpath := strings.Replace(savePath+system+projectName+"-"+timestamp+".json", system+system, system, -1)
