@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"io"
+	"log"
 	"sort"
 
 	"github.com/wgliang/goreporter/linters/copycheck/syntax"
@@ -56,14 +57,14 @@ func (p *TextPrinter) prepareClonesInfo(dups [][]*syntax.Node) []clone {
 	for i, dup := range dups {
 		cnt := len(dup)
 		if cnt == 0 {
-			panic("zero length dup")
+			log.Fatal("zero length dup")
 		}
 		nstart := dup[0]
 		nend := dup[cnt-1]
 
 		file, err := p.freader.ReadFile(nstart)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		cl := clone{filename: nstart.Filename}

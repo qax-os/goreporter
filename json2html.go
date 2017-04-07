@@ -55,11 +55,15 @@ func (r *Reporter) Json2Html() (HtmlData, error) {
 			values := strings.Fields(value)
 			if len(values) == 4 {
 				com, _ := strconv.Atoi(values[0])
-				cycloInfo := CycloInfo{
-					Comp: com,
-					Info: values[3],
+				if com >= 15 {
+					cycloInfo := CycloInfo{
+						Comp: com,
+						Info: values[3],
+					}
+					cycloInfos = append(cycloInfos, cycloInfo)
+				} else {
+					continue
 				}
-				cycloInfos = append(cycloInfos, cycloInfo)
 			}
 		}
 		cyclo.Info = cycloInfos
@@ -163,6 +167,8 @@ func (r *Reporter) Json2Html() (HtmlData, error) {
 		log.Println(err)
 	}
 	htmlData.NoTests = string(stringNoTestJson)
+
+	htmlData.Score = r.Grade()
 
 	return htmlData, nil
 }

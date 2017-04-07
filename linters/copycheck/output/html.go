@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"regexp"
 	"sort"
 
@@ -40,14 +41,14 @@ func (p *HtmlPrinter) Print(dups [][]*syntax.Node) {
 	for i, dup := range dups {
 		cnt := len(dup)
 		if cnt == 0 {
-			panic("zero length dup")
+			log.Fatal("zero length dup")
 		}
 		nstart := dup[0]
 		nend := dup[cnt-1]
 
 		file, err := p.freader.ReadFile(nstart)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 
 		lineStart, _ := blockLines(file, nstart.Pos, nend.End)

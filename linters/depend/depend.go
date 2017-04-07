@@ -25,7 +25,7 @@ var (
 	// ignore packages in the Go standard library
 	ignoreStdlib   = true
 	delveGoroot    = false
-	ignorePrefixes = "github.com,golang.org"
+	ignorePrefixes = ""
 	// a comma-separated list of packages to ignore
 	ignorePackages = ""
 	// a comma-separated list of build tags to consider satisified during the build

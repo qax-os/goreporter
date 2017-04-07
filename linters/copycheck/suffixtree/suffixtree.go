@@ -3,6 +3,7 @@ package suffixtree
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 )
@@ -119,7 +120,7 @@ func (t *STree) canonize(s *state, start, end Pos) (*state, Pos) {
 		if start <= end {
 			tr = s.findTran(t.data[start])
 			if tr == nil {
-				panic(fmt.Sprintf("there should be some transition for '%d' at %d",
+				log.Fatal(fmt.Sprintf("there should be some transition for '%d' at %d",
 					t.data[start].Val(), start))
 			}
 		}
@@ -130,14 +131,14 @@ func (t *STree) canonize(s *state, start, end Pos) (*state, Pos) {
 		s = tr.state
 	}
 	if s == nil {
-		panic("there should always be some suffix link resolution")
+		log.Fatal("there should always be some suffix link resolution")
 	}
 	return s, start
 }
 
 func (t *STree) At(p Pos) Token {
 	if p < 0 || p >= Pos(len(t.data)) {
-		panic("position out of bounds")
+		log.Fatal("position out of bounds")
 	}
 	return t.data[p]
 }

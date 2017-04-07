@@ -94,13 +94,12 @@ func crawlPaths(paths []string, expect string) chan string {
 		for _, path := range paths {
 			info, err := os.Lstat(path)
 			if err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 			if !info.IsDir() {
 				fchan <- path
 				continue
 			}
-
 			filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 				if checkExpect(path, expect) {
 					return nil

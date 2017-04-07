@@ -89,9 +89,9 @@ func projectName(projectPath string) (project string) {
 	if err != nil {
 		log.Println(err)
 	}
-	projectPathIndex := strings.Index(absPath, "360.cn")
+	projectPathIndex := strings.LastIndex(absPath, system)
 	if -1 != projectPathIndex {
-		project = absPath[(projectPathIndex + 7):]
+		project = absPath[(projectPathIndex + 1):len(absPath)]
 	}
 
 	return project

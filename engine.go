@@ -259,7 +259,6 @@ func (r *Reporter) SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestam
 			log.Println(err)
 		}
 	} else {
-		//默认当前目录名为email.html
 		htmlpath := projectName + "-" + timestamp + ".html"
 		log.Println(htmlpath)
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
@@ -267,6 +266,84 @@ func (r *Reporter) SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestam
 			log.Println(err)
 		}
 	}
+}
+
+func (r *Reporter) Grade() int {
+	score := 0.0
+	tscore := float64(40)
+	if len(r.UnitTestx.AvgCover) > 1 {
+		cover, err := strconv.ParseFloat(r.UnitTestx.AvgCover[:(len(r.UnitTestx.AvgCover)-1)], 64)
+		if err != nil {
+			cover = 0
+		}
+		score = score + tscore*cover/100.0
+	}
+
+	countCopy := len(r.CopyTips)
+	if countCopy < 10 {
+		score = score + float64(10-1*countCopy)
+	}
+
+	countScan := 0
+	for _, pkg := range r.ScanTips {
+		countScan = countScan + len(pkg)
+	}
+	if countScan < 10 {
+		score = score + float64(10-1*countScan)
+	}
+
+	countSimple := 0
+	for _, pkg := range r.SimpleTips {
+		countSimple = countSimple + len(pkg)
+	}
+	if countSimple < 10 {
+		score = score + float64(10-1*countSimple)
+	}
+
+	sscore := 10.0
+	sscore = sscore - float64(len(r.DeadCode)/5)
+	if sscore < 0 {
+		sscore = 0
+	}
+	score = score + sscore
+
+	sum15 := 0
+	sum50 := 0
+	countcyclo := 0
+	sum := 0
+	pscore := 0
+	for _, val := range r.Cyclox {
+		for _, v := range val.Result {
+			var num int
+			in := strings.Index(v, " ")
+			if in > 0 {
+				countcyclo++
+				num, _ = strconv.Atoi(v[0:in])
+				if num >= 50 {
+					sum50++
+					sum15++
+				} else if num >= 15 {
+					sum15++
+				} else {
+					sum += num
+				}
+			}
+		}
+	}
+
+	if (countcyclo - sum50 - sum15) > 0 {
+		pscore = 20 * ((15 * 1.0 * (countcyclo - sum50 - sum15)) - sum) / (15 * (countcyclo - sum50 - sum15))
+	} else {
+		pscore = 0
+	}
+
+	pscore = pscore - sum50/5 - sum15/10
+	if pscore < 0 {
+		pscore = 0
+	}
+	score = score + float64(pscore)
+
+	return int(score)
 }
 
 func (r *Reporter) SaveAsJson(projectPath, savePath, timestamp string) {
@@ -280,7 +357,6 @@ func (r *Reporter) SaveAsJson(projectPath, savePath, timestamp string) {
 			log.Println(err)
 		}
 	} else {
-		//默认当前目录名为email.html
 		jsonpath := projectName + "-" + timestamp + ".json"
 		err := ioutil.WriteFile(jsonpath, jsonData, 0666)
 		if err != nil {

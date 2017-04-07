@@ -20,6 +20,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 	- [UnitTest](#unittest)
 	- [SimpleCode](#simplecode)
 	- [DeadCode & CopyCode](#deadcodeandcopycode)
+- [Report-example](#report-example)
 - [Credits](#credits)
 
 <!-- /MarkdownTOC -->
@@ -69,6 +70,11 @@ $ goreporter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName]
 ```
 $ goreporter -p ../goreporter -d ../goreporter -t ./templates/template.html
 ```
+you can see result detail:[Example-Report](./doc/goreporter-report.html)
+
+### Report-example
+
+[Example-Report](./doc/goreporter-report.html)
 
 ### Summary
 ![summary](./doc/summary.jpeg)

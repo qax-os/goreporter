@@ -25,7 +25,7 @@ type replacer interface {
 // Replacements are performed in order, without overlapping matches.
 func NewReplacer(oldnew ...string) *Replacer {
 	if len(oldnew)%2 == 1 {
-		panic("strings.NewReplacer: odd argument count")
+		log.Fatal("strings.NewReplacer: odd argument count")
 	}
 
 	allNewBytes := true
