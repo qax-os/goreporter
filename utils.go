@@ -7,22 +7,27 @@ import (
 	"strings"
 )
 
-func DirList(path string, suffix, expect string) (dirs map[string]string, err error) {
+func DirList(projectPath string, suffix, expect string) (dirs map[string]string, err error) {
 	dirs = make(map[string]string, 0)
-	path = absPath(path)
-	_, err = os.Stat(path)
+	if strings.HasSuffix(projectPath, "./") {
+		log.Fatal("please specify a relative path with the project name.")
+	}
+	if absPath(projectPath) == projectPath {
+		log.Fatal("please specify a relative path with the project name.")
+	}
+	_, err = os.Stat(projectPath)
 	if err != nil {
 		log.Fatal("dir path is invalid")
 	}
-	err = filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+	err = filepath.Walk(projectPath, func(projectPath string, f os.FileInfo, err error) error {
 		if f == nil {
 			return err
 		}
 		if f.IsDir() {
 			return nil
 		}
-		if strings.HasSuffix(path, suffix) {
-			dir := path[0:strings.LastIndex(path, system)]
+		if strings.HasSuffix(projectPath, suffix) {
+			dir := projectPath[0:strings.LastIndex(projectPath, system)]
 			if ExpectPkg(expect, dir) {
 				return nil
 			}
