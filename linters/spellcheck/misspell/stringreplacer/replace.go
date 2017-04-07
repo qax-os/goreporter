@@ -6,6 +6,7 @@ package stringreplacer
 
 import (
 	"io"
+	"log"
 	"strings"
 )
 
