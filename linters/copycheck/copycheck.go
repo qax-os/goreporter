@@ -2,7 +2,6 @@ package copycheck
 
 import (
 	"bufio"
-	"flag"
 	"io/ioutil"
 	"log"
 	"os"
@@ -39,7 +38,6 @@ const (
 )
 
 func CopyCheck(projectPath string, expect string) [][]string {
-	flag.Parse()
 	if html && plumbing {
 		log.Fatal("you can have either plumbing or HTML output")
 	}

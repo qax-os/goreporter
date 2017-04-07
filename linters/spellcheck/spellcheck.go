@@ -2,7 +2,6 @@ package spellcheck
 
 import (
 	"bytes"
-	"flag"
 	"io"
 	"io/ioutil"
 	"log"
@@ -92,20 +91,19 @@ func SpellCheck(projectPath, except string) []string {
 	spellCheck = make([]string, 0)
 	t := time.Now()
 	var (
-		workers   = flag.Int("j", 0, "Number of workers, 0 = number of CPUs")
-		writeit   = flag.Bool("w", false, "Overwrite file with corrections (default is just to display)")
-		quietFlag = flag.Bool("q", false, "Do not emit misspelling output")
-		outFlag   = flag.String("o", "stdout", "output file or [stderr|stdout|]")
-		format    = flag.String("f", "", "'csv', 'sqlite3' or custom Golang template for output")
-		ignores   = flag.String("i", "", "ignore the following corrections, comma separated")
-		locale    = flag.String("locale", "", "Correct spellings using locale perferances for US or UK.  Default is to use a neutral variety of English.  Setting locale to US will correct the British spelling of 'colour' to 'color'")
-		mode      = flag.String("source", "auto", "Source mode: auto=guess, go=golang source, text=plain or markdown-like text")
-		debugFlag = flag.Bool("debug", false, "Debug matching, very slow")
-		exitError = flag.Bool("error", false, "Exit with 2 if misspelling found")
+		workers   = 0
+		writeit   = false
+		quietFlag = false
+		outFlag   = "stdout"
+		format    = ""
+		ignores   = ""
+		locale    = ""
+		mode      = "auto"
+		debugFlag = false
+		exitError = false
 	)
-	flag.Parse()
 
-	if *debugFlag {
+	if debugFlag {
 		debug = log.New(os.Stderr, "DEBUG ", 0)
 	} else {
 		debug = log.New(ioutil.Discard, "", 0)
@@ -113,12 +111,12 @@ func SpellCheck(projectPath, except string) []string {
 
 	r := misspell.Replacer{
 		Replacements: misspell.DictMain,
-		Debug:        *debugFlag,
+		Debug:        debugFlag,
 	}
 	//
 	// Figure out regional variations
 	//
-	switch strings.ToUpper(*locale) {
+	switch strings.ToUpper(locale) {
 	case "":
 		// nothing
 	case "US":
@@ -128,21 +126,21 @@ func SpellCheck(projectPath, except string) []string {
 	case "NZ", "AU", "CA":
 		log.Fatalf("Help wanted.  https://github.com/client9/misspell/issues/6")
 	default:
-		log.Fatalf("Unknow locale: %q", *locale)
+		log.Fatalf("Unknow locale: %q", locale)
 	}
 
 	//
 	// Stuff to ignore
 	//
-	*ignores = except
-	if len(*ignores) > 0 {
-		r.RemoveRule(strings.Split(*ignores, ";"))
+	ignores = except
+	if len(ignores) > 0 {
+		r.RemoveRule(strings.Split(ignores, ";"))
 	}
 
 	//
 	// Source input mode
 	//
-	switch *mode {
+	switch mode {
 	case "auto":
 	case "go":
 	case "text":
@@ -154,18 +152,18 @@ func SpellCheck(projectPath, except string) []string {
 	// Custom output
 	//
 	switch {
-	case *format == "csv":
+	case format == "csv":
 		tmpl := template.Must(template.New("csv").Parse(csvTmpl))
 		defaultWrite = tmpl
 		defaultRead = tmpl
 		stdout.Println(csvHeader)
-	case *format == "sqlite" || *format == "sqlite3":
+	case format == "sqlite" || format == "sqlite3":
 		tmpl := template.Must(template.New("sqlite3").Parse(sqliteTmpl))
 		defaultWrite = tmpl
 		defaultRead = tmpl
 		stdout.Println(sqliteHeader)
-	case len(*format) > 0:
-		t, err := template.New("custom").Parse(*format)
+	case len(format) > 0:
+		t, err := template.New("custom").Parse(format)
 		if err != nil {
 			log.Fatalf("Unable to compile log format: %s", err)
 		}
@@ -180,18 +178,18 @@ func SpellCheck(projectPath, except string) []string {
 	// all writing at the same time causing broken output.  Log is routine safe.
 	// we see it so it doesn't use a prefix or include a time stamp.
 	switch {
-	case *quietFlag || *outFlag == "/dev/null":
+	case quietFlag || outFlag == "/dev/null":
 		stdout = log.New(ioutil.Discard, "", 0)
-	case *outFlag == "/dev/stderr" || *outFlag == "stderr":
+	case outFlag == "/dev/stderr" || outFlag == "stderr":
 		stdout = log.New(os.Stderr, "", 0)
-	case *outFlag == "/dev/stdout" || *outFlag == "stdout":
+	case outFlag == "/dev/stdout" || outFlag == "stdout":
 		stdout = log.New(os.Stdout, "", 0)
-	case *outFlag == "" || *outFlag == "-":
+	case outFlag == "" || outFlag == "-":
 		stdout = log.New(os.Stdout, "", 0)
 	default:
-		fo, err := os.Create(*outFlag)
+		fo, err := os.Create(outFlag)
 		if err != nil {
-			log.Fatalf("unable to create outfile %q: %s", *outFlag, err)
+			log.Fatalf("unable to create outfile %q: %s", outFlag, err)
 		}
 		defer fo.Close()
 		stdout = log.New(fo, "", 0)
@@ -200,14 +198,14 @@ func SpellCheck(projectPath, except string) []string {
 	//
 	// Number of Workers / CPU to use
 	//
-	if *workers < 0 {
+	if workers < 0 {
 		log.Fatalf("-j must >= 0")
 	}
-	if *workers == 0 {
-		*workers = runtime.NumCPU()
+	if workers == 0 {
+		workers = runtime.NumCPU()
 	}
-	if *debugFlag {
-		*workers = 1
+	if debugFlag {
+		workers = 1
 	}
 
 	//
@@ -226,7 +224,7 @@ func SpellCheck(projectPath, except string) []string {
 		// send data to the writers
 		var fileout io.Writer
 		var errout io.Writer
-		switch *writeit {
+		switch writeit {
 		case true:
 			// if we ARE writing the corrected stream
 			// the the corrected stream goes to stdout
@@ -247,11 +245,11 @@ func SpellCheck(projectPath, except string) []string {
 			count++
 
 			// don't even evaluate the output templates
-			if *quietFlag {
+			if quietFlag {
 				return
 			}
 			diff.Filename = "stdin"
-			if *writeit {
+			if writeit {
 				defaultWrite.Execute(errout, diff)
 			} else {
 				defaultRead.Execute(errout, diff)
@@ -263,11 +261,11 @@ func SpellCheck(projectPath, except string) []string {
 		if err != nil {
 			os.Exit(1)
 		}
-		switch *format {
+		switch format {
 		case "sqlite", "sqlite3":
 			fileout.Write([]byte(sqliteFooter))
 		}
-		if count != 0 && *exitError {
+		if count != 0 && exitError {
 			// error
 			return spellCheck
 		}
@@ -275,10 +273,10 @@ func SpellCheck(projectPath, except string) []string {
 	}
 
 	c := make(chan string, 64)
-	results := make(chan int, *workers)
+	results := make(chan int, workers)
 
-	for i := 0; i < *workers; i++ {
-		go worker(*writeit, &r, *mode, c, results)
+	for i := 0; i < workers; i++ {
+		go worker(writeit, &r, mode, c, results)
 	}
 
 	for _, filename := range args {

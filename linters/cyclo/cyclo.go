@@ -19,7 +19,6 @@
 package cyclo
 
 import (
-	"flag"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -58,7 +57,6 @@ var (
 )
 
 func Cyclo(packagePath string) ([]string, string) {
-	flag.Usage = usage
 	args := []string{packagePath}
 	if len(args) == 0 {
 		usage()

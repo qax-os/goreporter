@@ -14,7 +14,6 @@
 package aligncheck
 
 import (
-	"flag"
 	"fmt"
 	"go/build"
 	"log"
@@ -31,8 +30,6 @@ var stdSizes = types.StdSizes{
 }
 
 func AlignCheck(projectPath string) []string {
-	flag.Parse()
-
 	importPaths := []string{projectPath}
 	if len(importPaths) == 0 {
 		importPaths = []string{"."}

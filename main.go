@@ -4,6 +4,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"os"
 	"runtime"
 	"strconv"
 	"time"
@@ -36,6 +37,11 @@ func main() {
 	log.SetPrefix("[Apollo]")
 	if *project == "" {
 		log.Fatal("The project path is not specified")
+	} else {
+		_, err := os.Stat(*project)
+		if err == nil {
+			log.Fatal("project path is invalid")
+		}
 	}
 
 	if *tplpath == "" {
@@ -51,6 +57,11 @@ func main() {
 
 	if *report == "" {
 		log.Println("The report path is not specified, and the current path is used by default")
+	} else {
+		_, err := os.Stat(*report)
+		if err == nil {
+			log.Fatal("report path is invalid")
+		}
 	}
 
 	if *except == "" {
