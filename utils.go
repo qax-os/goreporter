@@ -10,7 +10,7 @@ import (
 func DirList(path string, suffix, expect string) (dirs map[string]string, err error) {
 	dirs = make(map[string]string, 0)
 	_, err = os.Stat(path)
-	if err == nil {
+	if err != nil {
 		log.Fatal("dir path is invalid")
 	}
 	err = filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
@@ -52,7 +52,7 @@ func ExpectPkg(expect, pkg string) bool {
 
 func PackageAbsPath(path string) (packagePath string) {
 	_, err := os.Stat(path)
-	if err == nil {
+	if err != nil {
 		log.Fatal("package path is invalid")
 	}
 	absPath, err := filepath.Abs(path)
