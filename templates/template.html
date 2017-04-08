@@ -1023,7 +1023,7 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 							  		return "#4ab73f"
 							  	} })
 							  .on("mouseover", function(d){
-								  	var text = "<p><span>总圈复杂度数： " + d.size + "</span></p><p>高圈复杂度数： " + d.serious + "</p>";
+								  	var text = "<p><span>total complexity： " + d.size + "</span></p><p>high complexity： " + d.serious + "</p>";
 								  	d3.select(this.parentNode).append("svg:foreignObject")
 								  		.append("xhtml:div")
 								  		.html(text);
