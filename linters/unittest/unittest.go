@@ -5,19 +5,8 @@ import (
 	"log"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
-
-var system string
-
-func init() {
-	if runtime.GOOS == `windows` {
-		system = `\`
-	} else {
-		system = `/`
-	}
-}
 
 func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, packageTestRaceResults map[string][]string) {
 	packageUnitTestResults = make(map[string][]string, 0)
@@ -110,7 +99,7 @@ func GoListWithImportPackages(packagePath string) (importPackages []string) {
 	}
 	// remove std package
 	for i := 0; i < len(packages); i++ {
-		if strings.Contains(packages[i], system) && !strings.Contains(packages[i], "vendor") {
+		if strings.Contains(packages[i], string(filepath.Separator)) && !strings.Contains(packages[i], "vendor") {
 			if _, ok := mapStdPackages[packages[i]]; !ok {
 				importPackages = append(importPackages, strings.Replace(packages[i], "'", "", -1))
 			}

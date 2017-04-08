@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"runtime"
 	"strconv"
 	"time"
 )
@@ -23,14 +22,6 @@ var (
 	// report formate
 	formate = flag.String("r", "", "project report formate(json/html).")
 )
-
-func init() {
-	if runtime.GOOS == `windows` {
-		system = `\`
-	} else {
-		system = `/`
-	}
-}
 
 func main() {
 	flag.Parse()

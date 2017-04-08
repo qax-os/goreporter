@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -26,8 +27,7 @@ import (
 )
 
 var (
-	system string
-	tpl    string
+	tpl string
 )
 
 func NewReporter() *Reporter {
@@ -252,7 +252,7 @@ func (r *Reporter) SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestam
 	}
 	projectName := projectName(projectPath)
 	if savePath != "" {
-		htmlpath := strings.Replace(savePath+system+projectName+"-"+timestamp+".html", system+system, system, -1)
+		htmlpath := strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".html", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
 		log.Println(htmlpath)
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
 		if err != nil {
@@ -351,7 +351,7 @@ func (r *Reporter) SaveAsJson(projectPath, savePath, timestamp string) {
 	savePath = absPath(savePath)
 	projectName := projectName(projectPath)
 	if savePath != "" {
-		jsonpath := strings.Replace(savePath+system+projectName+"-"+timestamp+".json", system+system, system, -1)
+		jsonpath := strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".json", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
 		err := ioutil.WriteFile(jsonpath, jsonData, 0666)
 		if err != nil {
 			log.Println(err)

@@ -27,7 +27,7 @@ func DirList(projectPath string, suffix, expect string) (dirs map[string]string,
 			return nil
 		}
 		if strings.HasSuffix(projectPath, suffix) {
-			dir := projectPath[0:strings.LastIndex(projectPath, system)]
+			dir := projectPath[0:strings.LastIndex(projectPath, string(filepath.Separator))]
 			if ExpectPkg(expect, dir) {
 				return nil
 			}
@@ -74,10 +74,10 @@ func PackageAbsPath(path string) (packagePath string) {
 }
 
 func PackageAbsPathExceptSuffix(path string) (packagePath string) {
-	if strings.LastIndex(path, system) <= 0 {
+	if strings.LastIndex(path, string(filepath.Separator)) <= 0 {
 		path, _ = os.Getwd()
 	}
-	path = path[0:strings.LastIndex(path, system)]
+	path = path[0:strings.LastIndex(path, string(filepath.Separator))]
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		log.Println(err)
@@ -95,7 +95,7 @@ func projectName(projectPath string) (project string) {
 	if err != nil {
 		log.Println(err)
 	}
-	projectPathIndex := strings.LastIndex(absPath, system)
+	projectPathIndex := strings.LastIndex(absPath, string(filepath.Separator))
 	if -1 != projectPathIndex {
 		project = absPath[(projectPathIndex + 1):len(absPath)]
 	}
