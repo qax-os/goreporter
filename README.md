@@ -62,7 +62,7 @@ Install goreporter (see above).
 Run it:
 
 ```
-$ goreporter -p [projtectRelativelyPath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
+$ goreporter -p [projectRelativePath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
 ```
 
 ## Example
@@ -92,4 +92,4 @@ you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-rep
 
 Templates is designed by liufeifei
 
-Logo is desigend by [xuri](https://github.com/Luxurioust)
+Logo is designed by [xuri](https://github.com/Luxurioust)
