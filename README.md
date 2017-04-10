@@ -13,6 +13,8 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [Supported linters](#supported-linters)
 - [Supported template](#supported-template)
 - [Installing](#installing)
+	- [Requirements](#requirements)
+- [Run it](#run-it)
 - [Credits](#credits)
 - [Quickstart](#quickstart)
 - [Example](#example)
@@ -46,6 +48,11 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 ## Installing
 
+### Requirements
+
+- [Go](https://golang.org/dl/) 1.6+
+- [Graphviz](http://www.graphviz.org/Download..php)
+
 There are two options for installing goreporter.
 
 - 1. Install a stable version, eg. `go get -u github.com/wgliang/goreporter/tree/version-1.0.0`.
@@ -59,7 +66,7 @@ There are two options for installing goreporter.
 
 Install goreporter (see above).
 
-Run it:
+## Run it:
 
 ```
 $ goreporter -p [projectRelativePath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
