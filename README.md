@@ -13,6 +13,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 - [Supported linters](#supported-linters)
 - [Supported template](#supported-template)
+- [Todo List](#todo-list)
 - [Installing](#installing)
 	- [Requirements](#requirements)
 - [Run it](#run-it)
@@ -46,6 +47,11 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 ## Supported template
 
 - html template file which can be loaded via `-t <file>`.
+
+## Todo List
+
+- Develop more linter, such as code line count statistics, function statistics, project information layer structure display, etc.
+- There are still many shortcomings in the presentation of the report, showing that the model is not perfect, and hope that someone can help optimize it.
 
 ## Installing
 
