@@ -24,6 +24,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 	- [UnitTest](#unittest)
 	- [SimpleCode](#simplecode)
 	- [DeadCode & CopyCode](#deadcodeandcopycode)
+	- [Cyclo](#cyclo)
 - [Report-example](#report-example)
 - [Credits](#credits)
 
@@ -97,6 +98,9 @@ you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-rep
 
 ### DeadCode & CopyCode
 ![deadcodeandcopycode](./doc/deadcodeandcopycode.jpeg)
+
+### Cyclo
+![cyclo](./doc/cyclo.jpeg)
 
 ## Report-example
 

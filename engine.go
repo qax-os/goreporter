@@ -26,6 +26,10 @@ import (
 	// "github.com/wgliang/goreporter/linters/varcheck"
 )
 
+const (
+	defatltTemplate = "./templates/template.html"
+)
+
 var (
 	tpl string
 )

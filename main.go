@@ -36,7 +36,13 @@ func main() {
 	}
 
 	if *tplpath == "" {
-		log.Fatal("The template path is not specified")
+		log.Println("The template path is not specified,and will use the default template[./templates/template.html]")
+		fileData, err := ioutil.ReadFile(defatltTemplate)
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			tpl = string(fileData)
+		}
 	} else {
 		fileData, err := ioutil.ReadFile(*tplpath)
 		if err != nil {
