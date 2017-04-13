@@ -67,7 +67,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		for pkgName, pkgPath := range dirsUnitTest {
 			pkg.Add(1)
 			go func(pkgName, pkgPath string) {
-				unitTestRes, unitRaceRes := unittest.UnitTest(pkgPath)
+				unitTestRes, unitRaceRes := unittest.UnitTest("./" + pkgPath)
 				var packageTest PackageTest
 				if len(unitTestRes) >= 1 {
 					testres := unitTestRes[pkgName]

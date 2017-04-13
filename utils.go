@@ -9,25 +9,25 @@ import (
 
 func DirList(projectPath string, suffix, expect string) (dirs map[string]string, err error) {
 	dirs = make(map[string]string, 0)
-	if strings.HasSuffix(projectPath, "./") {
-		log.Fatal("please specify a relative path with the project name.")
-	}
-	if absPath(projectPath) == projectPath {
-		log.Fatal("please specify a relative path with the project name.")
-	}
 	_, err = os.Stat(projectPath)
 	if err != nil {
 		log.Fatal("dir path is invalid")
 	}
-	err = filepath.Walk(projectPath, func(projectPath string, f os.FileInfo, err error) error {
+	err = filepath.Walk(projectPath, func(subPath string, f os.FileInfo, err error) error {
 		if f == nil {
 			return err
 		}
 		if f.IsDir() {
 			return nil
 		}
-		if strings.HasSuffix(projectPath, suffix) {
-			dir := projectPath[0:strings.LastIndex(projectPath, string(filepath.Separator))]
+		if strings.HasSuffix(subPath, suffix) {
+			sepIdx := strings.LastIndex(subPath, string(filepath.Separator))
+			var dir string
+			if sepIdx == -1 {
+				dir = "."
+			} else {
+				dir = subPath[0:sepIdx]
+			}
 			if ExpectPkg(expect, dir) {
 				return nil
 			}

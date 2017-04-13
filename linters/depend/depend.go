@@ -36,11 +36,15 @@ var (
 
 	buildTags    []string
 	buildContext = build.Default
+
+	vendors []string
 )
 
 func Depend(path, expect string) string {
 	ignorePackages = expect
-
+	vendors = getVendorlist(path)
+	// add root vendor
+	vendors = append(vendors, "vendor")
 	pkgs = make(map[string]*build.Package)
 	ids = make(map[string]int)
 
@@ -153,10 +157,19 @@ func processPackage(root string, pkgName string) error {
 	if ignored[pkgName] {
 		return nil
 	}
-
 	pkg, err := buildContext.Import(pkgName, root, 0)
 	if err != nil {
-		return fmt.Errorf("failed to import %s: %s", pkgName, err)
+		flag := false
+		for i := 0; i < len(vendors); i++ {
+			pkg, err = buildContext.Import(vendors[i]+string(filepath.Separator)+pkgName, root, 0)
+			if err == nil {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			return fmt.Errorf("failed to import %s: %s", pkgName, err)
+		}
 	}
 
 	if isIgnored(pkg) {
@@ -251,8 +264,8 @@ func getVendorlist(path string) []string {
 		if !f.IsDir() {
 			return nil
 		}
-		if strings.HasSuffix(path, "vendor") {
-			vendors = append(vendors, path)
+		if strings.HasSuffix(path, "vendor") && path != "" {
+			vendors = append(vendors, PackageAbsPath(path))
 		}
 		return nil
 	})
@@ -260,4 +273,21 @@ func getVendorlist(path string) []string {
 		log.Printf("filepath.Walk() returned %v\n", err)
 	}
 	return vendors
+}
+
+func PackageAbsPath(path string) (packagePath string) {
+	_, err := os.Stat(path)
+	if err != nil {
+		log.Fatal("package path is invalid")
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		log.Println(err)
+	}
+	packagePathIndex := strings.Index(absPath, "src")
+	if -1 != packagePathIndex {
+		packagePath = absPath[(packagePathIndex + 4):]
+	}
+
+	return packagePath
 }

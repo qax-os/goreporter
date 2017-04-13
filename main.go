@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,13 +15,13 @@ var (
 	// project path:Must Be Relative path
 	project = flag.String("p", "", "path of project.")
 	// save path of report
-	report = flag.String("d", "", "path of report.")
+	report = flag.String("r", "", "path of report.")
 	// except packages,multiple packages are separated by semicolons
 	except = flag.String("e", "", "except packages.")
 	// template
 	tplpath = flag.String("t", "", "project meta information.")
 	// report formate
-	formate = flag.String("r", "", "project report formate(json/html).")
+	formate = flag.String("f", "", "project report formate(json/html).")
 )
 
 func main() {
@@ -44,6 +45,9 @@ func main() {
 			tpl = string(fileData)
 		}
 	} else {
+		if !strings.HasSuffix(*report, ".html") {
+			log.Println("The template file is not a html template")
+		}
 		fileData, err := ioutil.ReadFile(*tplpath)
 		if err != nil {
 			log.Fatal(err)
