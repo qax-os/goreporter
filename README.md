@@ -77,8 +77,16 @@ Install goreporter (see above).
 ## Run it:
 
 ```
-$ goreporter -p [projectRelativePath] -d [reportPath] -e [exceptPackagesName] -r [json/html]  {-t templatePathIfHtml}
+$ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html]  {-t templatePathIfHtml}
 ```
+
+- -p Must be a valid golang project path.
+- -r Save the path to the report.
+- -e Exceptional packages (multiple separated by commas, for example: "linters/aligncheck,linters/cyclo" ).
+- -f report formate json OR html.
+- -t Template path,if not specified, the default template will be used.
+
+By default, the default template is used to generate reports in html format.
 
 ## Example
 

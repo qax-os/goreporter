@@ -19,7 +19,7 @@ var (
 	// except packages,multiple packages are separated by semicolons
 	except = flag.String("e", "", "except packages.")
 	// template
-	tplpath = flag.String("t", "", "project meta information.")
+	tplpath = flag.String("t", "", "report html template path.")
 	// report formate
 	formate = flag.String("f", "", "project report formate(json/html).")
 )
@@ -37,13 +37,7 @@ func main() {
 	}
 
 	if *tplpath == "" {
-		log.Println("The template path is not specified,and will use the default template[./templates/template.html]")
-		fileData, err := ioutil.ReadFile(defatltTemplate)
-		if err != nil {
-			log.Fatal(err)
-		} else {
-			tpl = string(fileData)
-		}
+		log.Println("The template path is not specified,and will use the default template")
 	} else {
 		if !strings.HasSuffix(*report, ".html") {
 			log.Println("The template file is not a html template")

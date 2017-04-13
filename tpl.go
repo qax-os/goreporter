@@ -1,3 +1,6 @@
+package main
+
+const defaultTpl = `
 <!DOCTYPE html>
 <html>
 	<head>
@@ -1059,4 +1062,4 @@ if(t==e.dx){for((r||f>e.dy)&&(f=e.dy);++u<o;)i=n[u],i.x=a,i.y=c,i.dy=f,a+=i.dx=M
 
 
 	</body>
-</html>
+</html>`

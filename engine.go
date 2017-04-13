@@ -26,10 +26,6 @@ import (
 	// "github.com/wgliang/goreporter/linters/varcheck"
 )
 
-const (
-	defatltTemplate = "./templates/template.html"
-)
-
 var (
 	tpl string
 )
@@ -244,7 +240,11 @@ func (r *Reporter) formateReport2Json() []byte {
 }
 
 func (r *Reporter) SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp string) {
-	t, err := template.New("skylar-apollo").Parse(tpl)
+	if tpl == "" {
+		tpl = defaultTpl
+	}
+
+	t, err := template.New("goreporter").Parse(tpl)
 	if err != nil {
 		log.Println(err)
 	}
