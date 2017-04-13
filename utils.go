@@ -83,7 +83,7 @@ func PackageAbsPathExceptSuffix(path string) (packagePath string) {
 		log.Println(err)
 	}
 	packagePathIndex := strings.Index(absPath, "src")
-	if -1 != packagePathIndex {
+	if -1 != packagePathIndex && (packagePathIndex+4) < len(absPath) {
 		packagePath = absPath[(packagePathIndex + 4):]
 	}
 
