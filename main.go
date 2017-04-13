@@ -26,7 +26,7 @@ var (
 
 func main() {
 	flag.Parse()
-	log.SetPrefix("[Apollo]")
+	log.SetPrefix("[GoReporter]")
 	if *project == "" {
 		log.Fatal("The project path is not specified")
 	} else {
