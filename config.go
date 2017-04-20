@@ -6,6 +6,7 @@ import (
 
 type Reporter struct {
 	Project     string              `json:"project"`
+	Score       int                 `json:"score"`
 	UnitTestx   UnitTest            `json:"unit_test"`
 	Cyclox      map[string]Cycloi   `json:"cyclo"`
 	SimpleTips  map[string][]string `json:"simple_tips"`

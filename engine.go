@@ -346,7 +346,7 @@ func (r *Reporter) Grade() int {
 		pscore = 0
 	}
 	score = score + float64(pscore)
-
+	r.Score = int(score)
 	return int(score)
 }
 
