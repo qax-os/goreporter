@@ -26,7 +26,9 @@ func DirList(projectPath string, suffix, expect string) (dirs map[string]string,
 			if sepIdx == -1 {
 				dir = "."
 			} else {
-				dir = subPath[0:sepIdx]
+				if len(subPath) > sepIdx {
+					dir = subPath[0:sepIdx]
+				}
 			}
 			if ExpectPkg(expect, dir) {
 				return nil
