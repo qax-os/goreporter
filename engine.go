@@ -30,23 +30,36 @@ var (
 	tpl string
 )
 
+func (w *WaitGroupWrapper) Wrap (cb func()){
+	w.Add(1)
+	go func() {
+		cb()
+		w.Done()
+	}()
+}
+
 func NewReporter() *Reporter {
 	return &Reporter{}
 }
 
-func (r *Reporter) Engine(projectPath string, exceptPackages string) {
+func (r *Reporter) Engine(ap string, exceptPackages string) {
+
 	log.Println("start code quality assessment...")
+	wg := &WaitGroupWrapper{}
+
+	projectPath := ap2rp(ap)
 
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
 	if err != nil {
 		log.Println(err)
+		// 文件路径相关错误
+		system.Logger.CheckErr(err, l.Error)
+		email.ErrorSendMail(err)
 	}
 	r.Project = projectName(projectPath)
-	var wg sync.WaitGroup
+	var importPkgs []string
 
-	// run linter:unit test
-	wg.Add(1)
-	go func() {
+	unitTestF := func() {
 		log.Println("running unit test...")
 		packagesTestDetail := struct {
 			Values map[string]PackageTest
@@ -80,6 +93,9 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 								packageTest.Time = time
 							} else {
 								log.Println(err)
+								// 文件路径相关错误
+								system.Logger.CheckErr(err, l.Error)
+								email.ErrorSendMail(err)
 							}
 						}
 						packageTest.Coverage = testres[4]
@@ -122,17 +138,20 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.UnitTestx.PackagesRaceDetail = packagesRaceDetail.Values
 		packagesRaceDetail.mux.Unlock()
 
-		wg.Done()
 		log.Println("unit test over!")
-	}()
-
-	log.Println("computing cyclo...")
-	dirsAll, err := DirList(projectPath, ".go", exceptPackages)
-	if err != nil {
-		log.Println(err)
 	}
-	wg.Add(1)
-	go func() {
+
+	cycloF := func() {
+		log.Println("computing cyclo...")
+
+		dirsAll, err := DirList(projectPath, ".go", exceptPackages)
+		if err != nil {
+			log.Println(err)
+			// 文件路径相关错误
+			system.Logger.CheckErr(err, l.Error)
+			email.ErrorSendMail(err)
+		}
+
 		cycloRes := make(map[string]Cycloi, 0)
 		for pkgName, pkgPath := range dirsAll {
 			cyclo, avg := cyclo.Cyclo(pkgPath)
@@ -142,13 +161,12 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			}
 		}
 		r.Cyclox = cycloRes
-		wg.Done()
 		log.Println("cyclo over!")
-	}()
+	}
 
-	log.Println("simpling code...")
-	wg.Add(1)
-	go func() {
+	simpleCodeF := func() {
+		log.Println("simpling code...")
+
 		simples := simplecode.SimpleCode(projectPath)
 		simpleTips := make(map[string][]string, 0)
 		for _, tips := range simples {
@@ -156,22 +174,21 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			simpleTips[PackageAbsPathExceptSuffix(tips[0:index])] = append(simpleTips[PackageAbsPathExceptSuffix(tips[0:index])], tips)
 		}
 		r.SimpleTips = simpleTips
-		wg.Done()
-	}()
-	log.Println("simpled code!")
+		log.Println("simpled code!")
 
-	log.Println("checking copy code...")
-	wg.Add(1)
-	go func() {
+	}
+
+	copyCheckF := func() {
+		log.Println("checking copy code...")
+
 		x := copycheck.CopyCheck(projectPath, "_test.go")
 		r.CopyTips = x
-		wg.Done()
 		log.Println("checked copy code!")
-	}()
+	}
 
-	log.Println("running staticscan...")
-	wg.Add(1)
-	go func() {
+	scanTipsF := func() {
+		log.Println("running staticscan...")
+
 		staticscan.StaticScan(projectPath)
 		scanTips := make(map[string][]string, 0)
 		tips := staticscan.StaticScan(projectPath)
@@ -180,41 +197,42 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			scanTips[PackageAbsPathExceptSuffix(tip[0:index])] = append(scanTips[PackageAbsPathExceptSuffix(tip[0:index])], tip)
 		}
 		r.ScanTips = scanTips
-		wg.Done()
 		log.Println("staticscan over!")
-	}()
+	}
 
-	log.Println("creating depend graph...")
-	wg.Add(1)
-	go func() {
+	dependGraphF := func() {
+		log.Println("creating depend graph...")
 		r.DependGraph = depend.Depend(projectPath, exceptPackages)
-		wg.Done()
 		log.Println("created depend graph")
-	}()
+	}
 
-	log.Println("checking dead code...")
-	wg.Add(1)
-	go func() {
+	deadCodeF := func() {
+		log.Println("checking dead code...")
 		r.DeadCode = deadcode.DeadCode(projectPath)
-		wg.Done()
 		log.Println("checked dead code")
-	}()
+	}
 
-	log.Println("checking spell error...")
-	wg.Add(1)
-	go func() {
+	spellCheckF := func() {
+		log.Println("checking spell error...")
 		r.SpellError = spellcheck.SpellCheck(projectPath, exceptPackages)
-		wg.Done()
 		log.Println("checked spell error")
-	}()
+	}
 
-	log.Println("getting import packages...")
-	var importPkgs []string
-	wg.Add(1)
-	go func() {
+	importPkgsf := func() {
+		log.Println("getting import packages...")
 		importPkgs = unittest.GoListWithImportPackages(projectPath)
-		wg.Done()
-	}()
+		log.Println("import packages done")
+	}
+
+	wg.Wrap(unitTestF)
+	wg.Wrap(cycloF)
+	wg.Wrap(simpleCodeF)
+	wg.Wrap(copyCheckF)
+	wg.Wrap(scanTipsF)
+	wg.Wrap(dependGraphF)
+	wg.Wrap(deadCodeF)
+	wg.Wrap(spellCheckF)
+	wg.Wrap(importPkgsf)
 
 	wg.Wait()
 
