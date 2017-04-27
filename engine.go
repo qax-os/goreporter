@@ -30,6 +30,10 @@ var (
 	tpl string
 )
 
+type WaitGroupWrapper struct {
+	sync.WaitGroup
+}
+
 func (w *WaitGroupWrapper) Wrap (cb func()){
 	w.Add(1)
 	go func() {
@@ -50,9 +54,6 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
 	if err != nil {
 		log.Println(err)
-		// 文件路径相关错误
-		system.Logger.CheckErr(err, l.Error)
-		email.ErrorSendMail(err)
 	}
 	r.Project = projectName(projectPath)
 	var importPkgs []string
@@ -91,9 +92,6 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 								packageTest.Time = time
 							} else {
 								log.Println(err)
-								// 文件路径相关错误
-								system.Logger.CheckErr(err, l.Error)
-								email.ErrorSendMail(err)
 							}
 						}
 						packageTest.Coverage = testres[4]
@@ -145,9 +143,6 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		dirsAll, err := DirList(projectPath, ".go", exceptPackages)
 		if err != nil {
 			log.Println(err)
-			// 文件路径相关错误
-			system.Logger.CheckErr(err, l.Error)
-			email.ErrorSendMail(err)
 		}
 
 		cycloRes := make(map[string]Cycloi, 0)
