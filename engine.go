@@ -42,12 +42,10 @@ func NewReporter() *Reporter {
 	return &Reporter{}
 }
 
-func (r *Reporter) Engine(ap string, exceptPackages string) {
+func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 	log.Println("start code quality assessment...")
 	wg := &WaitGroupWrapper{}
-
-	projectPath := ap2rp(ap)
 
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
 	if err != nil {
