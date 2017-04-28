@@ -91,7 +91,7 @@ By default, the default template is used to generate reports in html format.
 ## Example
 
 ```
-$ goreporter -p ../goreporter -d ../goreporter -t ./templates/template.html
+$ goreporter -p ../goreporter -r ../goreporter -t ./templates/template.html
 ```
 you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-report.html)
 

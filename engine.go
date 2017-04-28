@@ -34,7 +34,7 @@ type WaitGroupWrapper struct {
 	sync.WaitGroup
 }
 
-func (w *WaitGroupWrapper) Wrap (cb func()){
+func (w *WaitGroupWrapper) Wrap(cb func()) {
 	w.Add(1)
 	go func() {
 		cb()
@@ -50,6 +50,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 	log.Println("start code quality assessment...")
 	wg := &WaitGroupWrapper{}
+	lintersFunction := make(map[string]func(), 9)
 
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
 	if err != nil {
@@ -58,7 +59,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	r.Project = projectName(projectPath)
 	var importPkgs []string
 
-	unitTestF := func() {
+	lintersFunction["unitTestF"] = func() {
 		log.Println("running unit test...")
 		packagesTestDetail := struct {
 			Values map[string]PackageTest
@@ -137,7 +138,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		log.Println("unit test over!")
 	}
 
-	cycloF := func() {
+	lintersFunction["cycloF"] = func() {
 		log.Println("computing cyclo...")
 
 		dirsAll, err := DirList(projectPath, ".go", exceptPackages)
@@ -157,7 +158,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		log.Println("cyclo over!")
 	}
 
-	simpleCodeF := func() {
+	lintersFunction["simpleCodeF"] = func() {
 		log.Println("simpling code...")
 
 		simples := simplecode.SimpleCode(projectPath)
@@ -171,7 +172,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 	}
 
-	copyCheckF := func() {
+	lintersFunction["copyCheckF"] = func() {
 		log.Println("checking copy code...")
 
 		x := copycheck.CopyCheck(projectPath, "_test.go")
@@ -179,7 +180,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		log.Println("checked copy code!")
 	}
 
-	scanTipsF := func() {
+	lintersFunction["scanTipsF"] = func() {
 		log.Println("running staticscan...")
 
 		staticscan.StaticScan(projectPath)
@@ -193,39 +194,33 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		log.Println("staticscan over!")
 	}
 
-	dependGraphF := func() {
+	lintersFunction["dependGraphF"] = func() {
 		log.Println("creating depend graph...")
 		r.DependGraph = depend.Depend(projectPath, exceptPackages)
 		log.Println("created depend graph")
 	}
 
-	deadCodeF := func() {
+	lintersFunction["deadCodeF"] = func() {
 		log.Println("checking dead code...")
 		r.DeadCode = deadcode.DeadCode(projectPath)
 		log.Println("checked dead code")
 	}
 
-	spellCheckF := func() {
+	lintersFunction["spellCheckF"] = func() {
 		log.Println("checking spell error...")
 		r.SpellError = spellcheck.SpellCheck(projectPath, exceptPackages)
 		log.Println("checked spell error")
 	}
 
-	importPkgsf := func() {
+	lintersFunction["importPkgsF"] = func() {
 		log.Println("getting import packages...")
 		importPkgs = unittest.GoListWithImportPackages(projectPath)
 		log.Println("import packages done")
 	}
-
-	wg.Wrap(unitTestF)
-	wg.Wrap(cycloF)
-	wg.Wrap(simpleCodeF)
-	wg.Wrap(copyCheckF)
-	wg.Wrap(scanTipsF)
-	wg.Wrap(dependGraphF)
-	wg.Wrap(deadCodeF)
-	wg.Wrap(spellCheckF)
-	wg.Wrap(importPkgsf)
+	// run all linters.
+	for _, funcRun := range lintersFunction {
+		wg.Wrap(funcRun)
+	}
 
 	wg.Wait()
 
