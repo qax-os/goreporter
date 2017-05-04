@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/wgliang/goreporter/engine"
 )
 
 // receive parameters
@@ -36,6 +38,7 @@ func main() {
 		}
 	}
 
+	var templateHtml string
 	if *tplpath == "" {
 		log.Println("The template path is not specified,and will use the default template")
 	} else {
@@ -46,7 +49,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		} else {
-			tpl = string(fileData)
+			templateHtml = string(fileData)
 		}
 	}
 
@@ -64,7 +67,7 @@ func main() {
 	}
 
 	startTime := strconv.FormatInt(time.Now().Unix(), 10)
-	reporter := NewReporter()
+	reporter := engine.NewReporter(templateHtml)
 	reporter.Engine(*project, *except)
 	htmlData, err := reporter.Json2Html()
 	if err != nil {
