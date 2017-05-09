@@ -60,7 +60,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	if err != nil {
 		log.Println(err)
 	}
-	r.Project = projectName(projectPath)
+	r.Project = projectPathName(projectPath)
 	var importPkgs []string
 
 	lintersFunction["unitTestF"] = func() {

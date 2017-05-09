@@ -105,6 +105,26 @@ func projectName(projectPath string) (project string) {
 	return project
 }
 
+func projectPathName(projectPath string) (project string) {
+	absPath, err := filepath.Abs(projectPath)
+	if err != nil {
+		log.Println(err)
+	}
+	if strings.Contains(absPath, "github.com") {
+		projectPathIndex := strings.LastIndex(absPath, "github.com")
+		if -1 != projectPathIndex && strings.Count(absPath[(projectPathIndex):len(absPath)], string(filepath.Separator)) == 2 {
+			project = absPath[(projectPathIndex):len(absPath)]
+			return project
+		}
+	}
+	projectPathIndex := strings.LastIndex(absPath, string(filepath.Separator))
+	if -1 != projectPathIndex {
+		project = absPath[(projectPathIndex + 1):len(absPath)]
+	}
+
+	return project
+}
+
 func absPath(path string) string {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
