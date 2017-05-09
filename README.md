@@ -99,13 +99,18 @@ you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-rep
 ![summary](./doc/summary.jpeg)
 
 ### UnitTest
-![unittest](./doc/unittest.jpeg)
+![unittest](./doc/unittest_time.jpeg)
+
+![unittest](./doc/unittest_cover.jpeg)
 
 ### SimpleCode
 ![simplecode](./doc/simplecode.jpeg)
 
-### DeadCode & CopyCode
-![deadcodeandcopycode](./doc/deadcodeandcopycode.jpeg)
+### DeadCode 
+![deadcode](./doc/copycode.jpeg)
+
+### CopyCode
+![copycode](./doc/copycode.jpeg)
 
 ### Cyclo
 ![cyclo](./doc/cyclo.jpeg)
