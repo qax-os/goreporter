@@ -2,10 +2,11 @@ package unittest
 
 import (
 	"bytes"
-	"log"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
 func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, packageTestRaceResults map[string][]string) {
@@ -16,15 +17,16 @@ func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, p
 	if "" == packageName {
 		packageName = packagePath
 	}
+
 	out, err := GoTestWithCoverAndRace(packagePath)
 	if err != nil {
 		if !strings.Contains(out, "==================") {
-			log.Println("Unit-Testing Package:", packageName, ":", err)
+			glog.Infoln("[UnitTest] package->:", packageName, " ... ", err)
 		} else {
-			log.Println("Unit-Testing Package:", packageName, ": pass")
+			glog.Infoln("[UnitTest] package->:", packageName, " ... pass")
 		}
 	} else {
-		log.Println("Unit-Testing Package:", packageName, ": pass")
+		glog.Infoln("[UnitTest] package->:", packageName, " ... pass")
 	}
 
 	if out == "" || !strings.Contains(out, "ok") {
@@ -78,7 +80,7 @@ func GoListWithImportPackages(packagePath string) (importPackages []string) {
 	// cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Println(err)
+		glog.Warningln(err)
 		return importPackages
 	}
 	packages := strings.Fields(out.String())
@@ -89,7 +91,7 @@ func GoListWithImportPackages(packagePath string) (importPackages []string) {
 	// cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		log.Println(err)
+		glog.Warningln(err)
 		return importPackages
 	}
 	stdPackages := strings.Split(out2.String(), "\n")
@@ -112,7 +114,7 @@ func GoListWithImportPackages(packagePath string) (importPackages []string) {
 func PackageAbsPath(path string) (packagePath string) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 	packagePathIndex := strings.Index(absPath, "src")
 	if -1 != packagePathIndex {

@@ -1,4 +1,4 @@
-package engine
+package tools
 
 const defaultTpl = `
 <!DOCTYPE html>

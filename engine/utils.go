@@ -1,17 +1,20 @@
 package engine
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
-func DirList(projectPath string, suffix, expect string) (dirs map[string]string, err error) {
+// DirList is a function that traverse the file directory containing the
+// specified file format according to the specified rule.
+func DirList(projectPath string, suffix, except string) (dirs map[string]string, err error) {
 	dirs = make(map[string]string, 0)
 	_, err = os.Stat(projectPath)
 	if err != nil {
-		log.Fatal("dir path is invalid")
+		glog.Fatal("dir path is invalid")
 	}
 	err = filepath.Walk(projectPath, func(subPath string, f os.FileInfo, err error) error {
 		if f == nil {
@@ -30,7 +33,7 @@ func DirList(projectPath string, suffix, expect string) (dirs map[string]string,
 					dir = subPath[0:sepIdx]
 				}
 			}
-			if ExpectPkg(expect, dir) {
+			if ExceptPkg(except, dir) {
 				return nil
 			}
 			dirs[PackageAbsPath(dir)] = dir
@@ -45,11 +48,12 @@ func DirList(projectPath string, suffix, expect string) (dirs map[string]string,
 	return dirs, nil
 }
 
-func ExpectPkg(expect, pkg string) bool {
-	if expect == "" {
+// ExceptPkg will determine whether the package is an exception.
+func ExceptPkg(except, pkg string) bool {
+	if except == "" {
 		return false
 	}
-	expects := strings.Split(expect, ",")
+	expects := strings.Split(except, ",")
 	for _, va := range expects {
 		if strings.Contains(pkg, va) {
 			return true
@@ -58,14 +62,23 @@ func ExpectPkg(expect, pkg string) bool {
 	return false
 }
 
+// PackageTest is an intermediate variables.
+type PackageTest struct {
+	IsPass   bool    `json:"is_pass"`
+	Coverage string  `json:"coverage"`
+	Time     float64 `json:"time"`
+}
+
+// PackageAbsPath will gets the absolute path of the specified
+// package from GOPATH's [src].
 func PackageAbsPath(path string) (packagePath string) {
 	_, err := os.Stat(path)
 	if err != nil {
-		log.Fatal("package path is invalid")
+		glog.Fatal("package path is invalid")
 	}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		log.Println(err)
+		glog.Fatal(err)
 	}
 	packagePathIndex := strings.Index(absPath, "src")
 	if -1 != packagePathIndex {
@@ -75,6 +88,8 @@ func PackageAbsPath(path string) (packagePath string) {
 	return packagePath
 }
 
+// PackageAbsPath will gets the absolute directory path of
+// the specified file from GOPATH's [src].
 func PackageAbsPathExceptSuffix(path string) (packagePath string) {
 	if strings.LastIndex(path, string(filepath.Separator)) <= 0 {
 		path, _ = os.Getwd()
@@ -82,7 +97,7 @@ func PackageAbsPathExceptSuffix(path string) (packagePath string) {
 	path = path[0:strings.LastIndex(path, string(filepath.Separator))]
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 	packagePathIndex := strings.Index(absPath, "src")
 	if -1 != packagePathIndex && (packagePathIndex+4) < len(absPath) {
@@ -92,10 +107,11 @@ func PackageAbsPathExceptSuffix(path string) (packagePath string) {
 	return packagePath
 }
 
-func projectName(projectPath string) (project string) {
+// ProjectName gets project's name.
+func ProjectName(projectPath string) (project string) {
 	absPath, err := filepath.Abs(projectPath)
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 	projectPathIndex := strings.LastIndex(absPath, string(filepath.Separator))
 	if -1 != projectPathIndex {
@@ -105,10 +121,22 @@ func projectName(projectPath string) (project string) {
 	return project
 }
 
+// AbsPath will get absolute path of file.
+func AbsPath(path string) string {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		glog.Errorln(err)
+		return path
+	}
+	return absPath
+}
+
+// projectPathName gets project's path name,such as
+// "github.com/wgliang/goreporter"...
 func projectPathName(projectPath string) (project string) {
 	absPath, err := filepath.Abs(projectPath)
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 	if strings.Contains(absPath, "github.com") {
 		projectPathIndex := strings.LastIndex(absPath, "github.com")
@@ -125,11 +153,11 @@ func projectPathName(projectPath string) (project string) {
 	return project
 }
 
-func absPath(path string) string {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		log.Println(err)
-		return path
+// packageNameFromGoPath will get package's name from GOPATH.
+func packageNameFromGoPath(path string) string {
+	names := strings.Split(path, string(filepath.Separator))
+	if len(names) >= 2 {
+		return names[len(names)-2]
 	}
-	return absPath
+	return "null"
 }
