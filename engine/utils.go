@@ -14,7 +14,7 @@ func DirList(projectPath string, suffix, except string) (dirs map[string]string,
 	dirs = make(map[string]string, 0)
 	_, err = os.Stat(projectPath)
 	if err != nil {
-		glog.Fatal("dir path is invalid")
+		glog.Errorln("dir path is invalid")
 	}
 	err = filepath.Walk(projectPath, func(subPath string, f os.FileInfo, err error) error {
 		if f == nil {
@@ -74,7 +74,7 @@ type PackageTest struct {
 func PackageAbsPath(path string) (packagePath string) {
 	_, err := os.Stat(path)
 	if err != nil {
-		glog.Fatal("package path is invalid")
+		glog.Errorln("package path is invalid")
 	}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -129,28 +129,6 @@ func AbsPath(path string) string {
 		return path
 	}
 	return absPath
-}
-
-// projectPathName gets project's path name,such as
-// "github.com/wgliang/goreporter"...
-func projectPathName(projectPath string) (project string) {
-	absPath, err := filepath.Abs(projectPath)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	if strings.Contains(absPath, "github.com") {
-		projectPathIndex := strings.LastIndex(absPath, "github.com")
-		if -1 != projectPathIndex && strings.Count(absPath[(projectPathIndex):len(absPath)], string(filepath.Separator)) == 2 {
-			project = absPath[(projectPathIndex):len(absPath)]
-			return project
-		}
-	}
-	projectPathIndex := strings.LastIndex(absPath, string(filepath.Separator))
-	if -1 != projectPathIndex {
-		project = absPath[(projectPathIndex + 1):len(absPath)]
-	}
-
-	return project
 }
 
 // packageNameFromGoPath will get package's name from GOPATH.
