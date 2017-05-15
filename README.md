@@ -90,6 +90,10 @@ $ goreporter -p ../goreporter -r ../goreporter -t ./templates/template.html
 ```
 you can see result detail:[online-example-report](http://fiisio.me/pages/goreporter-report.html)
 
+example:github.com/wgliang/logcool
+
+![github.com/wgliang/logcool](./doc/github-com-wgliang-goreporter-logcool.png)
+
 ## Credits
 
 Templates is designed by liufeifei
