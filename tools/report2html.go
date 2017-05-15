@@ -170,9 +170,10 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	// convert depend graph
 	htmlData.DepGraph = template.HTML(structData.Metrics["DependGraphTips"].Summaries["graph"].Description)
 	noTestPackages := make([]string, 0)
-	importPackages := structData.Metrics["ImportPackageTips"].Summaries
+	importPackages := structData.Metrics["ImportPackagesTips"].Summaries
+	unitTestPackages := structData.Metrics["UnitTestTips"].Summaries
 	for packageName, _ := range importPackages {
-		if _, ok := importPackages[packageName]; !ok {
+		if _, ok := unitTestPackages[packageName]; !ok {
 			noTestPackages = append(noTestPackages, packageName)
 		}
 	}
@@ -182,7 +183,9 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	}
 	htmlData.NoTests = string(stringNoTestJson)
 	htmlData.Date = structData.TimeStamp
-
+	if len(importPackages) > 0 {
+		htmlData.AveragePackageCover = float64(100 * (len(importPackages) - len(noTestPackages)) / len(importPackages))
+	}
 	return htmlData, nil
 }
 
