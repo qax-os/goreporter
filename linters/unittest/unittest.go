@@ -83,7 +83,9 @@ func GoListWithImportPackages(packagePath string) (importPackages []string) {
 		glog.Warningln(err)
 		return importPackages
 	}
-	packages := strings.Fields(out.String())
+	packagesString := out.String()
+	packagesString = strings.Replace(packagesString, `'`, "", -1)
+	packages := strings.Fields(packagesString)
 
 	var out2 bytes.Buffer
 	cmd = exec.Command("go", "list", "std")
