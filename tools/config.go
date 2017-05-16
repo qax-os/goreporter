@@ -1,6 +1,9 @@
 package tools
 
-import "html/template"
+import (
+	"html/template"
+	"time"
+)
 
 type UnitTest struct {
 	AvgCover           string                 `json:"average_cover"`
@@ -86,4 +89,7 @@ type HtmlData struct {
 	Copycodes           string
 	Cyclos              string
 	DepGraph            template.HTML
+
+	LastRefresh          time.Time `json:"last_refresh"`
+	HumanizedLastRefresh string    `json:"humanized_last_refresh"`
 }

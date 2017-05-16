@@ -57,6 +57,10 @@ func (runner runner) resolveRelative(importPaths []string) (goFiles bool, err er
 	ctx := build.Default
 	ctx.BuildTags = runner.tags
 	for i, path := range importPaths {
+		githubIndex := strings.LastIndex(path, "github.com")
+		if githubIndex < len(path) && githubIndex >= 0 {
+			path = path[githubIndex:]
+		}
 		bpkg, err := ctx.Import(path, wd, build.FindOnly)
 		if err != nil {
 			return false, fmt.Errorf("can't load package %q: %v", path, err)
