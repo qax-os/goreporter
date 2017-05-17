@@ -1,6 +1,6 @@
 ![goreporter](./logo.png)
 
-# goreporter
+# goreporter [![Version Status](https://img.shields.io/badge/v2.0-stable-orange.svg)](https://github.com/wgliang/goreporter/releases/tag/version2.0.0)
 
 [![Current Release](https://img.shields.io/github/release/wgliang/goreporter.svg)](https://github.com/wgliang/goreporter/releases/latest)
 [![Build Status](https://travis-ci.org/wgliang/goreporter.svg?branch=master)](https://travis-ci.org/wgliang/goreporter)
