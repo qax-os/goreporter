@@ -9,9 +9,9 @@ import (
 	"github.com/golang/glog"
 )
 
-func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, packageTestRaceResults map[string][]string) {
-	packageUnitTestResults = make(map[string][]string, 0)
-	packageTestRaceResults = make(map[string][]string, 0)
+func UnitTest(packagePath string) (packageUnitTestResults []string, packageTestRaceResults []string) {
+	packageUnitTestResults = make([]string, 0)
+	packageTestRaceResults = make([]string, 0)
 
 	packageName := PackageAbsPath(packagePath)
 	if "" == packageName {
@@ -30,7 +30,7 @@ func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, p
 	}
 
 	if out == "" || !strings.Contains(out, "ok") {
-		packageUnitTestResults[packageName] = []string{}
+		return packageUnitTestResults, packageTestRaceResults
 	} else if err != nil {
 		lindex := strings.LastIndex(out, "coverage:")
 		res := strings.Split(out[lindex:], "\n")
@@ -39,17 +39,17 @@ func UnitTest(packagePath string) (packageUnitTestResults map[string][]string, p
 
 		if len(info) >= 3 && len(cov) >= 2 {
 			rest := info[0] + " " + info[1] + " " + info[2] + " " + cov[0] + " " + cov[1]
-			packageUnitTestResults[packageName] = strings.Fields(rest)
+			packageUnitTestResults = strings.Fields(rest)
 
 			for in, val := range strings.Split(out, "==================") {
 				if (in+1)%2 == 0 {
-					packageTestRaceResults[packageName] = append(packageTestRaceResults[packageName], val)
+					packageTestRaceResults = append(packageTestRaceResults, val)
 				}
 			}
 		}
 	} else {
 		test := strings.Fields(out)
-		packageUnitTestResults[packageName] = test
+		packageUnitTestResults = test
 	}
 
 	return packageUnitTestResults, packageTestRaceResults

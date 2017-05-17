@@ -76,35 +76,29 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			go func(pkgName, pkgPath string) {
 				unitTestRes, _ := unittest.UnitTest("./" + pkgPath)
 				var packageTest PackageTest
-				if len(unitTestRes) >= 1 {
-					testres := unitTestRes[pkgName]
-					if len(testres) > 5 {
-						if testres[0] == "ok" {
-							packageTest.IsPass = true
-						} else {
-							packageTest.IsPass = false
-						}
-						timeLen := len(testres[2])
-						if timeLen > 1 {
-							time, err := strconv.ParseFloat(testres[2][:(timeLen-1)], 64)
-							if err == nil {
-								packageTest.Time = time
-							} else {
-								glog.Errorln(err)
-							}
-						}
-						packageTest.Coverage = testres[4]
-
-						coverLen := len(testres[4])
-						if coverLen > 1 {
-							coverFloat, _ := strconv.ParseFloat(testres[4][:(coverLen-1)], 64)
-							sumCover = sumCover + coverFloat
-							countCover = countCover + 1
-						} else {
-							countCover = countCover + 1
-						}
+				if len(unitTestRes) >= 5 {
+					if unitTestRes[0] == "ok" {
+						packageTest.IsPass = true
 					} else {
-						packageTest.Coverage = "0%"
+						packageTest.IsPass = false
+					}
+					timeLen := len(unitTestRes[2])
+					if timeLen > 1 {
+						time, err := strconv.ParseFloat(unitTestRes[2][:(timeLen-1)], 64)
+						if err == nil {
+							packageTest.Time = time
+						} else {
+							glog.Errorln(err)
+						}
+					}
+					packageTest.Coverage = unitTestRes[4]
+
+					coverLen := len(unitTestRes[4])
+					if coverLen > 1 {
+						coverFloat, _ := strconv.ParseFloat(unitTestRes[4][:(coverLen-1)], 64)
+						sumCover = sumCover + coverFloat
+						countCover = countCover + 1
+					} else {
 						countCover = countCover + 1
 					}
 				} else {
@@ -266,8 +260,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 							line = lineright - lineleft + 1
 						}
 					}
+					values[0] = AbsPath(values[0])
 				}
-				summary.Errors = append(summary.Errors, Error{LineNumber: line, ErrorString: copyCodeList[i][j]})
+
+				summary.Errors = append(summary.Errors, Error{LineNumber: line, ErrorString: strings.Join(values, ":")})
 			}
 			summary.Name = strconv.Itoa(len(summary.Errors))
 			summaries[string(i)] = summary

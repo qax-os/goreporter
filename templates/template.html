@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="renderer" content="webkit" />
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <meta name="description" content="A Golang tool that does static analysis, unit testing, code review and generate code quality report">
@@ -522,25 +523,32 @@ $(function() {
     var gr_cyclo_table = "";
     for (var key in resData.gocyclo) {
         c++;
-        var v = resData.gocyclo[key];
-        var label = "";
-        if (v.Size <= 14) {
-            label = '<span class="label bg-green">' + v.Size + '</span>';
-        } else if (14 < v.Size && v.Size <= 20) {
-            label = '<span class="label bg-light-blue">' + v.Size + '</span>';
-        } else if (20 < v.Size && v.Size <= 25) {
-            label = '<span class="label bg-blue">' + v.Size + '</span>';
-        } else if (25 < v.Size && v.Size <= 30) {
-            label = '<span class="label bg-orange">' + v.Size + '</span>';
-        } else if (30 < v.Size) {
-            label = '<span class="label bg-red">' + v.Size + '</span>';
+        var info = resData.gocyclo[key].Info;
+        for (var k in info) {
+            var v = info[k]
+            var label = "";
+            if (v.Comp <= 14) {
+                label = '<span class="label bg-green">' + v.Comp + '</span>';
+            } else if (14 < v.Comp && v.Comp <= 20) {
+                label = '<span class="label bg-light-blue">' + v.Comp + '</span>';
+            } else if (20 < v.Comp && v.Comp <= 25) {
+                label = '<span class="label bg-blue">' + v.Comp + '</span>';
+            } else if (25 < v.Comp && v.Comp <= 30) {
+                label = '<span class="label bg-orange">' + v.Comp + '</span>';
+            } else if (30 < v.Comp) {
+                label = '<span class="label bg-red">' + v.Comp + '</span>';
+            }
+            gr_cyclo_table += '<tr><td>' + c + '</td><td>' + v.Info + '</td><td>' + label + '</td></tr>'
         }
-        gr_cyclo_table += '<tr><td>' + c + '</td><td>' + v.Pkg + '</td><td>' + label + '</td></tr>'
     }
     $(".gr_cyclo_table").html(gr_cyclo_table);
-
-    $("#bar_chart_1").attr("height", resData.gotest.gotest_result.xAxis.length * 35);
-    $("#bar_chart_2").attr("height", resData.gotest.gotest_result.xAxis.length * 35);
+    if (resData.gotest.gotest_result.xAxis.length < 2) {
+        $("#bar_chart_1").attr("height", resData.gotest.gotest_result.xAxis.length * 65);
+        $("#bar_chart_2").attr("height", resData.gotest.gotest_result.xAxis.length * 65);
+    } else {
+        $("#bar_chart_1").attr("height", resData.gotest.gotest_result.xAxis.length * 35);
+        $("#bar_chart_2").attr("height", resData.gotest.gotest_result.xAxis.length * 35);
+    }
 
     new Chart(document.getElementById("bar_chart_1").getContext("2d"), getChartJs('bar'));
     new Chart(document.getElementById("bar_chart_2").getContext("2d"), getChartJs('bar2'));

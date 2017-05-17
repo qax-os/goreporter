@@ -80,7 +80,8 @@ func PackageAbsPath(path string) (packagePath string) {
 	if err != nil {
 		glog.Fatal(err)
 	}
-	packagePathIndex := strings.Index(absPath, "src")
+
+	packagePathIndex := strings.LastIndex(absPath, "src")
 	if -1 != packagePathIndex {
 		packagePath = absPath[(packagePathIndex + 4):]
 	}

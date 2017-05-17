@@ -18,8 +18,12 @@ import (
 // Json2Html will remake the reporter's data for the
 // format we need for the template.
 func Json2Html(jsonData []byte) (HtmlData, error) {
-	var structData engine.Reporter
-	var htmlData HtmlData
+	var (
+		structData engine.Reporter
+		htmlData   HtmlData
+		issues     int
+	)
+	issues = 0
 
 	if jsonData == nil {
 		return htmlData, errors.New("json is null")
@@ -38,17 +42,20 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 		for pkgName, testRes := range result.Summaries {
 			var packageUnitTestResult PackageTest
 			json.Unmarshal([]byte(testRes.Description), &packageUnitTestResult)
-			test := Test{
-				Path: pkgName,
-				Time: packageUnitTestResult.Time,
+			srcLastIndex := strings.LastIndex(pkgName, htmlData.Project)
+			if srcLastIndex < len(pkgName) && srcLastIndex >= 0 {
+				test := Test{
+					Path: pkgName[srcLastIndex:],
+					Time: packageUnitTestResult.Time,
+				}
+				if len(packageUnitTestResult.Coverage) > 1 {
+					test.Cover, _ = strconv.ParseFloat(packageUnitTestResult.Coverage[:(len(packageUnitTestResult.Coverage)-1)], 64)
+				}
+				if packageUnitTestResult.IsPass {
+					test.Result = 1
+				}
+				testHtmlRes = append(testHtmlRes, test)
 			}
-			if len(packageUnitTestResult.Coverage) > 1 {
-				test.Cover, _ = strconv.ParseFloat(packageUnitTestResult.Coverage[:(len(packageUnitTestResult.Coverage)-1)], 64)
-			}
-			if packageUnitTestResult.IsPass {
-				test.Result = 1
-			}
-			testHtmlRes = append(testHtmlRes, test)
 		}
 		htmlData.TestSummaryCoverAvg = fmt.Sprintf("%0.1f", result.Percentage)
 	}
@@ -70,14 +77,34 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			}
 			var infos []CycloInfo
 			for i := 0; i < len(cycloTips); i++ {
-				cycloInfo := CycloInfo{
-					Comp: cycloTips[i].LineNumber,
-					Info: cycloTips[i].ErrorString,
+				cycloTip := strings.Split(cycloTips[i].ErrorString, ":")
+				if len(cycloTip) == 3 {
+					var githubPath string
+					srcLastIndex := strings.LastIndex(cycloTip[0], htmlData.Project)
+					if srcLastIndex < len(cycloTip[0]) && srcLastIndex >= 0 {
+						cycloTip[0] = cycloTip[0][srcLastIndex:]
+						cycloTip[1] = "#L" + cycloTip[1]
+						if len(htmlData.Project) < len(cycloTip[0]) {
+							if strings.HasPrefix(htmlData.Project, "github.com") {
+								cycloTip[0] = htmlData.Project + "/blob/master" + cycloTip[0][len(htmlData.Project):]
+							}
+							githubPath = cycloTip[0] + strings.Join(cycloTip[1:], ":")
+						}
+					}
+					if githubPath == "" {
+						githubPath = strings.Join(cycloTip[0:], ":")
+					}
+
+					cycloInfo := CycloInfo{
+						Comp: cycloTips[i].LineNumber,
+						Info: githubPath,
+					}
+					if cycloTips[i].LineNumber > 15 {
+						htmlData.CycloBigThan15 = htmlData.CycloBigThan15 + 1
+						issues = issues + 1
+					}
+					infos = append(infos, cycloInfo)
 				}
-				if cycloTips[i].LineNumber > 15 {
-					htmlData.CycloBigThan15 = htmlData.CycloBigThan15 + 1
-				}
-				infos = append(infos, cycloInfo)
 			}
 			cyclo.Info = infos
 			cycloHtmlRes = append(cycloHtmlRes, cyclo)
@@ -99,11 +126,27 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			for i := 0; i < len(simpleCodeTips); i++ {
 				simpleCodeTip := strings.Split(simpleCodeTips[i].ErrorString, ":")
 				if len(simpleCodeTip) == 4 {
+					var githubPath string
+					srcLastIndex := strings.LastIndex(simpleCodeTip[0], htmlData.Project)
+					if srcLastIndex < len(simpleCodeTip[0]) && srcLastIndex >= 0 {
+						simpleCodeTip[0] = simpleCodeTip[0][srcLastIndex:]
+						simpleCodeTip[1] = "#L" + simpleCodeTip[1]
+						if len(htmlData.Project) < len(simpleCodeTip[0]) {
+							if strings.HasPrefix(htmlData.Project, "github.com") {
+								simpleCodeTip[0] = htmlData.Project + "/blob/master" + simpleCodeTip[0][len(htmlData.Project):]
+							}
+							githubPath = simpleCodeTip[0] + strings.Join(simpleCodeTip[1:3], ":")
+						}
+					}
+					if githubPath == "" {
+						githubPath = strings.Join(simpleCodeTip[0:], ":")
+					}
 					simpecode := Simple{
-						Path: strings.Join(simpleCodeTip[0:3], ":"),
+						Path: githubPath,
 						Info: simpleCodeTip[3],
 					}
 					simpleHtmlRes = append(simpleHtmlRes, simpecode)
+					issues = issues + 1
 				}
 			}
 		}
@@ -117,21 +160,38 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	htmlData.SimpleIssues = len(simpleHtmlRes)
 
 	// convert copy code result
-	copyHtmlRes := make([]Simple, 0)
+	copyHtmlRes := make([]Copycode, 0)
 	if result, ok := structData.Metrics["CopyCodeTips"]; ok {
-		for _, simpleResult := range result.Summaries {
-			simpleTips := simpleResult.Errors
-
-			for i := 0; i < len(simpleTips); i++ {
-				copyCodeTip := strings.Split(simpleTips[i].ErrorString, ":")
-				if len(copyCodeTip) == 4 {
-					copycode := Simple{
-						Path: strings.Join(copyCodeTip[0:3], ":"),
-						Info: copyCodeTip[3],
+		for _, copyResult := range result.Summaries {
+			copyTips := copyResult.Errors
+			var copyCodePathList []string
+			for i := 0; i < len(copyTips); i++ {
+				copyCodeTip := strings.Split(copyTips[i].ErrorString, ":")
+				if len(copyCodeTip) == 2 {
+					var githubPath string
+					srcLastIndex := strings.LastIndex(copyCodeTip[0], htmlData.Project)
+					if srcLastIndex < len(copyCodeTip[0]) && srcLastIndex >= 0 {
+						copyCodeTip[0] = copyCodeTip[0][srcLastIndex:]
+						copyCodeTip[1] = "#L" + copyCodeTip[1]
+						if len(htmlData.Project) < len(copyCodeTip[0]) {
+							if strings.HasPrefix(htmlData.Project, "github.com") {
+								copyCodeTip[0] = htmlData.Project + "/blob/master" + copyCodeTip[0][len(htmlData.Project):]
+							}
+							githubPath = copyCodeTip[0] + copyCodeTip[1]
+						}
 					}
-					copyHtmlRes = append(copyHtmlRes, copycode)
+					if githubPath == "" {
+						githubPath = strings.Join(copyCodeTip[0:], ":")
+					}
+					copyCodePathList = append(copyCodePathList, githubPath)
 				}
 			}
+			copycode := Copycode{
+				Files: strconv.Itoa(len(copyTips)),
+				Path:  copyCodePathList,
+			}
+			copyHtmlRes = append(copyHtmlRes, copycode)
+			issues = issues + 1
 		}
 	}
 
@@ -144,17 +204,33 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	// convert simple code result
 	deadcodeHtmlRes := make([]Deadcode, 0)
 	if result, ok := structData.Metrics["DeadCodeTips"]; ok {
-		for _, copyResult := range result.Summaries {
-			simpleTips := copyResult.Errors
+		for _, deadCodeResult := range result.Summaries {
+			deadCodeTips := deadCodeResult.Errors
 
-			for i := 0; i < len(simpleTips); i++ {
-				deadCodeTip := strings.Split(simpleTips[i].ErrorString, ":")
+			for i := 0; i < len(deadCodeTips); i++ {
+				deadCodeTip := strings.Split(deadCodeTips[i].ErrorString, ":")
 				if len(deadCodeTip) == 4 {
+					var githubPath string
+					srcLastIndex := strings.LastIndex(deadCodeTip[0], htmlData.Project)
+					if srcLastIndex < len(deadCodeTip[0]) && srcLastIndex >= 0 {
+						deadCodeTip[0] = deadCodeTip[0][srcLastIndex:]
+						deadCodeTip[1] = "#L" + deadCodeTip[1]
+						if len(htmlData.Project) < len(deadCodeTip[0]) {
+							if strings.HasPrefix(htmlData.Project, "github.com") {
+								deadCodeTip[0] = htmlData.Project + "/blob/master" + deadCodeTip[0][len(htmlData.Project):]
+							}
+							githubPath = deadCodeTip[0] + strings.Join(deadCodeTip[1:3], ":")
+						}
+					}
+					if githubPath == "" {
+						githubPath = strings.Join(deadCodeTip[0:], ":")
+					}
 					deadcode := Deadcode{
-						Path: strings.Join(deadCodeTip[0:3], ":"),
+						Path: githubPath,
 						Info: deadCodeTip[3],
 					}
 					deadcodeHtmlRes = append(deadcodeHtmlRes, deadcode)
+					issues = issues + 1
 				}
 			}
 		}
@@ -182,9 +258,13 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 		glog.Errorln(err)
 	}
 	htmlData.NoTests = string(stringNoTestJson)
+	htmlData.Issues = issues
 	htmlData.Date = structData.TimeStamp
+
 	if len(importPackages) > 0 {
 		htmlData.AveragePackageCover = float64(100 * (len(importPackages) - len(noTestPackages)) / len(importPackages))
+	} else {
+		htmlData.AveragePackageCover = float64(100)
 	}
 	return htmlData, nil
 }

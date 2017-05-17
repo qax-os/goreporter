@@ -76,6 +76,7 @@ type HtmlData struct {
 	Score               int
 	Tests               string
 	Date                string
+	Issues              int
 	TestSummaryCoverAvg string
 	AveragePackageCover float64
 	SimpleIssues        int
