@@ -79,25 +79,9 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			for i := 0; i < len(cycloTips); i++ {
 				cycloTip := strings.Split(cycloTips[i].ErrorString, ":")
 				if len(cycloTip) == 3 {
-					var githubPath string
-					srcLastIndex := strings.LastIndex(cycloTip[0], htmlData.Project)
-					if srcLastIndex < len(cycloTip[0]) && srcLastIndex >= 0 {
-						cycloTip[0] = cycloTip[0][srcLastIndex:]
-						cycloTip[1] = "#L" + cycloTip[1]
-						if len(htmlData.Project) < len(cycloTip[0]) {
-							if strings.HasPrefix(htmlData.Project, "github.com") {
-								cycloTip[0] = htmlData.Project + "/blob/master" + cycloTip[0][len(htmlData.Project):]
-							}
-							githubPath = cycloTip[0] + strings.Join(cycloTip[1:], ":")
-						}
-					}
-					if githubPath == "" {
-						githubPath = strings.Join(cycloTip[0:], ":")
-					}
-
 					cycloInfo := CycloInfo{
 						Comp: cycloTips[i].LineNumber,
-						Info: githubPath,
+						Info: strings.Join(cycloTip[0:], ":"),
 					}
 					if cycloTips[i].LineNumber > 15 {
 						htmlData.CycloBigThan15 = htmlData.CycloBigThan15 + 1
@@ -126,23 +110,8 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			for i := 0; i < len(simpleCodeTips); i++ {
 				simpleCodeTip := strings.Split(simpleCodeTips[i].ErrorString, ":")
 				if len(simpleCodeTip) == 4 {
-					var githubPath string
-					srcLastIndex := strings.LastIndex(simpleCodeTip[0], htmlData.Project)
-					if srcLastIndex < len(simpleCodeTip[0]) && srcLastIndex >= 0 {
-						simpleCodeTip[0] = simpleCodeTip[0][srcLastIndex:]
-						simpleCodeTip[1] = "#L" + simpleCodeTip[1]
-						if len(htmlData.Project) < len(simpleCodeTip[0]) {
-							if strings.HasPrefix(htmlData.Project, "github.com") {
-								simpleCodeTip[0] = htmlData.Project + "/blob/master" + simpleCodeTip[0][len(htmlData.Project):]
-							}
-							githubPath = simpleCodeTip[0] + strings.Join(simpleCodeTip[1:3], ":")
-						}
-					}
-					if githubPath == "" {
-						githubPath = strings.Join(simpleCodeTip[0:], ":")
-					}
 					simpecode := Simple{
-						Path: githubPath,
+						Path: strings.Join(simpleCodeTip[0:3], ":"),
 						Info: simpleCodeTip[3],
 					}
 					simpleHtmlRes = append(simpleHtmlRes, simpecode)
@@ -168,22 +137,7 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			for i := 0; i < len(copyTips); i++ {
 				copyCodeTip := strings.Split(copyTips[i].ErrorString, ":")
 				if len(copyCodeTip) == 2 {
-					var githubPath string
-					srcLastIndex := strings.LastIndex(copyCodeTip[0], htmlData.Project)
-					if srcLastIndex < len(copyCodeTip[0]) && srcLastIndex >= 0 {
-						copyCodeTip[0] = copyCodeTip[0][srcLastIndex:]
-						copyCodeTip[1] = "#L" + copyCodeTip[1]
-						if len(htmlData.Project) < len(copyCodeTip[0]) {
-							if strings.HasPrefix(htmlData.Project, "github.com") {
-								copyCodeTip[0] = htmlData.Project + "/blob/master" + copyCodeTip[0][len(htmlData.Project):]
-							}
-							githubPath = copyCodeTip[0] + copyCodeTip[1]
-						}
-					}
-					if githubPath == "" {
-						githubPath = strings.Join(copyCodeTip[0:], ":")
-					}
-					copyCodePathList = append(copyCodePathList, githubPath)
+					copyCodePathList = append(copyCodePathList, strings.Join(copyCodeTip[0:], ":"))
 				}
 			}
 			copycode := Copycode{
@@ -210,23 +164,8 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			for i := 0; i < len(deadCodeTips); i++ {
 				deadCodeTip := strings.Split(deadCodeTips[i].ErrorString, ":")
 				if len(deadCodeTip) == 4 {
-					var githubPath string
-					srcLastIndex := strings.LastIndex(deadCodeTip[0], htmlData.Project)
-					if srcLastIndex < len(deadCodeTip[0]) && srcLastIndex >= 0 {
-						deadCodeTip[0] = deadCodeTip[0][srcLastIndex:]
-						deadCodeTip[1] = "#L" + deadCodeTip[1]
-						if len(htmlData.Project) < len(deadCodeTip[0]) {
-							if strings.HasPrefix(htmlData.Project, "github.com") {
-								deadCodeTip[0] = htmlData.Project + "/blob/master" + deadCodeTip[0][len(htmlData.Project):]
-							}
-							githubPath = deadCodeTip[0] + strings.Join(deadCodeTip[1:3], ":")
-						}
-					}
-					if githubPath == "" {
-						githubPath = strings.Join(deadCodeTip[0:], ":")
-					}
 					deadcode := Deadcode{
-						Path: githubPath,
+						Path: strings.Join(deadCodeTip[0:3], ":"),
 						Info: deadCodeTip[3],
 					}
 					deadcodeHtmlRes = append(deadcodeHtmlRes, deadcode)
