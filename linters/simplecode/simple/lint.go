@@ -11,69 +11,31 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wgliang/goreporter/linters/staticscan/lint"
-
-	"golang.org/x/tools/go/types/typeutil"
+	"github.com/wgliang/goreporter/linters/simplecode/lint"
 )
 
-type Checker struct {
-	CheckGenerated bool
-	MS             *typeutil.MethodSetCache
+var Funcs = []lint.Func{
+	// LintSingleCaseSelect,
+	LintLoopCopy,
+	LintIfBoolCmp,
+	LintStringsContains,
+	LintBytesCompare,
+	LintRanges,
+	LintForTrue,
+	LintRegexpRaw,
+	LintIfReturn,
+	LintRedundantNilCheckWithLen,
+	LintSlicing,
+	LintLoopAppend,
+	LintTimeSince,
+	LintSimplerReturn,
+	LintReceiveIntoBlank,
+	LintFormatInt,
+	LintSimplerStructConversion,
+	LintTrim,
 }
 
-func NewChecker() *Checker {
-	return &Checker{
-		MS: &typeutil.MethodSetCache{},
-	}
-}
-func (c *Checker) Init(*lint.Program) {}
-
-func (c *Checker) Funcs() map[string]lint.Func {
-	return map[string]lint.Func{
-		"S1000": c.LintSingleCaseSelect,
-		"S1001": c.LintLoopCopy,
-		"S1002": c.LintIfBoolCmp,
-		"S1003": c.LintStringsContains,
-		"S1004": c.LintBytesCompare,
-		"S1005": c.LintRanges,
-		"S1006": c.LintForTrue,
-		"S1007": c.LintRegexpRaw,
-		"S1008": c.LintIfReturn,
-		"S1009": c.LintRedundantNilCheckWithLen,
-		"S1010": c.LintSlicing,
-		"S1011": c.LintLoopAppend,
-		"S1012": c.LintTimeSince,
-		"S1013": c.LintSimplerReturn,
-		"S1014": c.LintReceiveIntoBlank,
-		"S1015": c.LintFormatInt,
-		"S1016": c.LintSimplerStructConversion,
-		"S1017": c.LintTrim,
-		"S1018": c.LintLoopSlide,
-		"S1019": c.LintMakeLenCap,
-		"S1020": c.LintAssertNotNil,
-		"S1021": c.LintDeclareAssign,
-		"S1022": c.LintBlankOK,
-		"S1023": c.LintRedundantBreak,
-		"S1024": c.LintTimeUntil,
-		"S1025": c.LintRedundantSprintf,
-		"S1026": c.LintStringCopy,
-	}
-}
-
-func (c *Checker) filterGenerated(files []*ast.File) []*ast.File {
-	if c.CheckGenerated {
-		return files
-	}
-	var out []*ast.File
-	for _, f := range files {
-		if !lint.IsGenerated(f) {
-			out = append(out, f)
-		}
-	}
-	return out
-}
-
-func (c *Checker) LintSingleCaseSelect(j *lint.Job) {
+func LintSingleCaseSelect(f *lint.File) {
 	isSingleSelect := func(node ast.Node) bool {
 		v, ok := node.(*ast.SelectStmt)
 		if !ok {
@@ -83,7 +45,7 @@ func (c *Checker) LintSingleCaseSelect(j *lint.Job) {
 	}
 
 	seen := map[ast.Node]struct{}{}
-	fn := func(node ast.Node) bool {
+	f.Walk(func(node ast.Node) bool {
 		switch v := node.(type) {
 		case *ast.ForStmt:
 			if len(v.Body.List) != 1 {
@@ -97,7 +59,7 @@ func (c *Checker) LintSingleCaseSelect(j *lint.Job) {
 				return true
 			}
 			seen[v.Body.List[0]] = struct{}{}
-			j.Errorf(node, "should use for range instead of for { select {} }")
+			f.Errorf(node, 1, lint.Category("range-loop"), "should use for range instead of for { select {} }")
 		case *ast.SelectStmt:
 			if _, ok := seen[v]; ok {
 				return true
@@ -105,17 +67,14 @@ func (c *Checker) LintSingleCaseSelect(j *lint.Job) {
 			if !isSingleSelect(v) {
 				return true
 			}
-			j.Errorf(node, "should use a simple channel send/receive instead of select with a single case")
+			f.Errorf(node, 1, lint.Category("FIXME"), "should use a simple channel send/receive instead of select with a single case")
 			return true
 		}
 		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	})
 }
 
-func (c *Checker) LintLoopCopy(j *lint.Job) {
+func LintLoopCopy(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		loop, ok := node.(*ast.RangeStmt)
 		if !ok {
@@ -139,7 +98,7 @@ func (c *Checker) LintLoopCopy(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		if _, ok := j.Program.Info.TypeOf(lhs.X).(*types.Slice); !ok {
+		if _, ok := f.Pkg.TypesInfo.TypeOf(lhs.X).(*types.Slice); !ok {
 			return true
 		}
 		lidx, ok := lhs.Index.(*ast.Ident)
@@ -150,16 +109,16 @@ func (c *Checker) LintLoopCopy(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		if j.Program.Info.TypeOf(lhs) == nil || j.Program.Info.TypeOf(stmt.Rhs[0]) == nil {
+		if f.Pkg.TypesInfo.TypeOf(lhs) == nil || f.Pkg.TypesInfo.TypeOf(stmt.Rhs[0]) == nil {
 			return true
 		}
-		if j.Program.Info.ObjectOf(lidx) != j.Program.Info.ObjectOf(key) {
+		if f.Pkg.TypesInfo.ObjectOf(lidx) != f.Pkg.TypesInfo.ObjectOf(key) {
 			return true
 		}
-		if !types.Identical(j.Program.Info.TypeOf(lhs), j.Program.Info.TypeOf(stmt.Rhs[0])) {
+		if !types.Identical(f.Pkg.TypesInfo.TypeOf(lhs), f.Pkg.TypesInfo.TypeOf(stmt.Rhs[0])) {
 			return true
 		}
-		if _, ok := j.Program.Info.TypeOf(loop.X).(*types.Slice); !ok {
+		if _, ok := f.Pkg.TypesInfo.TypeOf(loop.X).(*types.Slice); !ok {
 			return true
 		}
 
@@ -173,7 +132,7 @@ func (c *Checker) LintLoopCopy(j *lint.Job) {
 			if !ok {
 				return true
 			}
-			if j.Program.Info.ObjectOf(ridx) != j.Program.Info.ObjectOf(key) {
+			if f.Pkg.TypesInfo.ObjectOf(ridx) != f.Pkg.TypesInfo.ObjectOf(key) {
 				return true
 			}
 		} else if rhs, ok := stmt.Rhs[0].(*ast.Ident); ok {
@@ -181,67 +140,53 @@ func (c *Checker) LintLoopCopy(j *lint.Job) {
 			if !ok {
 				return true
 			}
-			if j.Program.Info.ObjectOf(rhs) != j.Program.Info.ObjectOf(value) {
+			if f.Pkg.TypesInfo.ObjectOf(rhs) != f.Pkg.TypesInfo.ObjectOf(value) {
 				return true
 			}
 		} else {
 			return true
 		}
-		j.Errorf(loop, "should use copy() instead of a loop")
+		f.Errorf(loop, 1, lint.Category("FIXME"), "should use copy() instead of a loop")
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintIfBoolCmp(j *lint.Job) {
+func LintIfBoolCmp(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		expr, ok := node.(*ast.BinaryExpr)
 		if !ok || (expr.Op != token.EQL && expr.Op != token.NEQ) {
 			return true
 		}
-		x := j.IsBoolConst(expr.X)
-		y := j.IsBoolConst(expr.Y)
-		if !x && !y {
-			return true
+		x := f.IsBoolConst(expr.X)
+		y := f.IsBoolConst(expr.Y)
+		if x || y {
+			var other ast.Expr
+			var val bool
+			if x {
+				val = f.BoolConst(expr.X)
+				other = expr.Y
+			} else {
+				val = f.BoolConst(expr.Y)
+				other = expr.X
+			}
+			op := ""
+			if (expr.Op == token.EQL && !val) || (expr.Op == token.NEQ && val) {
+				op = "!"
+			}
+			f.Errorf(expr, 1, lint.Category("FIXME"), "should omit comparison to bool constant, can be simplified to %s%s",
+				op, f.Render(other))
 		}
-		var other ast.Expr
-		var val bool
-		if x {
-			val = j.BoolConst(expr.X)
-			other = expr.Y
-		} else {
-			val = j.BoolConst(expr.Y)
-			other = expr.X
-		}
-		basic, ok := j.Program.Info.TypeOf(other).Underlying().(*types.Basic)
-		if !ok || basic.Kind() != types.Bool {
-			return true
-		}
-		op := ""
-		if (expr.Op == token.EQL && !val) || (expr.Op == token.NEQ && val) {
-			op = "!"
-		}
-		r := op + j.Render(other)
-		l1 := len(r)
-		r = strings.TrimLeft(r, "!")
-		if (l1-len(r))%2 == 1 {
-			r = "!" + r
-		}
-		j.Errorf(expr, "should omit comparison to bool constant, can be simplified to %s", r)
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintStringsContains(j *lint.Job) {
+func LintStringsContains(f *lint.File) {
 	// map of value to token to bool value
-	allowed := map[int64]map[token.Token]bool{
-		-1: {token.GTR: true, token.NEQ: true, token.EQL: false},
-		0:  {token.GEQ: true, token.LSS: false},
+	allowed := map[string]map[token.Token]bool{
+		"-1": {token.GTR: true, token.NEQ: true, token.EQL: false},
+		"0":  {token.GEQ: true, token.LSS: false},
 	}
 	fn := func(node ast.Node) bool {
 		expr, ok := node.(*ast.BinaryExpr)
@@ -254,7 +199,7 @@ func (c *Checker) LintStringsContains(j *lint.Job) {
 			return true
 		}
 
-		value, ok := j.ExprToInt(expr.Y)
+		value, ok := lint.ExprToInt(expr.Y)
 		if !ok {
 			return true
 		}
@@ -300,16 +245,14 @@ func (c *Checker) LintStringsContains(j *lint.Job) {
 		if !b {
 			prefix = "!"
 		}
-		j.Errorf(node, "should use %s%s.%s(%s) instead", prefix, pkgIdent.Name, newFunc, j.RenderArgs(call.Args))
+		f.Errorf(node, 1, "should use %s%s.%s(%s) instead", prefix, pkgIdent.Name, newFunc, f.RenderArgs(call.Args))
 
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintBytesCompare(j *lint.Job) {
+func LintBytesCompare(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		expr, ok := node.(*ast.BinaryExpr)
 		if !ok {
@@ -322,44 +265,42 @@ func (c *Checker) LintBytesCompare(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		if !j.IsFunctionCallName(call, "bytes.Compare") {
+		if !lint.IsPkgDot(call.Fun, "bytes", "Compare") {
 			return true
 		}
-		value, ok := j.ExprToInt(expr.Y)
-		if !ok || value != 0 {
+		value, ok := lint.ExprToInt(expr.Y)
+		if !ok {
 			return true
 		}
-		args := j.RenderArgs(call.Args)
+		if value != "0" {
+			return true
+		}
+		args := f.RenderArgs(call.Args)
 		prefix := ""
 		if expr.Op == token.NEQ {
 			prefix = "!"
 		}
-		j.Errorf(node, "should use %sbytes.Equal(%s) instead", prefix, args)
+		f.Errorf(node, 1, lint.Category("FIXME"), "should use %sbytes.Equal(%s) instead", prefix, args)
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintRanges(j *lint.Job) {
-	fn := func(node ast.Node) bool {
+func LintRanges(f *lint.File) {
+	f.Walk(func(node ast.Node) bool {
 		rs, ok := node.(*ast.RangeStmt)
 		if !ok {
 			return true
 		}
-		if lint.IsBlank(rs.Key) && (rs.Value == nil || lint.IsBlank(rs.Value)) {
-			j.Errorf(rs.Key, "should omit values from range; this loop is equivalent to `for range ...`")
+		if lint.IsIdent(rs.Key, "_") && (rs.Value == nil || lint.IsIdent(rs.Value, "_")) {
+			f.Errorf(rs.Key, 1, lint.Category("range-loop"), "should omit values from range; this loop is equivalent to `for range ...`")
 		}
 
 		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	})
 }
 
-func (c *Checker) LintForTrue(j *lint.Job) {
+func LintForTrue(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		loop, ok := node.(*ast.ForStmt)
 		if !ok {
@@ -368,29 +309,26 @@ func (c *Checker) LintForTrue(j *lint.Job) {
 		if loop.Init != nil || loop.Post != nil {
 			return true
 		}
-		if !j.IsBoolConst(loop.Cond) || !j.BoolConst(loop.Cond) {
+		if !f.IsBoolConst(loop.Cond) || !f.BoolConst(loop.Cond) {
 			return true
 		}
-		j.Errorf(loop, "should use for {} instead of for true {}")
+		f.Errorf(loop, 1, lint.Category("FIXME"), "should use for {} instead of for true {}")
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintRegexpRaw(j *lint.Job) {
+func LintRegexpRaw(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		call, ok := node.(*ast.CallExpr)
 		if !ok {
 			return true
 		}
-		if !j.IsFunctionCallName(call, "regexp.MustCompile") &&
-			!j.IsFunctionCallName(call, "regexp.Compile") {
-			return true
-		}
 		sel, ok := call.Fun.(*ast.SelectorExpr)
 		if !ok {
+			return true
+		}
+		if !lint.IsPkgDot(call.Fun, "regexp", "MustCompile") && !lint.IsPkgDot(call.Fun, "regexp", "Compile") {
 			return true
 		}
 		if len(call.Args) != 1 {
@@ -406,7 +344,7 @@ func (c *Checker) LintRegexpRaw(j *lint.Job) {
 			// invalid function call
 			return true
 		}
-		if lit.Value[0] != '"' {
+		if f.Src[f.Fset.Position(lit.Pos()).Offset] != '"' {
 			// already a raw string
 			return true
 		}
@@ -431,15 +369,13 @@ func (c *Checker) LintRegexpRaw(j *lint.Job) {
 			}
 		}
 
-		j.Errorf(call, "should use raw string (`...`) with regexp.%s to avoid having to escape twice", sel.Sel.Name)
+		f.Errorf(call, 1, lint.Category("FIXME"), "should use raw string (`...`) with regexp.%s to avoid having to escape twice", sel.Sel.Name)
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintIfReturn(j *lint.Job) {
+func LintIfReturn(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		block, ok := node.(*ast.BlockStmt)
 		if !ok {
@@ -484,7 +420,7 @@ func (c *Checker) LintIfReturn(j *lint.Job) {
 		if len(ret1.Results) != 1 {
 			return true
 		}
-		if !j.IsBoolConst(ret1.Results[0]) {
+		if !f.IsBoolConst(ret1.Results[0]) {
 			return true
 		}
 
@@ -495,15 +431,13 @@ func (c *Checker) LintIfReturn(j *lint.Job) {
 		if len(ret2.Results) != 1 {
 			return true
 		}
-		if !j.IsBoolConst(ret2.Results[0]) {
+		if !f.IsBoolConst(ret2.Results[0]) {
 			return true
 		}
-		j.Errorf(n1, "should use 'return <expr>' instead of 'if <expr> { return <bool> }; return <bool>'")
+		f.Errorf(n1, 1, lint.Category("FIXME"), "should use 'return <expr>' instead of 'if <expr> { return <bool> }; return <bool>'")
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
 // LintRedundantNilCheckWithLen checks for the following reduntant nil-checks:
@@ -514,17 +448,17 @@ func (c *Checker) LintIfReturn(j *lint.Job) {
 //   if x != nil && len(x) > N {}
 //   if x != nil && len(x) >= N {} (where N != 0)
 //
-func (c *Checker) LintRedundantNilCheckWithLen(j *lint.Job) {
+func LintRedundantNilCheckWithLen(f *lint.File) {
 	isConstZero := func(expr ast.Expr) (isConst bool, isZero bool) {
-		_, ok := expr.(*ast.BasicLit)
+		lit, ok := expr.(*ast.BasicLit)
 		if ok {
-			return true, lint.IsZero(expr)
+			return true, lit.Kind == token.INT && lit.Value == "0"
 		}
 		id, ok := expr.(*ast.Ident)
 		if !ok {
 			return false, false
 		}
-		c, ok := j.Program.Info.ObjectOf(id).(*types.Const)
+		c, ok := f.Pkg.TypesInfo.ObjectOf(id).(*types.Const)
 		if !ok {
 			return false, false
 		}
@@ -557,7 +491,7 @@ func (c *Checker) LintRedundantNilCheckWithLen(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		if !j.IsNil(x.Y) {
+		if !lint.IsNil(x.Y) {
 			return true
 		}
 
@@ -620,7 +554,7 @@ func (c *Checker) LintRedundantNilCheckWithLen(j *lint.Job) {
 		// finally check that xx type is one of array, slice, map or chan
 		// this is to prevent false positive in case if xx is a pointer to an array
 		var nilType string
-		switch j.Program.Info.TypeOf(xx).(type) {
+		switch f.Pkg.TypesInfo.TypeOf(xx).(type) {
 		case *types.Slice:
 			nilType = "nil slices"
 		case *types.Map:
@@ -630,15 +564,13 @@ func (c *Checker) LintRedundantNilCheckWithLen(j *lint.Job) {
 		default:
 			return true
 		}
-		j.Errorf(expr, "should omit nil check; len() for %s is defined as zero", nilType)
+		f.Errorf(expr, 1, lint.Category("FIXME"), "should omit nil check; len() for %s is defined as zero", nilType)
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintSlicing(j *lint.Job) {
+func LintSlicing(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		n, ok := node.(*ast.SliceExpr)
 		if !ok {
@@ -659,19 +591,17 @@ func (c *Checker) LintSlicing(j *lint.Job) {
 		if !ok || fun.Name != "len" {
 			return true
 		}
-		if _, ok := j.Program.Info.ObjectOf(fun).(*types.Builtin); !ok {
+		if _, ok := f.Pkg.TypesInfo.ObjectOf(fun).(*types.Builtin); !ok {
 			return true
 		}
 		arg, ok := call.Args[0].(*ast.Ident)
 		if !ok || arg.Obj != s.Obj {
 			return true
 		}
-		j.Errorf(n, "should omit second index in slice, s[a:len(s)] is identical to s[a:]")
+		f.Errorf(n, 1, "should omit second index in slice, s[a:len(s)] is identical to s[a:]")
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
 func refersTo(info *types.Info, expr ast.Expr, ident *ast.Ident) bool {
@@ -691,7 +621,7 @@ func refersTo(info *types.Info, expr ast.Expr, ident *ast.Ident) bool {
 	return found
 }
 
-func (c *Checker) LintLoopAppend(j *lint.Job) {
+func LintLoopAppend(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		loop, ok := node.(*ast.RangeStmt)
 		if !ok {
@@ -714,7 +644,7 @@ func (c *Checker) LintLoopAppend(j *lint.Job) {
 		if stmt.Tok != token.ASSIGN || len(stmt.Lhs) != 1 || len(stmt.Rhs) != 1 {
 			return true
 		}
-		if refersTo(j.Program.Info, stmt.Lhs[0], val) {
+		if refersTo(f.Pkg.TypesInfo, stmt.Lhs[0], val) {
 			return true
 		}
 		call, ok := stmt.Rhs[0].(*ast.CallExpr)
@@ -728,14 +658,14 @@ func (c *Checker) LintLoopAppend(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		obj := j.Program.Info.ObjectOf(fun)
+		obj := f.Pkg.TypesInfo.ObjectOf(fun)
 		fn, ok := obj.(*types.Builtin)
 		if !ok || fn.Name() != "append" {
 			return true
 		}
 
-		src := j.Program.Info.TypeOf(loop.X)
-		dst := j.Program.Info.TypeOf(call.Args[0])
+		src := f.Pkg.TypesInfo.TypeOf(loop.X)
+		dst := f.Pkg.TypesInfo.TypeOf(call.Args[0])
 		// TODO(dominikh) remove nil check once Go issue #15173 has
 		// been fixed
 		if src == nil {
@@ -745,7 +675,7 @@ func (c *Checker) LintLoopAppend(j *lint.Job) {
 			return true
 		}
 
-		if j.Render(stmt.Lhs[0]) != j.Render(call.Args[0]) {
+		if f.Render(stmt.Lhs[0]) != f.Render(call.Args[0]) {
 			return true
 		}
 
@@ -753,19 +683,17 @@ func (c *Checker) LintLoopAppend(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		if j.Program.Info.ObjectOf(val) != j.Program.Info.ObjectOf(el) {
+		if f.Pkg.TypesInfo.ObjectOf(val) != f.Pkg.TypesInfo.ObjectOf(el) {
 			return true
 		}
-		j.Errorf(loop, "should replace loop with %s = append(%s, %s...)",
-			j.Render(stmt.Lhs[0]), j.Render(call.Args[0]), j.Render(loop.X))
+		f.Errorf(loop, 1, "should replace loop with %s = append(%s, %s...)",
+			f.Render(stmt.Lhs[0]), f.Render(call.Args[0]), f.Render(loop.X))
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintTimeSince(j *lint.Job) {
+func LintTimeSince(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		call, ok := node.(*ast.CallExpr)
 		if !ok {
@@ -775,44 +703,23 @@ func (c *Checker) LintTimeSince(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		if !j.IsFunctionCallName(sel.X, "time.Now") {
+		subcall, ok := sel.X.(*ast.CallExpr)
+		if !ok {
+			return true
+		}
+		if !lint.IsPkgDot(subcall.Fun, "time", "Now") {
 			return true
 		}
 		if sel.Sel.Name != "Sub" {
 			return true
 		}
-		j.Errorf(call, "should use time.Since instead of time.Now().Sub")
+		f.Errorf(call, 1, "should use time.Since instead of time.Now().Sub")
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintTimeUntil(j *lint.Job) {
-	if !j.IsGoVersion(8) {
-		return
-	}
-	fn := func(node ast.Node) bool {
-		call, ok := node.(*ast.CallExpr)
-		if !ok {
-			return true
-		}
-		if !j.IsFunctionCallName(call, "(time.Time).Sub") {
-			return true
-		}
-		if !j.IsFunctionCallName(call.Args[0], "time.Now") {
-			return true
-		}
-		j.Errorf(call, "should use time.Until instead of t.Sub(time.Now())")
-		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
-}
-
-func (c *Checker) LintSimplerReturn(j *lint.Job) {
+func LintSimplerReturn(f *lint.File) {
 	fn1 := func(node ast.Node) bool {
 		var ret *ast.FieldList
 		switch x := node.(type) {
@@ -854,7 +761,7 @@ func (c *Checker) LintSimplerReturn(j *lint.Job) {
 					continue
 				}
 				expr, ok := ifs.Cond.(*ast.BinaryExpr)
-				if !ok || expr.Op != token.NEQ || !j.IsNil(expr.Y) {
+				if !ok || expr.Op != token.NEQ || !lint.IsNil(expr.Y) {
 					continue
 				}
 				id1, ok := expr.X.(*ast.Ident)
@@ -873,9 +780,9 @@ func (c *Checker) LintSimplerReturn(j *lint.Job) {
 					if !ok {
 						continue outer
 					}
-					results1 = append(results1, j.Program.Info.ObjectOf(ident))
+					results1 = append(results1, f.Pkg.TypesInfo.ObjectOf(ident))
 				}
-				if results1[len(results1)-1] != j.Program.Info.ObjectOf(id1) {
+				if results1[len(results1)-1] != f.Pkg.TypesInfo.ObjectOf(id1) {
 					continue
 				}
 
@@ -890,10 +797,10 @@ func (c *Checker) LintSimplerReturn(j *lint.Job) {
 					if !ok {
 						continue outer
 					}
-					results2 = append(results2, j.Program.Info.ObjectOf(ident))
+					results2 = append(results2, f.Pkg.TypesInfo.ObjectOf(ident))
 				}
 				_, isNil := results2[len(results2)-1].(*types.Nil)
-				if results2[len(results2)-1] != j.Program.Info.ObjectOf(id1) &&
+				if results2[len(results2)-1] != f.Pkg.TypesInfo.ObjectOf(id1) &&
 					!isNil {
 					continue
 				}
@@ -903,12 +810,12 @@ func (c *Checker) LintSimplerReturn(j *lint.Job) {
 					}
 				}
 
-				id1Obj := j.Program.Info.ObjectOf(id1)
+				id1Obj := f.Pkg.TypesInfo.ObjectOf(id1)
 				if id1Obj == nil {
 					continue
 				}
 				_, idIface := id1Obj.Type().Underlying().(*types.Interface)
-				_, retIface := j.Program.Info.TypeOf(ret.List[ret.NumFields()-1].Type).Underlying().(*types.Interface)
+				_, retIface := f.Pkg.TypesInfo.TypeOf(ret.List[ret.NumFields()-1].Type).Underlying().(*types.Interface)
 
 				if retIface && !idIface {
 					// When the return value is an interface, but the
@@ -917,21 +824,19 @@ func (c *Checker) LintSimplerReturn(j *lint.Job) {
 					continue
 				}
 
-				j.Errorf(ifs, "'if %s != nil { return %s }; return %s' can be simplified to 'return %s'",
-					j.Render(expr.X), j.RenderArgs(ret1.Results),
-					j.RenderArgs(ret2.Results), j.RenderArgs(ret1.Results))
+				f.Errorf(ifs, 1, "'if %s != nil { return %s }; return %s' can be simplified to 'return %s'",
+					f.Render(expr.X), f.RenderArgs(ret1.Results),
+					f.RenderArgs(ret2.Results), f.RenderArgs(ret1.Results))
 			}
 			return true
 		}
 		ast.Inspect(node, fn2)
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn1)
-	}
+	f.Walk(fn1)
 }
 
-func (c *Checker) LintReceiveIntoBlank(j *lint.Job) {
+func LintReceiveIntoBlank(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		stmt, ok := node.(*ast.AssignStmt)
 		if !ok {
@@ -952,18 +857,16 @@ func (c *Checker) LintReceiveIntoBlank(j *lint.Job) {
 			if expr.Op != token.ARROW {
 				continue
 			}
-			j.Errorf(lh, "'_ = <-ch' can be simplified to '<-ch'")
+			f.Errorf(lh, 1, "'_ = <-ch' can be simplified to '<-ch'")
 		}
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintFormatInt(j *lint.Job) {
+func LintFormatInt(f *lint.File) {
 	checkBasic := func(v ast.Expr) bool {
-		typ, ok := j.Program.Info.TypeOf(v).(*types.Basic)
+		typ, ok := f.Pkg.TypesInfo.TypeOf(v).(*types.Basic)
 		if !ok {
 			return false
 		}
@@ -974,7 +877,7 @@ func (c *Checker) LintFormatInt(j *lint.Job) {
 		return false
 	}
 	checkConst := func(v *ast.Ident) bool {
-		c, ok := j.Program.Info.ObjectOf(v).(*types.Const)
+		c, ok := f.Pkg.TypesInfo.ObjectOf(v).(*types.Const)
 		if !ok {
 			return false
 		}
@@ -988,7 +891,7 @@ func (c *Checker) LintFormatInt(j *lint.Job) {
 		if !checkConst(v) {
 			return false
 		}
-		basic, ok := j.Program.Info.ObjectOf(v).(*types.Const).Type().(*types.Basic)
+		basic, ok := f.Pkg.TypesInfo.ObjectOf(v).(*types.Const).Type().(*types.Basic)
 		return ok && basic.Kind() == types.UntypedInt
 	}
 
@@ -997,7 +900,7 @@ func (c *Checker) LintFormatInt(j *lint.Job) {
 		if !ok {
 			return true
 		}
-		if !j.IsFunctionCallName(call, "strconv.FormatInt") {
+		if !lint.IsPkgDot(call.Fun, "strconv", "FormatInt") {
 			return true
 		}
 		if len(call.Args) != 2 {
@@ -1017,7 +920,7 @@ func (c *Checker) LintFormatInt(j *lint.Job) {
 			if !ok {
 				return true
 			}
-			obj, ok := j.Program.Info.ObjectOf(ident).(*types.TypeName)
+			obj, ok := f.Pkg.TypesInfo.ObjectOf(ident).(*types.TypeName)
 			if !ok || obj.Parent() != types.Universe || obj.Name() != "int64" {
 				return true
 			}
@@ -1051,22 +954,20 @@ func (c *Checker) LintFormatInt(j *lint.Job) {
 			}
 		}
 		if matches {
-			j.Errorf(call, "should use strconv.Itoa instead of strconv.FormatInt")
+			f.Errorf(call, 1, "should use strconv.Itoa instead of strconv.FormatInt")
 		}
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintSimplerStructConversion(j *lint.Job) {
+func LintSimplerStructConversion(f *lint.File) {
 	fn := func(node ast.Node) bool {
 		lit, ok := node.(*ast.CompositeLit)
 		if !ok {
 			return true
 		}
-		typ1 := j.Program.Info.TypeOf(lit.Type)
+		typ1 := f.Pkg.TypesInfo.TypeOf(lit.Type)
 		if typ1 == nil {
 			return true
 		}
@@ -1088,7 +989,7 @@ func (c *Checker) LintSimplerStructConversion(j *lint.Job) {
 			if !ok {
 				return nil, nil, false
 			}
-			typ := j.Program.Info.TypeOf(sel.X)
+			typ := f.Pkg.TypesInfo.TypeOf(sel.X)
 			return typ, ident, typ != nil
 		}
 		if len(lit.Elts) == 0 {
@@ -1151,15 +1052,14 @@ func (c *Checker) LintSimplerStructConversion(j *lint.Job) {
 		if !structsIdentical(s1, s2) {
 			return true
 		}
-		j.Errorf(node, "should use type conversion instead of struct literal")
+		f.Errorf(node, 1, "should use type conversion instead of struct literal")
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintTrim(j *lint.Job) {
+func LintTrim(f *lint.File) {
+	// TODO(dh): implement the same for suffix
 	sameNonDynamic := func(node1, node2 ast.Node) bool {
 		if reflect.TypeOf(node1) != reflect.TypeOf(node2) {
 			return false
@@ -1169,9 +1069,9 @@ func (c *Checker) LintTrim(j *lint.Job) {
 		case *ast.Ident:
 			return node1.Obj == node2.(*ast.Ident).Obj
 		case *ast.SelectorExpr:
-			return j.Render(node1) == j.Render(node2)
+			return f.Render(node1) == f.Render(node2)
 		case *ast.IndexExpr:
-			return j.Render(node1) == j.Render(node2)
+			return f.Render(node1) == f.Render(node2)
 		}
 		return false
 	}
@@ -1264,7 +1164,7 @@ func (c *Checker) LintTrim(j *lint.Job) {
 			index = slice.Low
 		case "HasSuffix":
 			if slice.Low != nil {
-				n, ok := j.ExprToInt(slice.Low)
+				n, ok := intLit(f, slice.Low)
 				if !ok || n != 0 {
 					return true
 				}
@@ -1293,8 +1193,8 @@ func (c *Checker) LintTrim(j *lint.Job) {
 				if !ok {
 					return true
 				}
-				s1, ok1 := j.ExprToString(lit)
-				s2, ok2 := j.ExprToString(condCall.Args[1])
+				s1, ok1 := stringLit(f, lit)
+				s2, ok2 := stringLit(f, condCall.Args[1])
 				if !ok1 || !ok2 || s1 != s2 {
 					return true
 				}
@@ -1310,8 +1210,8 @@ func (c *Checker) LintTrim(j *lint.Job) {
 			if pkg != "strings" {
 				return true
 			}
-			string, ok1 := j.ExprToString(condCall.Args[1])
-			int, ok2 := j.ExprToInt(slice.Low)
+			string, ok1 := stringLit(f, condCall.Args[1])
+			int, ok2 := intLit(f, slice.Low)
 			if !ok1 || !ok2 || int != int64(len(string)) {
 				return true
 			}
@@ -1337,432 +1237,31 @@ func (c *Checker) LintTrim(j *lint.Job) {
 		case "HasSuffix":
 			replacement = "TrimSuffix"
 		}
-		j.Errorf(ifstmt, "should replace this if statement with an unconditional %s.%s", pkg, replacement)
+		f.Errorf(ifstmt, 1, "should replace this if statement with an unconditional %s.%s", pkg, replacement)
 		return true
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	f.Walk(fn)
 }
 
-func (c *Checker) LintLoopSlide(j *lint.Job) {
-	// TODO(dh): detect bs[i+offset] in addition to bs[offset+i]
-	// TODO(dh): consider merging this function with LintLoopCopy
-	// TODO(dh): detect length that is an expression, not a variable name
-	// TODO(dh): support sliding to a different offset than the beginning of the slice
-
-	fn := func(node ast.Node) bool {
-		/*
-			for i := 0; i < n; i++ {
-				bs[i] = bs[offset+i]
-			}
-
-						↓
-
-			copy(bs[:n], bs[offset:offset+n])
-		*/
-
-		loop, ok := node.(*ast.ForStmt)
-		if !ok || len(loop.Body.List) != 1 || loop.Init == nil || loop.Cond == nil || loop.Post == nil {
-			return true
-		}
-		assign, ok := loop.Init.(*ast.AssignStmt)
-		if !ok || len(assign.Lhs) != 1 || len(assign.Rhs) != 1 || !lint.IsZero(assign.Rhs[0]) {
-			return true
-		}
-		initvar, ok := assign.Lhs[0].(*ast.Ident)
-		if !ok {
-			return true
-		}
-		post, ok := loop.Post.(*ast.IncDecStmt)
-		if !ok || post.Tok != token.INC {
-			return true
-		}
-		postvar, ok := post.X.(*ast.Ident)
-		if !ok || j.Program.Info.ObjectOf(postvar) != j.Program.Info.ObjectOf(initvar) {
-			return true
-		}
-		bin, ok := loop.Cond.(*ast.BinaryExpr)
-		if !ok || bin.Op != token.LSS {
-			return true
-		}
-		binx, ok := bin.X.(*ast.Ident)
-		if !ok || j.Program.Info.ObjectOf(binx) != j.Program.Info.ObjectOf(initvar) {
-			return true
-		}
-		biny, ok := bin.Y.(*ast.Ident)
-		if !ok {
-			return true
-		}
-
-		assign, ok = loop.Body.List[0].(*ast.AssignStmt)
-		if !ok || len(assign.Lhs) != 1 || len(assign.Rhs) != 1 || assign.Tok != token.ASSIGN {
-			return true
-		}
-		lhs, ok := assign.Lhs[0].(*ast.IndexExpr)
-		if !ok {
-			return true
-		}
-		rhs, ok := assign.Rhs[0].(*ast.IndexExpr)
-		if !ok {
-			return true
-		}
-
-		bs1, ok := lhs.X.(*ast.Ident)
-		if !ok {
-			return true
-		}
-		bs2, ok := rhs.X.(*ast.Ident)
-		if !ok {
-			return true
-		}
-		obj1 := j.Program.Info.ObjectOf(bs1)
-		obj2 := j.Program.Info.ObjectOf(bs2)
-		if obj1 != obj2 {
-			return true
-		}
-		if _, ok := obj1.Type().Underlying().(*types.Slice); !ok {
-			return true
-		}
-
-		index1, ok := lhs.Index.(*ast.Ident)
-		if !ok || j.Program.Info.ObjectOf(index1) != j.Program.Info.ObjectOf(initvar) {
-			return true
-		}
-		index2, ok := rhs.Index.(*ast.BinaryExpr)
-		if !ok || index2.Op != token.ADD {
-			return true
-		}
-		add1, ok := index2.X.(*ast.Ident)
-		if !ok {
-			return true
-		}
-		add2, ok := index2.Y.(*ast.Ident)
-		if !ok || j.Program.Info.ObjectOf(add2) != j.Program.Info.ObjectOf(initvar) {
-			return true
-		}
-
-		j.Errorf(loop, "should use copy(%s[:%s], %s[%s:]) instead", j.Render(bs1), j.Render(biny), j.Render(bs1), j.Render(add1))
-		return true
+func stringLit(f *lint.File, expr ast.Expr) (string, bool) {
+	tv := f.Pkg.TypesInfo.Types[expr]
+	if tv.Value == nil {
+		return "", false
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
+	if tv.Value.Kind() != constant.String {
+		return "", false
 	}
+	return constant.StringVal(tv.Value), true
 }
 
-func (c *Checker) LintMakeLenCap(j *lint.Job) {
-	fn := func(node ast.Node) bool {
-		call, ok := node.(*ast.CallExpr)
-		if !ok {
-			return true
-		}
-		if fn, ok := call.Fun.(*ast.Ident); !ok || fn.Name != "make" {
-			// FIXME check whether make is indeed the built-in function
-			return true
-		}
-		switch len(call.Args) {
-		case 2:
-			// make(T, len)
-			if _, ok := j.Program.Info.TypeOf(call.Args[0]).Underlying().(*types.Slice); ok {
-				break
-			}
-			if lint.IsZero(call.Args[1]) {
-				j.Errorf(call.Args[1], "should use make(%s) instead", j.Render(call.Args[0]))
-			}
-		case 3:
-			// make(T, len, cap)
-			if j.Render(call.Args[1]) == j.Render(call.Args[2]) {
-				j.Errorf(call.Args[1], "should use make(%s, %s) instead", j.Render(call.Args[0]), j.Render(call.Args[1]))
-			}
-		}
-		return false
+func intLit(f *lint.File, expr ast.Expr) (int64, bool) {
+	tv := f.Pkg.TypesInfo.Types[expr]
+	if tv.Value == nil {
+		return 0, false
 	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
+	if tv.Value.Kind() != constant.Int {
+		return 0, false
 	}
-}
-
-func (c *Checker) LintAssertNotNil(j *lint.Job) {
-	isNilCheck := func(ident *ast.Ident, expr ast.Expr) bool {
-		xbinop, ok := expr.(*ast.BinaryExpr)
-		if !ok || xbinop.Op != token.NEQ {
-			return false
-		}
-		xident, ok := xbinop.X.(*ast.Ident)
-		if !ok || xident.Obj != ident.Obj {
-			return false
-		}
-		if !j.IsNil(xbinop.Y) {
-			return false
-		}
-		return true
-	}
-	isOKCheck := func(ident *ast.Ident, expr ast.Expr) bool {
-		yident, ok := expr.(*ast.Ident)
-		if !ok || yident.Obj != ident.Obj {
-			return false
-		}
-		return true
-	}
-	fn := func(node ast.Node) bool {
-		ifstmt, ok := node.(*ast.IfStmt)
-		if !ok {
-			return true
-		}
-		assign, ok := ifstmt.Init.(*ast.AssignStmt)
-		if !ok || len(assign.Lhs) != 2 || len(assign.Rhs) != 1 || !lint.IsBlank(assign.Lhs[0]) {
-			return true
-		}
-		assert, ok := assign.Rhs[0].(*ast.TypeAssertExpr)
-		if !ok {
-			return true
-		}
-		binop, ok := ifstmt.Cond.(*ast.BinaryExpr)
-		if !ok || binop.Op != token.LAND {
-			return true
-		}
-		assertIdent, ok := assert.X.(*ast.Ident)
-		if !ok {
-			return true
-		}
-		assignIdent, ok := assign.Lhs[1].(*ast.Ident)
-		if !ok {
-			return true
-		}
-		if !(isNilCheck(assertIdent, binop.X) && isOKCheck(assignIdent, binop.Y)) &&
-			!(isNilCheck(assertIdent, binop.Y) && isOKCheck(assignIdent, binop.X)) {
-			return true
-		}
-		j.Errorf(ifstmt, "when %s is true, %s can't be nil", j.Render(assignIdent), j.Render(assertIdent))
-		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
-}
-
-func (c *Checker) LintDeclareAssign(j *lint.Job) {
-	fn := func(node ast.Node) bool {
-		block, ok := node.(*ast.BlockStmt)
-		if !ok {
-			return true
-		}
-		if len(block.List) < 2 {
-			return true
-		}
-		for i, stmt := range block.List[:len(block.List)-1] {
-			_ = i
-			decl, ok := stmt.(*ast.DeclStmt)
-			if !ok {
-				continue
-			}
-			gdecl, ok := decl.Decl.(*ast.GenDecl)
-			if !ok || gdecl.Tok != token.VAR || len(gdecl.Specs) != 1 {
-				continue
-			}
-			vspec, ok := gdecl.Specs[0].(*ast.ValueSpec)
-			if !ok || len(vspec.Names) != 1 || len(vspec.Values) != 0 {
-				continue
-			}
-
-			assign, ok := block.List[i+1].(*ast.AssignStmt)
-			if !ok || assign.Tok != token.ASSIGN {
-				continue
-			}
-			if len(assign.Lhs) != 1 || len(assign.Rhs) != 1 {
-				continue
-			}
-			ident, ok := assign.Lhs[0].(*ast.Ident)
-			if !ok {
-				continue
-			}
-			if vspec.Names[0].Obj != ident.Obj {
-				continue
-			}
-
-			if refersTo(j.Program.Info, assign.Rhs[0], ident) {
-				continue
-			}
-			j.Errorf(decl, "should merge variable declaration with assignment on next line")
-		}
-		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
-}
-
-func (c *Checker) LintBlankOK(j *lint.Job) {
-	fn := func(node ast.Node) bool {
-		assign, ok := node.(*ast.AssignStmt)
-		if !ok {
-			return true
-		}
-		if len(assign.Lhs) != 2 || len(assign.Rhs) != 1 {
-			return true
-		}
-		if !lint.IsBlank(assign.Lhs[1]) {
-			return true
-		}
-		switch rhs := assign.Rhs[0].(type) {
-		case *ast.IndexExpr:
-			// The type-checker should make sure that it's a map, but
-			// let's be safe.
-			if _, ok := j.Program.Info.TypeOf(rhs.X).Underlying().(*types.Map); !ok {
-				return true
-			}
-		case *ast.UnaryExpr:
-			if rhs.Op != token.ARROW {
-				return true
-			}
-		default:
-			return true
-		}
-		cp := *assign
-		cp.Lhs = cp.Lhs[0:1]
-		j.Errorf(assign, "should write %s instead of %s", j.Render(&cp), j.Render(assign))
-		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
-}
-
-func (c *Checker) LintRedundantBreak(j *lint.Job) {
-	fn := func(node ast.Node) bool {
-		clause, ok := node.(*ast.CaseClause)
-		if !ok {
-			return true
-		}
-		if len(clause.Body) < 2 {
-			return true
-		}
-		branch, ok := clause.Body[len(clause.Body)-1].(*ast.BranchStmt)
-		if !ok || branch.Tok != token.BREAK || branch.Label != nil {
-			return true
-		}
-		j.Errorf(branch, "redundant break statement")
-		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
-}
-
-func (c *Checker) LintRedundantSprintf(j *lint.Job) {
-	isStringer := func(typ types.Type) bool {
-		m := c.MS.MethodSet(typ).Lookup(nil, "String")
-		if m == nil {
-			return false
-		}
-		fn, ok := m.Obj().(*types.Func)
-		if !ok {
-			// String is a field, not a method
-			return false
-		}
-		sig := fn.Type().(*types.Signature)
-		if sig.Params().Len() != 0 {
-			return false
-		}
-		if sig.Results().Len() != 1 {
-			return false
-		}
-		if sig.Results().At(0).Type() != types.Universe.Lookup("string").Type() {
-			return false
-		}
-		return true
-	}
-	fn := func(node ast.Node) bool {
-		call, ok := node.(*ast.CallExpr)
-		if !ok {
-			return true
-		}
-		if !j.IsFunctionCallName(call, "fmt.Sprintf") {
-			return true
-		}
-		if len(call.Args) != 2 {
-			return true
-		}
-		if s, ok := j.ExprToString(call.Args[0]); !ok || s != "%s" {
-			return true
-		}
-		pkg := j.NodePackage(call)
-		arg := call.Args[1]
-		typ := pkg.Info.TypeOf(arg)
-
-		if isStringer(typ) {
-			j.Errorf(call, "should use String() instead of fmt.Sprintf")
-			return true
-		}
-
-		if typ.Underlying() == types.Universe.Lookup("string").Type() {
-			if typ == types.Universe.Lookup("string").Type() {
-				j.Errorf(call, "the argument is already a string, there's no need to use fmt.Sprintf")
-			} else {
-				j.Errorf(call, "the argument's underlying type is a string, should use a simple conversion instead of fmt.Sprintf")
-			}
-		}
-		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
-}
-
-func (c *Checker) LintStringCopy(j *lint.Job) {
-	emptyStringLit := func(e ast.Expr) bool {
-		bl, ok := e.(*ast.BasicLit)
-		return ok && bl.Value == `""`
-	}
-	fn := func(node ast.Node) bool {
-		switch x := node.(type) {
-		case *ast.BinaryExpr: // "" + s, s + ""
-			if x.Op != token.ADD {
-				break
-			}
-			l1 := j.Program.Prog.Fset.Position(x.X.Pos()).Line
-			l2 := j.Program.Prog.Fset.Position(x.Y.Pos()).Line
-			if l1 != l2 {
-				break
-			}
-			var want ast.Expr
-			switch {
-			case emptyStringLit(x.X):
-				want = x.Y
-			case emptyStringLit(x.Y):
-				want = x.X
-			default:
-				return true
-			}
-			j.Errorf(x, "should use %s instead of %s",
-				j.Render(want), j.Render(x))
-		case *ast.CallExpr: // string([]byte(s))
-			bt, ok := j.Program.Info.TypeOf(x.Fun).(*types.Basic)
-			if !ok || bt.Kind() != types.String {
-				break
-			}
-			nested, ok := x.Args[0].(*ast.CallExpr)
-			if !ok {
-				break
-			}
-			st, ok := j.Program.Info.TypeOf(nested.Fun).(*types.Slice)
-			if !ok {
-				break
-			}
-			et, ok := st.Elem().(*types.Basic)
-			if !ok || et.Kind() != types.Byte {
-				break
-			}
-			xt, ok := j.Program.Info.TypeOf(nested.Args[0]).(*types.Basic)
-			if !ok || xt.Kind() != types.String {
-				break
-			}
-			j.Errorf(x, "should use %s instead of %s",
-				j.Render(nested.Args[0]), j.Render(x))
-		}
-		return true
-	}
-	for _, f := range c.filterGenerated(j.Program.Files) {
-		ast.Inspect(f, fn)
-	}
+	val, _ := constant.Int64Val(tv.Value)
+	return val, true
 }

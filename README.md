@@ -20,11 +20,6 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [Credits](#credits)
 - [Quickstart](#quickstart)
 - [Example](#example)
-	- [Summary](#summary)
-	- [UnitTest](#unittest)
-	- [SimpleCode](#simplecode)
-	- [DeadCode & CopyCode](#deadcodeandcopycode)
-	- [Cyclo](#cyclo)
 - [Report-example](#report-example)
 - [Credits](#credits)
 
@@ -93,31 +88,11 @@ By default, the default template is used to generate reports in html format.
 ```
 $ goreporter -p ../goreporter -r ../goreporter -t ./templates/template.html
 ```
-you can see result detail:[Example-Report](http://fiisio.me/pages/goreporter-report.html)
+you can see result detail:[online-example-report](http://fiisio.me/pages/goreporter-report.html)
 
-### Summary
-![summary](./doc/summary.jpeg)
+example:github.com/wgliang/logcool
 
-### UnitTest
-![unittest](./doc/unittest_time.jpeg)
-
-![unittest](./doc/unittest_cover.jpeg)
-
-### SimpleCode
-![simplecode](./doc/simplecode.jpeg)
-
-### DeadCode 
-![deadcode](./doc/copycode.jpeg)
-
-### CopyCode
-![copycode](./doc/copycode.jpeg)
-
-### Cyclo
-![cyclo](./doc/cyclo.jpeg)
-
-## Report-example
-
-[Example-Report](http://fiisio.me/pages/goreporter-report.html)
+![github.com/wgliang/logcool](./doc/github-com-wgliang-goreporter-logcool.png)
 
 ## Credits
 

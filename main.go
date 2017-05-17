@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/wgliang/goreporter/engine"
+	"github.com/wgliang/goreporter/tools"
 )
 
 // receive parameters
@@ -28,55 +29,54 @@ var (
 
 func main() {
 	flag.Parse()
-	log.SetPrefix("[GoReporter]")
 	if *project == "" {
-		log.Fatal("The project path is not specified")
+		glog.Fatal("The project path is not specified")
 	} else {
 		_, err := os.Stat(*project)
 		if err != nil {
-			log.Fatal("project path is invalid")
+			glog.Fatal("project path is invalid")
 		}
 	}
 
 	var templateHtml string
 	if *tplpath == "" {
-		log.Println("The template path is not specified,and will use the default template")
+		glog.Warningln("The template path is not specified,and will use the default template")
 	} else {
 		if !strings.HasSuffix(*report, ".html") {
-			log.Println("The template file is not a html template")
+			glog.Warningln("The template file is not a html template")
 		}
 		fileData, err := ioutil.ReadFile(*tplpath)
 		if err != nil {
-			log.Fatal(err)
+			glog.Fatal(err)
 		} else {
 			templateHtml = string(fileData)
 		}
 	}
 
 	if *report == "" {
-		log.Println("The report path is not specified, and the current path is used by default")
+		glog.Warningln("The report path is not specified, and the current path is used by default")
 	} else {
 		_, err := os.Stat(*report)
 		if err != nil {
-			log.Fatal("report path is invalid")
+			glog.Fatal("report path is invalid")
 		}
 	}
 
 	if *except == "" {
-		log.Println("There are no packages that are excepted, review all items of the package")
+		glog.Warningln("There are no packages that are excepted, review all items of the package")
 	}
 
 	startTime := strconv.FormatInt(time.Now().Unix(), 10)
 	reporter := engine.NewReporter(templateHtml)
 	reporter.Engine(*project, *except)
-	htmlData, err := reporter.Json2Html()
+	htmlData, err := tools.Json2Html(reporter.FormateReport2Json())
 	if err != nil {
-		log.Println("Json2Html error")
+		glog.Errorln("Json2Html error")
 		return
 	}
 	if *formate == "json" {
-		reporter.SaveAsJson(*project, *report, startTime)
+		tools.SaveAsJson(reporter.FormateReport2Json(), *project, *report, startTime)
 	} else {
-		reporter.SaveAsHtml(htmlData, *project, *report, startTime)
+		tools.SaveAsHtml(htmlData, *project, *report, startTime, templateHtml)
 	}
 }

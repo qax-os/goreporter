@@ -3,9 +3,9 @@ package simple
 import (
 	"testing"
 
-	"github.com/wgliang/goreporter/linters/staticscan/lint/testutil"
+	"github.com/wgliang/goreporter/linters/simplecode/lint/testutil"
 )
 
 func TestAll(t *testing.T) {
-	testutil.TestAll(t, NewChecker(), "")
+	testutil.TestAll(t, Funcs, "../../")
 }

@@ -1,39 +1,28 @@
 package engine
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
-	"html/template"
-	"io/ioutil"
-	"log"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
-	// "github.com/wgliang/goreporter/linters/aligncheck"
+	"github.com/golang/glog"
 	"github.com/wgliang/goreporter/linters/copycheck"
 	"github.com/wgliang/goreporter/linters/cyclo"
 	"github.com/wgliang/goreporter/linters/deadcode"
 	"github.com/wgliang/goreporter/linters/depend"
-	// "github.com/wgliang/goreporter/linters/errorcheck"
 	"github.com/wgliang/goreporter/linters/simplecode"
-	"github.com/wgliang/goreporter/linters/staticscan"
-	// "github.com/wgliang/goreporter/linters/structcheck"
 	"github.com/wgliang/goreporter/linters/spellcheck"
 	"github.com/wgliang/goreporter/linters/unittest"
-	// "github.com/wgliang/goreporter/linters/varcheck"
 )
 
-var (
-	tpl string
-)
-
+// WaitGroupWrapper
 type WaitGroupWrapper struct {
 	sync.WaitGroup
 }
 
+// Wrap
 func (w *WaitGroupWrapper) Wrap(cb func()) {
 	w.Add(1)
 	go func() {
@@ -42,37 +31,42 @@ func (w *WaitGroupWrapper) Wrap(cb func()) {
 	}()
 }
 
+// NewReporter will return Reporter.
 func NewReporter(templateHtml string) *Reporter {
-	if templateHtml != "" {
-		tpl = templateHtml
+	return &Reporter{
+		Metrics: make(map[string]Metric, 0),
 	}
-
-	return &Reporter{}
 }
 
+// Engine, run all linters as our metrics in golang prohject.And all linters' result will
+// be as one metric data for Reporter.
 func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
-	log.Println("start code quality assessment...")
+	glog.Infoln("start code quality assessment...")
 	wg := &WaitGroupWrapper{}
 	lintersFunction := make(map[string]func(), 9)
-
+	// All directory that has _test.go files will be add into.
 	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
-	r.Project = projectPathName(projectPath)
-	var importPkgs []string
+	r.Project = PackageAbsPath(projectPath)
 
+	// linterFunction:unitTestF,Run all valid TEST in your golang package.And will measure
+	// from both coverage and time-consuming
 	lintersFunction["unitTestF"] = func() {
-		log.Println("running unit test...")
+		glog.Infoln("running unit test...")
+
+		metricUnitTest := Metric{
+			Name:        "UnitTest",
+			Description: "Run all valid TEST in your golang package.And will measure from both coverage and time-consuming.",
+			Weight:      0.4,
+		}
+
 		packagesTestDetail := struct {
-			Values map[string]PackageTest
+			Values map[string]Summary
 			mux    *sync.RWMutex
-		}{make(map[string]PackageTest, 0), new(sync.RWMutex)}
-		packagesRaceDetail := struct {
-			Values map[string][]string
-			mux    *sync.RWMutex
-		}{make(map[string][]string, 0), new(sync.RWMutex)}
+		}{make(map[string]Summary, 0), new(sync.RWMutex)}
 
 		sumCover := 0.0
 		countCover := 0
@@ -80,147 +74,339 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		for pkgName, pkgPath := range dirsUnitTest {
 			pkg.Add(1)
 			go func(pkgName, pkgPath string) {
-				unitTestRes, unitRaceRes := unittest.UnitTest("./" + pkgPath)
+				unitTestRes, _ := unittest.UnitTest("./" + pkgPath)
 				var packageTest PackageTest
-				if len(unitTestRes) >= 1 {
-					testres := unitTestRes[pkgName]
-					if len(testres) > 5 {
-						if testres[0] == "ok" {
-							packageTest.IsPass = true
-						} else {
-							packageTest.IsPass = false
-						}
-						timeLen := len(testres[2])
-						if timeLen > 1 {
-							time, err := strconv.ParseFloat(testres[2][:(timeLen-1)], 64)
-							if err == nil {
-								packageTest.Time = time
-							} else {
-								log.Println(err)
-							}
-						}
-						packageTest.Coverage = testres[4]
-
-						coverLen := len(testres[4])
-						if coverLen > 1 {
-							coverFloat, _ := strconv.ParseFloat(testres[4][:(coverLen-1)], 64)
-							sumCover = sumCover + coverFloat
-							countCover = countCover + 1
-						} else {
-							countCover = countCover + 1
-						}
+				if len(unitTestRes) >= 5 {
+					if unitTestRes[0] == "ok" {
+						packageTest.IsPass = true
 					} else {
-						packageTest.Coverage = "0%"
+						packageTest.IsPass = false
+					}
+					timeLen := len(unitTestRes[2])
+					if timeLen > 1 {
+						time, err := strconv.ParseFloat(unitTestRes[2][:(timeLen-1)], 64)
+						if err == nil {
+							packageTest.Time = time
+						} else {
+							glog.Errorln(err)
+						}
+					}
+					packageTest.Coverage = unitTestRes[4]
+
+					coverLen := len(unitTestRes[4])
+					if coverLen > 1 {
+						coverFloat, _ := strconv.ParseFloat(unitTestRes[4][:(coverLen-1)], 64)
+						sumCover = sumCover + coverFloat
+						countCover = countCover + 1
+					} else {
 						countCover = countCover + 1
 					}
 				} else {
 					packageTest.Coverage = "0%"
 					countCover = countCover + 1
 				}
+				jsonStringPackageTest, err := json.Marshal(packageTest)
+				if err != nil {
+					glog.Errorln(err)
+				}
+				summarie := Summary{
+					Name:        pkgName,
+					Description: string(jsonStringPackageTest),
+				}
 				packagesTestDetail.mux.Lock()
-				packagesTestDetail.Values[pkgName] = packageTest
+				packagesTestDetail.Values[pkgName] = summarie
 				packagesTestDetail.mux.Unlock()
 
-				if len(unitRaceRes[pkgName]) > 0 {
-					packagesRaceDetail.mux.Lock()
-					packagesRaceDetail.Values[pkgName] = unitRaceRes[pkgName]
-					packagesRaceDetail.mux.Unlock()
-				}
 				pkg.Done()
 			}(pkgName, pkgPath)
 		}
 
 		pkg.Wait()
-		packagesTestDetail.mux.Lock()
-		r.UnitTestx.PackagesTestDetail = packagesTestDetail.Values
-		packagesTestDetail.mux.Unlock()
-		r.UnitTestx.AvgCover = fmt.Sprintf("%.1f", sumCover/float64(countCover)) + "%"
-		packagesRaceDetail.mux.Lock()
-		r.UnitTestx.PackagesRaceDetail = packagesRaceDetail.Values
-		packagesRaceDetail.mux.Unlock()
 
-		log.Println("unit test over!")
+		packagesTestDetail.mux.Lock()
+		metricUnitTest.Summaries = packagesTestDetail.Values
+		packagesTestDetail.mux.Unlock()
+		metricUnitTest.Percentage = sumCover / float64(countCover)
+
+		r.Metrics["UnitTestTips"] = metricUnitTest
+		glog.Infoln("unit test over!")
+	}
+	// All directory that has .go files will be add into.
+	dirsAll, err := DirList(projectPath, ".go", exceptPackages)
+	if err != nil {
+		glog.Errorln(err)
 	}
 
+	// linterFunnction:cycloF,Computing all [.go] file's cyclo,and as an important
+	// indicator of the quality of the code.
 	lintersFunction["cycloF"] = func() {
-		log.Println("computing cyclo...")
+		glog.Infoln("computing cyclo...")
 
-		dirsAll, err := DirList(projectPath, ".go", exceptPackages)
-		if err != nil {
-			log.Println(err)
+		metricCyclo := Metric{
+			Name:        "Cyclo",
+			Description: "Computing all [.go] file's cyclo,and as an important indicator of the quality of the code.",
+			Weight:      0.2,
 		}
 
-		cycloRes := make(map[string]Cycloi, 0)
+		summaries := make(map[string]Summary, 0)
+		sumAverageCyclo := 0.0
+		var compBigThan15 int
 		for pkgName, pkgPath := range dirsAll {
+			summary := Summary{
+				Name: pkgName,
+			}
+			summary.Errors = make([]Error, 0)
+			errors := make([]Error, 0)
 			cyclo, avg := cyclo.Cyclo(pkgPath)
-			cycloRes[pkgName] = Cycloi{
-				Average: avg,
-				Result:  cyclo,
+			avgfloat, _ := strconv.ParseFloat(avg, 64)
+			sumAverageCyclo = sumAverageCyclo + avgfloat
+			for _, val := range cyclo {
+				cyclovalues := strings.Split(val, " ")
+				if len(cyclovalues) == 4 {
+					comp, _ := strconv.Atoi(cyclovalues[0])
+					erroru := Error{
+						LineNumber:  comp,
+						ErrorString: AbsPath(cyclovalues[3]),
+					}
+					if comp >= 15 {
+						compBigThan15 = compBigThan15 + 1
+					}
+					errors = append(errors, erroru)
+				}
+			}
+			summary.Errors = errors
+			summary.Description = avg
+			summaries[pkgName] = summary
+		}
+
+		metricCyclo.Summaries = summaries
+		metricCyclo.Percentage = countPercentage(compBigThan15 + int(sumAverageCyclo/float64(len(dirsAll))) - 1)
+
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["CycloTips"] = metricCyclo
+		glog.Infoln("comput cyclo done!")
+	}
+	// linterfunction:simpleCodeF,all golang code hints that can be optimized
+	// and give suggestions for changes.
+	lintersFunction["simpleCodeF"] = func() {
+		glog.Infoln("simpling code...")
+
+		metricSimple := Metric{
+			Name:        "Simple",
+			Description: "All golang code hints that can be optimized and give suggestions for changes.",
+			Weight:      0.1,
+			Summaries:   make(map[string]Summary, 0),
+		}
+		summaries := make(map[string]Summary, 0)
+
+		simples := simplecode.Simple(dirsAll)
+
+		for _, simpleTip := range simples {
+			simpleTips := strings.Split(simpleTip, ":")
+			if len(simpleTips) == 4 {
+				packageName := packageNameFromGoPath(simpleTips[0])
+				line, _ := strconv.Atoi(simpleTips[1])
+				erroru := Error{
+					LineNumber:  line,
+					ErrorString: AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
+				}
+				if summarie, ok := summaries[packageName]; ok {
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				} else {
+					summarie := Summary{
+						Name:   packageName,
+						Errors: make([]Error, 0),
+					}
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				}
+
 			}
 		}
-		r.Cyclox = cycloRes
-		log.Println("cyclo over!")
+		metricSimple.Summaries = summaries
+		metricSimple.Percentage = countPercentage(len(summaries))
+
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["SimpleTips"] = metricSimple
+		glog.Infoln("simple code done!")
 	}
 
-	lintersFunction["simpleCodeF"] = func() {
-		log.Println("simpling code...")
-
-		simples := simplecode.SimpleCode(projectPath)
-		simpleTips := make(map[string][]string, 0)
-		for _, tips := range simples {
-			index := strings.Index(tips, ":")
-			simpleTips[PackageAbsPathExceptSuffix(tips[0:index])] = append(simpleTips[PackageAbsPathExceptSuffix(tips[0:index])], tips)
-		}
-		r.SimpleTips = simpleTips
-		log.Println("simpled code!")
-
-	}
-
+	// linterFunction:copycode,query all duplicate code in the project and give
+	// duplicate code locations and rows.
 	lintersFunction["copyCheckF"] = func() {
-		log.Println("checking copy code...")
-
-		x := copycheck.CopyCheck(projectPath, "_test.go")
-		r.CopyTips = x
-		log.Println("checked copy code!")
-	}
-
-	lintersFunction["scanTipsF"] = func() {
-		log.Println("running staticscan...")
-
-		staticscan.StaticScan(projectPath)
-		scanTips := make(map[string][]string, 0)
-		tips := staticscan.StaticScan(projectPath)
-		for _, tip := range tips {
-			index := strings.Index(tip, ":")
-			scanTips[PackageAbsPathExceptSuffix(tip[0:index])] = append(scanTips[PackageAbsPathExceptSuffix(tip[0:index])], tip)
+		glog.Infoln("checking copy code...")
+		metricCopyCode := Metric{
+			Name:        "CopyCode",
+			Description: "Query all duplicate code in the project and give duplicate code locations and rows.",
+			Weight:      0.1,
 		}
-		r.ScanTips = scanTips
-		log.Println("staticscan over!")
-	}
 
-	lintersFunction["dependGraphF"] = func() {
-		log.Println("creating depend graph...")
-		r.DependGraph = depend.Depend(projectPath, exceptPackages)
-		log.Println("created depend graph")
-	}
+		summaries := make(map[string]Summary, 0)
+		copyCodeList := copycheck.CopyCheck(projectPath, "_test.go")
+		for i := 0; i < len(copyCodeList); i++ {
+			summary := Summary{
+				Errors: make([]Error, 0),
+			}
+			for j := 0; j < len(copyCodeList[i]); j++ {
+				var line int
+				values := strings.Split(copyCodeList[i][j], ":")
+				if len(values) > 1 {
+					lines := strings.Split(strings.TrimSpace(values[1]), ",")
+					if len(lines) == 2 {
+						lineright, _ := strconv.Atoi(lines[1])
+						lineleft, _ := strconv.Atoi(lines[0])
+						if lineright-lineleft >= 0 {
+							line = lineright - lineleft + 1
+						}
+					}
+					values[0] = AbsPath(values[0])
+				}
 
+				summary.Errors = append(summary.Errors, Error{LineNumber: line, ErrorString: strings.Join(values, ":")})
+			}
+			summary.Name = strconv.Itoa(len(summary.Errors))
+			summaries[string(i)] = summary
+		}
+		metricCopyCode.Summaries = summaries
+		metricCopyCode.Percentage = countPercentage(len(summaries))
+
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["CopyCodeTips"] = metricCopyCode
+		glog.Infoln("checked copy code!")
+	}
+	// linterFunction:deadCodeF,all useless code, or never obsolete obsolete code.
 	lintersFunction["deadCodeF"] = func() {
-		log.Println("checking dead code...")
-		r.DeadCode = deadcode.DeadCode(projectPath)
-		log.Println("checked dead code")
-	}
+		glog.Infoln("checking dead code...")
 
+		metricDeadCode := Metric{
+			Name:        "DeadCode",
+			Description: "All useless code, or never obsolete obsolete code.",
+			Weight:      0.1,
+			Summaries:   make(map[string]Summary, 0),
+		}
+		summaries := make(map[string]Summary, 0)
+
+		deadcode := deadcode.DeadCode(projectPath)
+		for _, simpleTip := range deadcode {
+			deadCodeTips := strings.Split(simpleTip, ":")
+			if len(deadCodeTips) == 4 {
+				packageName := packageNameFromGoPath(deadCodeTips[0])
+				line, _ := strconv.Atoi(deadCodeTips[1])
+				erroru := Error{
+					LineNumber:  line,
+					ErrorString: AbsPath(deadCodeTips[0]) + ":" + strings.Join(deadCodeTips[1:], ":"),
+				}
+				if summarie, ok := summaries[packageName]; ok {
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				} else {
+					summarie := Summary{
+						Name:   PackageAbsPathExceptSuffix(deadCodeTips[0]),
+						Errors: make([]Error, 0),
+					}
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				}
+
+			}
+		}
+		metricDeadCode.Summaries = summaries
+		metricDeadCode.Percentage = countPercentage(len(summaries))
+
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["DeadCodeTips"] = metricDeadCode
+		glog.Infoln("check dead code done.")
+	}
+	// linterFunction:spellCheckF,check the project variables, functions,
+	// etc. naming spelling is wrong.
 	lintersFunction["spellCheckF"] = func() {
-		log.Println("checking spell error...")
-		r.SpellError = spellcheck.SpellCheck(projectPath, exceptPackages)
-		log.Println("checked spell error")
+		glog.Infoln("checking spell error...")
+
+		metricSpellTips := Metric{
+			Name:        "SpellCheck",
+			Description: "Check the project variables, functions, etc. naming spelling is wrong.",
+			Weight:      0.1,
+			Summaries:   make(map[string]Summary, 0),
+		}
+		summaries := make(map[string]Summary, 0)
+
+		spelltips := spellcheck.SpellCheck(projectPath, exceptPackages)
+
+		for _, simpleTip := range spelltips {
+			simpleTips := strings.Split(simpleTip, ":")
+			if len(simpleTips) == 4 {
+				packageName := packageNameFromGoPath(simpleTips[0])
+				line, _ := strconv.Atoi(simpleTips[1])
+				erroru := Error{
+					LineNumber:  line,
+					ErrorString: AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
+				}
+				if summarie, ok := summaries[packageName]; ok {
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				} else {
+					summarie := Summary{
+						Name:   PackageAbsPathExceptSuffix(simpleTips[0]),
+						Errors: make([]Error, 0),
+					}
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				}
+
+			}
+		}
+		metricSpellTips.Summaries = summaries
+		metricSpellTips.Percentage = countPercentage(len(summaries))
+
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["SpellCheckTips"] = metricSpellTips
+		glog.Infoln("checked spell error")
+	}
+	// linterFunction:dependGraphF,The project contains all the package lists.
+	lintersFunction["ImportPackagesF"] = func() {
+		glog.Infoln("getting import packages...")
+		metricImportPackageTips := Metric{
+			Name:        "ImportPackages",
+			Description: "Check the project variables, functions, etc. naming spelling is wrong.",
+			Weight:      0,
+			Summaries:   make(map[string]Summary, 0),
+		}
+		summaries := make(map[string]Summary, 0)
+		importPkgs := unittest.GoListWithImportPackages(projectPath)
+		for i := 0; i < len(importPkgs); i++ {
+			summaries[importPkgs[i]] = Summary{Name: importPkgs[i]}
+		}
+		metricImportPackageTips.Summaries = summaries
+		metricImportPackageTips.Percentage = countPercentage(len(summaries))
+		r.Metrics["ImportPackagesTips"] = metricImportPackageTips
+		glog.Infoln("import packages done.")
 	}
 
-	lintersFunction["importPkgsF"] = func() {
-		log.Println("getting import packages...")
-		importPkgs = unittest.GoListWithImportPackages(projectPath)
-		log.Println("import packages done")
+	// linterFunction:dependGraphF,The dependency graph for all packages in the
+	// project helps you optimize the project architecture.
+	lintersFunction["dependGraphF"] = func() {
+		glog.Infoln("creating depend graph...")
+		metricDependGraphTips := Metric{
+			Name:        "DependGraph",
+			Description: "The dependency graph for all packages in the project helps you optimize the project architecture.",
+			Weight:      0,
+			Summaries:   make(map[string]Summary, 0),
+		}
+		summaries := make(map[string]Summary, 0)
+
+		graph := depend.Depend(projectPath, exceptPackages)
+		summaries["graph"] = Summary{
+			Name:        "graph",
+			Description: graph,
+		}
+		metricDependGraphTips.Summaries = summaries
+		metricDependGraphTips.Percentage = countPercentage(len(summaries))
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["DependGraphTips"] = metricDependGraphTips
+		glog.Infoln("created depend graph")
 	}
+	r.TimeStamp = time.Now().Format("2006-01-02 15:04:05")
 	// run all linters.
 	for _, funcRun := range lintersFunction {
 		wg.Wrap(funcRun)
@@ -228,153 +414,30 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 	wg.Wait()
 
-	// get all no unit test packages
-	noTestPackage := make([]string, 0)
-	for i := 0; i < len(importPkgs); i++ {
-		if _, ok := r.UnitTestx.PackagesTestDetail[importPkgs[i]]; !ok {
-			noTestPackage = append(noTestPackage, importPkgs[i])
-		}
-	}
-	r.NoTestPkg = noTestPackage
-
-	log.Println("finished code quality assessment...")
+	glog.Infoln("finished code quality assessment...")
 }
 
-func (r *Reporter) formateReport2Json() []byte {
+// FormateReport2Json will formate struct reporter into json.
+func (r *Reporter) FormateReport2Json() []byte {
 	report, err := json.Marshal(r)
 	if err != nil {
-		log.Println("json err:", err)
+		glog.Errorln("json err:", err)
 	}
 
 	return report
 }
 
-func (r *Reporter) SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp string) {
-	if tpl == "" {
-		tpl = defaultTpl
-	}
-
-	t, err := template.New("goreporter").Parse(tpl)
-	if err != nil {
-		log.Println(err)
-	}
-
-	var out bytes.Buffer
-	err = t.Execute(&out, htmlData)
-	if err != nil {
-		log.Println(err)
-	}
-	projectName := projectName(projectPath)
-	if savePath != "" {
-		htmlpath := strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".html", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
-		log.Println(htmlpath)
-		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
-		if err != nil {
-			log.Println(err)
-		}
+// countPercentage will count all linters' percentage.
+func countPercentage(issues int) float64 {
+	if issues < 5 {
+		return float64(100 - 5*2)
+	} else if issues < 10 {
+		return float64(100 - 10 - (issues-5)*4)
+	} else if issues < 20 {
+		return float64(100 - 10 - 20 - (issues-10)*5)
+	} else if issues < 40 {
+		return float64(100 - 10 - 20 - 50 - (issues-20)*1)
 	} else {
-		htmlpath := projectName + "-" + timestamp + ".html"
-		log.Println(htmlpath)
-		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
-		if err != nil {
-			log.Println(err)
-		}
-	}
-}
-
-func (r *Reporter) Grade() int {
-	score := 0.0
-	tscore := float64(40)
-	if len(r.UnitTestx.AvgCover) > 1 {
-		cover, err := strconv.ParseFloat(r.UnitTestx.AvgCover[:(len(r.UnitTestx.AvgCover)-1)], 64)
-		if err != nil {
-			cover = 0
-		}
-		score = score + tscore*cover/100.0
-	}
-
-	countCopy := len(r.CopyTips)
-	if countCopy < 10 {
-		score = score + float64(10-1*countCopy)
-	}
-
-	countScan := 0
-	for _, pkg := range r.ScanTips {
-		countScan = countScan + len(pkg)
-	}
-	if countScan < 10 {
-		score = score + float64(10-1*countScan)
-	}
-
-	countSimple := 0
-	for _, pkg := range r.SimpleTips {
-		countSimple = countSimple + len(pkg)
-	}
-	if countSimple < 10 {
-		score = score + float64(10-1*countSimple)
-	}
-
-	sscore := 10.0
-	sscore = sscore - float64(len(r.DeadCode)/5)
-	if sscore < 0 {
-		sscore = 0
-	}
-	score = score + sscore
-
-	sum15 := 0
-	sum50 := 0
-	countcyclo := 0
-	sum := 0
-	pscore := 0
-	for _, val := range r.Cyclox {
-		for _, v := range val.Result {
-			var num int
-			in := strings.Index(v, " ")
-			if in > 0 {
-				countcyclo++
-				num, _ = strconv.Atoi(v[0:in])
-				if num >= 50 {
-					sum50++
-					sum15++
-				} else if num >= 15 {
-					sum15++
-				} else {
-					sum += num
-				}
-			}
-		}
-	}
-
-	if (countcyclo - sum50 - sum15) > 0 {
-		pscore = 20 * ((15 * 1.0 * (countcyclo - sum50 - sum15)) - sum) / (15 * (countcyclo - sum50 - sum15))
-	} else {
-		pscore = 0
-	}
-
-	pscore = pscore - sum50/5 - sum15/10
-	if pscore < 0 {
-		pscore = 0
-	}
-	score = score + float64(pscore)
-	r.Score = int(score)
-	return int(score)
-}
-
-func (r *Reporter) SaveAsJson(projectPath, savePath, timestamp string) {
-	jsonData := r.formateReport2Json()
-	savePath = absPath(savePath)
-	projectName := projectName(projectPath)
-	if savePath != "" {
-		jsonpath := strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".json", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
-		err := ioutil.WriteFile(jsonpath, jsonData, 0666)
-		if err != nil {
-			log.Println(err)
-		}
-	} else {
-		jsonpath := projectName + "-" + timestamp + ".json"
-		err := ioutil.WriteFile(jsonpath, jsonData, 0666)
-		if err != nil {
-			log.Println(err)
-		}
+		return 0.0
 	}
 }
