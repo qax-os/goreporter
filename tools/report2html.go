@@ -200,10 +200,12 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	htmlData.Issues = issues
 	htmlData.Date = structData.TimeStamp
 
-	if len(importPackages) > 0 {
+	if len(importPackages) > 0 && len(noTestPackages) == 0 {
+		htmlData.AveragePackageCover = float64(100)
+	} else if len(importPackages) > 0 {
 		htmlData.AveragePackageCover = float64(100 * (len(importPackages) - len(noTestPackages)) / len(importPackages))
 	} else {
-		htmlData.AveragePackageCover = float64(100)
+		htmlData.AveragePackageCover = float64(0)
 	}
 	return htmlData, nil
 }

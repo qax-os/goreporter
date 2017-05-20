@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"go/build"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
 var (
@@ -51,7 +52,8 @@ func Depend(path, expect string) string {
 	args := []string{path}
 
 	if len(args) != 1 {
-		log.Fatal("need one package name to process")
+		glog.Errorln("need one package name to process")
+		return ""
 	}
 
 	if ignorePrefixes != "" {
@@ -72,10 +74,12 @@ func Depend(path, expect string) string {
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("failed to get cwd: %s", err)
+		glog.Errorf("failed to get cwd: %s", err)
+		return ""
 	}
 	if err := processPackage(cwd, args[0]); err != nil {
-		log.Fatal(err)
+		glog.Errorln(err)
+		return ""
 	}
 
 	graph := "digraph godep {"
@@ -122,7 +126,7 @@ func Depend(path, expect string) string {
 
 	err = ioutil.WriteFile("graph.gv", []byte(graph), 0666)
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 
 	// convert file formate
@@ -132,22 +136,22 @@ func Depend(path, expect string) string {
 	cmdsvg.Stderr = os.Stderr
 	err = cmdsvg.Run()
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 
 	svg, err := ioutil.ReadFile("pkgdep.svg")
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 
 	err = os.Remove("pkgdep.svg")
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 
 	err = os.Remove("graph.gv")
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 
 	return string(svg)
@@ -270,7 +274,7 @@ func getVendorlist(path string) []string {
 		return nil
 	})
 	if err != nil {
-		log.Printf("filepath.Walk() returned %v\n", err)
+		glog.Errorf("filepath.Walk() returned %v\n", err)
 	}
 	return vendors
 }
@@ -278,11 +282,12 @@ func getVendorlist(path string) []string {
 func PackageAbsPath(path string) (packagePath string) {
 	_, err := os.Stat(path)
 	if err != nil {
-		log.Fatal("package path is invalid")
+		glog.Errorln("package path is invalid")
+		return ""
 	}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		log.Println(err)
+		glog.Errorln(err)
 	}
 	packagePathIndex := strings.Index(absPath, "src")
 	if -1 != packagePathIndex {

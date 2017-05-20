@@ -35,6 +35,7 @@ func (w *WaitGroupWrapper) Wrap(cb func()) {
 func NewReporter(templateHtml string) *Reporter {
 	return &Reporter{
 		Metrics: make(map[string]Metric, 0),
+		syncRW:  new(sync.RWMutex),
 	}
 }
 
@@ -50,7 +51,9 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	if err != nil {
 		glog.Errorln(err)
 	}
+	r.syncRW.Lock()
 	r.Project = PackageAbsPath(projectPath)
+	r.syncRW.Unlock()
 
 	// linterFunction:unitTestF,Run all valid TEST in your golang package.And will measure
 	// from both coverage and time-consuming
@@ -126,9 +129,15 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		packagesTestDetail.mux.Lock()
 		metricUnitTest.Summaries = packagesTestDetail.Values
 		packagesTestDetail.mux.Unlock()
-		metricUnitTest.Percentage = sumCover / float64(countCover)
+		if countCover == 0 {
+			metricUnitTest.Percentage = 0
+		} else {
+			metricUnitTest.Percentage = sumCover / float64(countCover)
+		}
 
+		r.syncRW.Lock()
 		r.Metrics["UnitTestTips"] = metricUnitTest
+		r.syncRW.Unlock()
 		glog.Infoln("unit test over!")
 	}
 	// All directory that has .go files will be add into.
@@ -181,9 +190,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 		metricCyclo.Summaries = summaries
 		metricCyclo.Percentage = countPercentage(compBigThan15 + int(sumAverageCyclo/float64(len(dirsAll))) - 1)
-
+		r.syncRW.Lock()
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["CycloTips"] = metricCyclo
+		r.syncRW.Unlock()
 		glog.Infoln("comput cyclo done!")
 	}
 	// linterfunction:simpleCodeF,all golang code hints that can be optimized
@@ -195,7 +205,6 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			Name:        "Simple",
 			Description: "All golang code hints that can be optimized and give suggestions for changes.",
 			Weight:      0.1,
-			Summaries:   make(map[string]Summary, 0),
 		}
 		summaries := make(map[string]Summary, 0)
 
@@ -226,9 +235,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		metricSimple.Summaries = summaries
 		metricSimple.Percentage = countPercentage(len(summaries))
-
+		r.syncRW.Lock()
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["SimpleTips"] = metricSimple
+		r.syncRW.Unlock()
 		glog.Infoln("simple code done!")
 	}
 
@@ -270,9 +280,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		metricCopyCode.Summaries = summaries
 		metricCopyCode.Percentage = countPercentage(len(summaries))
-
+		r.syncRW.Lock()
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["CopyCodeTips"] = metricCopyCode
+		r.syncRW.Unlock()
 		glog.Infoln("checked copy code!")
 	}
 	// linterFunction:deadCodeF,all useless code, or never obsolete obsolete code.
@@ -283,7 +294,6 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			Name:        "DeadCode",
 			Description: "All useless code, or never obsolete obsolete code.",
 			Weight:      0.1,
-			Summaries:   make(map[string]Summary, 0),
 		}
 		summaries := make(map[string]Summary, 0)
 
@@ -313,9 +323,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		metricDeadCode.Summaries = summaries
 		metricDeadCode.Percentage = countPercentage(len(summaries))
-
+		r.syncRW.Lock()
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DeadCodeTips"] = metricDeadCode
+		r.syncRW.Unlock()
 		glog.Infoln("check dead code done.")
 	}
 	// linterFunction:spellCheckF,check the project variables, functions,
@@ -327,7 +338,6 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			Name:        "SpellCheck",
 			Description: "Check the project variables, functions, etc. naming spelling is wrong.",
 			Weight:      0.1,
-			Summaries:   make(map[string]Summary, 0),
 		}
 		summaries := make(map[string]Summary, 0)
 
@@ -358,9 +368,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		metricSpellTips.Summaries = summaries
 		metricSpellTips.Percentage = countPercentage(len(summaries))
-
+		r.syncRW.Lock()
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["SpellCheckTips"] = metricSpellTips
+		r.syncRW.Unlock()
 		glog.Infoln("checked spell error")
 	}
 	// linterFunction:dependGraphF,The project contains all the package lists.
@@ -379,7 +390,9 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		metricImportPackageTips.Summaries = summaries
 		metricImportPackageTips.Percentage = countPercentage(len(summaries))
+		r.syncRW.Lock()
 		r.Metrics["ImportPackagesTips"] = metricImportPackageTips
+		r.syncRW.Unlock()
 		glog.Infoln("import packages done.")
 	}
 
@@ -391,7 +404,6 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			Name:        "DependGraph",
 			Description: "The dependency graph for all packages in the project helps you optimize the project architecture.",
 			Weight:      0,
-			Summaries:   make(map[string]Summary, 0),
 		}
 		summaries := make(map[string]Summary, 0)
 
@@ -402,8 +414,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		}
 		metricDependGraphTips.Summaries = summaries
 		metricDependGraphTips.Percentage = countPercentage(len(summaries))
+		r.syncRW.Lock()
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DependGraphTips"] = metricDependGraphTips
+		r.syncRW.Unlock()
 		glog.Infoln("created depend graph")
 	}
 	r.TimeStamp = time.Now().Format("2006-01-02 15:04:05")

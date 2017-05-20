@@ -1,5 +1,7 @@
 package engine
 
+import "sync"
+
 // Error contains the line number and the reason for
 // an error output from a command
 type Error struct {
@@ -34,4 +36,6 @@ type Reporter struct {
 	Metrics   map[string]Metric `json:"metrics"`
 	Issues    int               `json:"issues"`
 	TimeStamp string            `json:"time_stamp"`
+
+	syncRW *sync.RWMutex
 }

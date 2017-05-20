@@ -4,12 +4,12 @@ import (
 	"bufio"
 	"flag"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/golang/glog"
 	"github.com/wgliang/goreporter/linters/copycheck/job"
 	"github.com/wgliang/goreporter/linters/copycheck/output"
 	"github.com/wgliang/goreporter/linters/copycheck/syntax"
@@ -38,14 +38,15 @@ const (
 	vendorDirInPath = string(filepath.Separator) + "vendor" + string(filepath.Separator)
 )
 
-func CopyCheck(projectPath string, expect string) [][]string {
+func CopyCheck(projectPath string, expect string) (result [][]string) {
 	flag.Parse()
 	if html && plumbing {
-		log.Fatal("you can have either plumbing or HTML output")
+		glog.Errorln("you can have either plumbing or HTML output")
+		return result
 	}
 	paths := []string{projectPath}
 	if verbose {
-		log.Println("Building suffix tree")
+		glog.Errorln("Building suffix tree")
 	}
 	schan := job.Parse(filesFeed(paths, expect))
 	t, data, done := job.BuildTree(schan)
@@ -55,7 +56,7 @@ func CopyCheck(projectPath string, expect string) [][]string {
 	t.Update(&syntax.Node{Type: -1})
 
 	if verbose {
-		log.Println("Searching for clones")
+		glog.Errorln("Searching for clones")
 	}
 	mchan := t.FindDuplOver(threshold)
 	duplChan := make(chan syntax.Match)
@@ -94,7 +95,8 @@ func crawlPaths(paths []string, expect string) chan string {
 		for _, path := range paths {
 			info, err := os.Lstat(path)
 			if err != nil {
-				log.Fatal(err)
+				glog.Errorln(err)
+				break
 			}
 			if !info.IsDir() {
 				fchan <- path
