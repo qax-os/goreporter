@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/wgliang/goreporter/linters/copycheck"
+	"github.com/wgliang/goreporter/linters/countcode"
 	"github.com/wgliang/goreporter/linters/cyclo"
 	"github.com/wgliang/goreporter/linters/deadcode"
 	"github.com/wgliang/goreporter/linters/depend"
@@ -278,6 +279,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			summary.Name = strconv.Itoa(len(summary.Errors))
 			summaries[string(i)] = summary
 		}
+
 		metricCopyCode.Summaries = summaries
 		metricCopyCode.Percentage = countPercentage(len(summaries))
 		r.syncRW.Lock()
@@ -374,7 +376,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.syncRW.Unlock()
 		glog.Infoln("checked spell error")
 	}
-	// linterFunction:dependGraphF,The project contains all the package lists.
+	// linterFunction:importPackagesF,The project contains all the package lists.
 	lintersFunction["ImportPackagesF"] = func() {
 		glog.Infoln("getting import packages...")
 		metricImportPackageTips := Metric{
@@ -394,6 +396,41 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.Metrics["ImportPackagesTips"] = metricImportPackageTips
 		r.syncRW.Unlock()
 		glog.Infoln("import packages done.")
+	}
+
+	// linterFunction:countCodeF,Count go files and go code lines of project.
+	lintersFunction["CountCodeF"] = func() {
+		glog.Infoln("countting code...")
+		metricCountCodeTips := Metric{
+			Name:        "CountCode",
+			Description: "Count lines and files of go project.",
+			Weight:      0,
+			Summaries:   make(map[string]Summary, 0),
+		}
+		summaries := make(map[string]Summary, 0)
+		fileCount, codeLines, commentLines, totalLines := countcode.CountCode(projectPath)
+		summaries["FileCount"] = Summary{
+			Name:        "FileCount",
+			Description: strconv.Itoa(fileCount),
+		}
+		summaries["CodeLines"] = Summary{
+			Name:        "CodeLines",
+			Description: strconv.Itoa(codeLines),
+		}
+		summaries["CommentLines"] = Summary{
+			Name:        "CommentLines",
+			Description: strconv.Itoa(commentLines),
+		}
+		summaries["TotalLines"] = Summary{
+			Name:        "TotalLines",
+			Description: strconv.Itoa(totalLines),
+		}
+		metricCountCodeTips.Summaries = summaries
+		metricCountCodeTips.Percentage = 0
+		r.syncRW.Lock()
+		r.Metrics["CountCodeTips"] = metricCountCodeTips
+		r.syncRW.Unlock()
+		glog.Infoln("count code done.")
 	}
 
 	// linterFunction:dependGraphF,The dependency graph for all packages in the

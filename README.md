@@ -41,6 +41,8 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 - [godepgraph](https://github.com/kisielk/godepgraph) - Godepgraph is a program for generating a dependency graph of Go packages.
 - [misspell](https://github.com/client9/misspell) - Correct commonly misspelled English words... quickly.
+- [countcode](https://github.com/bytbox/sloc) - Count lines and files of project.
+
 
 ## Supported template
 

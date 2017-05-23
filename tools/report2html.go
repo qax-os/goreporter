@@ -182,6 +182,14 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	htmlData.Deadcodes = string(stringDeadCodeJson)
 	htmlData.DeadcodeIssues = len(deadcodeHtmlRes)
 
+	// convert countline result
+	if result, ok := structData.Metrics["CountCodeTips"]; ok {
+		htmlData.FileCount, _ = strconv.Atoi(result.Summaries["FileCount"].Description)
+		htmlData.CodeLines, _ = strconv.Atoi(result.Summaries["CodeLines"].Description)
+		htmlData.CommentLines, _ = strconv.Atoi(result.Summaries["CommentLines"].Description)
+		htmlData.TotalLines, _ = strconv.Atoi(result.Summaries["TotalLines"].Description)
+	}
+
 	// convert depend graph
 	htmlData.DepGraph = template.HTML(structData.Metrics["DependGraphTips"].Summaries["graph"].Description)
 	noTestPackages := make([]string, 0)

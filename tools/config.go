@@ -77,6 +77,10 @@ type HtmlData struct {
 	Tests               string
 	Date                string
 	Issues              int
+	FileCount           int
+	CodeLines           int
+	CommentLines        int
+	TotalLines          int
 	TestSummaryCoverAvg string
 	AveragePackageCover float64
 	SimpleIssues        int

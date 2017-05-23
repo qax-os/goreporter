@@ -89,8 +89,8 @@ const defaultTpl = `
                             <i class="material-icons">pages</i>
                         </div>
                         <div class="content">
-                            <div class="text">PkgCover %</div>
-                            <div class="number count-to gr_pkgcover" data-from="0" data-to="0" data-speed="1000"></div>
+                            <div class="text">CodeLines</div>
+                            <div class="number count-to gr_codelines" data-from="0" data-to="0" data-speed="1000"></div>
                         </div>
                     </div>
                 </div>
@@ -304,7 +304,7 @@ var resData = {
     score: {{.Score}},
     avgcover: {{.TestSummaryCoverAvg}},
     date:{{.Date}},
-    pkgcover: {{.AveragePackageCover}},
+    codelines: {{.CodeLines}},
     gosimple_issue: {{.SimpleIssues}},
     deadcode_count: {{.DeadcodeIssues}},
     cycol_count: {{.CycloBigThan15}},
@@ -394,7 +394,7 @@ $(function() {
         $(".gr_project").text(resData.project);
     $(".gr_score").attr("data-to", resData.score);
     $(".gr_avgcover").attr("data-to", resData.avgcover);
-    $(".gr_pkgcover").attr("data-to", resData.pkgcover);
+    $(".gr_codelines").attr("data-to", resData.codelines);
     $(".gr_gosimple_issue").attr("data-to", resData.gosimple_issue);
     $(".gr_deadcode_count").attr("data-to", resData.deadcode_count);
     $(".gr_cycol_count").attr("data-to", resData.cycol_count);
