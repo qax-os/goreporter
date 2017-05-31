@@ -7,7 +7,7 @@
 [![GoDoc](https://godoc.org/github.com/wgliang/goreporter?status.svg)](https://godoc.org/github.com/wgliang/goreporter)
 [![License](https://img.shields.io/badge/LICENSE-Apache2.0-ff69b4.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
-A Golang tool that does static analysis, unit testing, code review and generate code quality report. This is a tool that concurrently runs a whole bunch of those linters and normalises their output to a report:
+A Golang tool that does static analysis, unit testing, code review and generate code quality report. This is a tool that concurrently runs a whole bunch of those linters and normalizes their output to a report:
 
 # Branch features
 
@@ -79,10 +79,10 @@ Install goreporter (see above).
 $ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html]  {-t templatePathIfHtml}
 ```
 
-- -p Must be a valid golang project path.
+- -p Must be a valid Golang project path.
 - -r Save the path to the report.
 - -e Exceptional packages (multiple separated by commas, for example: "linters/aligncheck,linters/cyclo" ).
-- -f report formate json OR html.
+- -f report format json OR html.
 - -t Template path,if not specified, the default template will be used.
 
 By default, the default template is used to generate reports in html format.
