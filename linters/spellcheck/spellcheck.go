@@ -132,10 +132,10 @@ func SpellCheck(projectPath, except string) []string {
 	//
 	// Stuff to ignore
 	//
-	ignores = except
-	if len(ignores) > 0 {
-		r.RemoveRule(strings.Split(ignores, ";"))
-	}
+	_ = ignores
+	// if len(ignores) > 0 {
+	// 	r.RemoveRule(strings.Split(ignores, ","))
+	// }
 
 	//
 	// Source input mode
@@ -278,10 +278,10 @@ func SpellCheck(projectPath, except string) []string {
 	for i := 0; i < workers; i++ {
 		go worker(writeit, &r, mode, c, results)
 	}
-
+	excepts := setExcept(except)
 	for _, filename := range args {
 		filepath.Walk(filename, func(path string, info os.FileInfo, err error) error {
-			if err == nil && !info.IsDir() {
+			if err == nil && !info.IsDir() && strings.HasSuffix(path, ".go") && !checkExcept(path, excepts) {
 				c <- path
 			}
 			return nil
@@ -290,4 +290,23 @@ func SpellCheck(projectPath, except string) []string {
 	close(c)
 
 	return spellCheck
+}
+
+func checkExcept(path string, excepts []string) bool {
+	if path == "" || path == " " {
+		return false
+	}
+	for _, val := range excepts {
+		if val != "" && val != " " {
+			return strings.Contains(path, val)
+		}
+	}
+	return false
+}
+
+func setExcept(except string) (excepts []string) {
+	if except == "" || except == " " {
+		return excepts
+	}
+	return append(excepts, strings.Split(except, ",")...)
 }

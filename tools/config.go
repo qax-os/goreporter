@@ -52,6 +52,11 @@ type Simple struct {
 	Info string
 }
 
+type Spell struct {
+	Path string
+	Info string
+}
+
 type Scan struct {
 	Path string
 	Info string
@@ -89,6 +94,7 @@ type HtmlData struct {
 	Races               []Race
 	NoTests             string
 	Simples             string
+	Spells              string
 	SimpleLevel         int
 	Deadcodes           string
 	Copycodes           string

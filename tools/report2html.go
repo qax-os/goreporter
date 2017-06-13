@@ -128,6 +128,31 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	htmlData.Simples = string(stringSimpleJson)
 	htmlData.SimpleIssues = len(simpleHtmlRes)
 
+	// convert spell code result
+	spellHtmlRes := make([]Spell, 0)
+	if result, ok := structData.Metrics["SpellCheckTips"]; ok {
+		for _, summary := range result.Summaries {
+			spellCodeTips := summary.Errors
+
+			for i := 0; i < len(spellCodeTips); i++ {
+				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
+				if len(spellCodeTip) == 4 {
+					spellcode := Spell{
+						Path: strings.Join(spellCodeTip[0:3], ":"),
+						Info: spellCodeTip[3],
+					}
+					spellHtmlRes = append(spellHtmlRes, spellcode)
+				}
+			}
+		}
+	}
+
+	stringSpellJson, err := json.Marshal(spellHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	htmlData.Spells = string(stringSpellJson)
+
 	// convert copy code result
 	copyHtmlRes := make([]Copycode, 0)
 	if result, ok := structData.Metrics["CopyCodeTips"]; ok {
@@ -236,17 +261,19 @@ func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp, tpl string)
 	projectName := engine.ProjectName(projectPath)
 	if savePath != "" {
 		htmlpath := strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".html", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
-		glog.Infoln("create html report:", htmlpath)
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
 		if err != nil {
 			glog.Errorln(err)
+		} else {
+			glog.Info("Html report was saved in:", htmlpath)
 		}
 	} else {
 		htmlpath := projectName + "-" + timestamp + ".html"
-		glog.Infoln("create html report:", htmlpath)
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
 		if err != nil {
 			glog.Errorln(err)
+		} else {
+			glog.Info("Html report was saved in:", htmlpath)
 		}
 	}
 }

@@ -229,6 +229,28 @@ const defaultTpl = `
                     </div>
                 </div>
 
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <div class="card">
+                        <div class="header">
+                            <h2>SpellError Tips</h2>
+                        </div>
+                        <div class="body">
+                            <div class="table-responsive scroll-tb">
+                                <table class="table table-hover dashboard-task-infos gr_spell_tb">
+                                    <thead>
+                                        <tr>
+                                            <th># </th>
+                                            <th>Path</th>
+                                            <th>Info</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="gr_spell_table">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
                     <a name="cyclo"></a>
@@ -315,6 +337,7 @@ var resData = {
         noTest: {{.NoTests}}
     },
     gosimple: {{.Simples}},
+    gospell:{{.Spells}},
     gosimpleLevel: 2,
     deadcode: {{.Deadcodes}},
     copycode: {{.Copycodes}},
@@ -386,6 +409,7 @@ $(function() {
     resData.gotest.res = changeStringToArray(resData.gotest.res);
     resData.gotest.noTest = changeStringToArray(resData.gotest.noTest);
     resData.gosimple = changeStringToArray(resData.gosimple);
+    resData.gospell = changeStringToArray(resData.gospell);
     resData.deadcode = changeStringToArray(resData.deadcode);
     resData.copycode = changeStringToArray(resData.copycode);
     resData.gocyclo = changeStringToArray(resData.gocyclo);
@@ -396,6 +420,7 @@ $(function() {
     $(".gr_avgcover").attr("data-to", resData.avgcover);
     $(".gr_codelines").attr("data-to", resData.codelines);
     $(".gr_gosimple_issue").attr("data-to", resData.gosimple_issue);
+    $(".gr_gospell_issue").attr("data-to", resData.gospell_issue);
     $(".gr_deadcode_count").attr("data-to", resData.deadcode_count);
     $(".gr_cycol_count").attr("data-to", resData.cycol_count);
     $(".gr_godepgraph_svg").html(godepgraph_svg);
@@ -458,6 +483,9 @@ $(function() {
             data_render
         }
     }
+
+    resData.gospell_result = goSimpleResult(resData.gospell, "Path", resData.gosimpleLevel);
+
     var thumb = '<center><img src="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADuElEQVR4Ae2bA7A0RxCAY9tmKbZt204hKjs2CrEtPds303v7jJm52Pxj2+jp1IT7glveZWfuuqofivt909s9q7nyHfWohy7Bxij4NSjgRioVt6gteAWHoWI/kQIyaf7Wih9YMwJQ8JcNeDBRsM/0tL9aTQgIgs+WAI/WugCkx/213Ib3/fkM7H8nP8ftBjgFK5YTgIoxx8eft3NZAQLecX0EnhdSAT85LQAVPF5eAPzsfPmHnAIfOglPdPE8qNhMqADJR9wUUOKnh8GbRMWvcK/0Z/iyqODjKAK0Yvs4JwAl3BVt9eFnPT6+uFurL2FrFICRBAhWcq7xkeAqDDzQAG9wbPXZWVHhTeoSO9wZeFL+cij4p7EEPFFYwaEdH2+IA4+KveDQfp+fGwfeJAp+t/3gTxQWRcXuiAtvUkt+sgN3edkrBiaRgOnC2vbCC76ZuamZFB4le9vqbm8AEsFLTjTSTsgaZize5vKHIwMLRjTRS+S3EA3cT9R+M1HrjYRDDzZY2u3ZPgbs/0xU7DtUfJyUd1TVb26igHerCRsuA26qDvxLAwuigLH8wAfHKRxZUXh6pmUBVLw7j/AmzcJUDv6psaVRcC+H4MGe8O2fB/xG8T2Kk6/Dex+96b9z6L83PG93lPz1nIIHK+CbxAJMzoH3Pvyj1LX01iUFp6JgxXyDBwVwL5UAk8QbcgsYfk+B75tewHBbPgE7biXqu5eIPfrrDpKmBohkAF7BRYY7vYCxrnwKaLuJqOt2ou67iPruIxp8kAgaicZ7CKeHug1zNgIm++wsfwH7ZSNgetBKAajAz0aAYJYKYN9mI0ByOwUI+CYbAQpszeGaFqBLcFA2AmROIc0ILDxCNNb9j9MUJb/SMLvdA8w+oOOW30T03kNUbKGfp4c+1dLb3/BmJ2CmYO/2NxMBU/1Wz//0AsZ7rJ7/6QWMtFs8/0METF7+ZLgAr8ni+R8ioHUfCBdQeMjq+Z9eQN89Fs7/EAHvTH1IP3zxI2mt6fvPfzT//7eAjlvyP/9n+j8Izv9QAQY+EEbCfwtovZFoZijvpf+5YYwsgDTNDk3lBYx25n30fRdLgFnx2RXwQ3kB/NG8j76ngqyResCvEvSv8Ob/8gJ67sq3AAlXRROQIKM9IvMX07KwA0q4FQV8X93VZ19pObhyhQS880Hsh6WPwfoo2bNVgtdasuMjHVgS+De89w9O+DHUQij5pajYl5VdeQOf4yDFl9QSzjBPkFHBmyjYj2m7vWl45pwPlH1I1KMevwCCyQloifV7DgAAAABJRU5ErkJggg==" style="margin-top:50px;" /></center><br/><center><h4>Sweet!</h4></center>';
     var c = 0;
     var gr_simple_table = "";
@@ -472,6 +500,21 @@ $(function() {
         $(".gr_simple_table").html(gr_simple_table);
     } else {
         $(".gr_simple_tb").html(thumb+'<center>No code can be simplifying</center>');
+    }
+
+    var c = 0;
+    var gr_spell_table = "";
+    if (resData.gospell_result.data_render.length > 0) {
+        for (var key in resData.gospell_result.data_dic) {
+            for (var k in resData.gospell_result.data_dic[key]) {
+                c++;
+                var v = resData.gospell_result.data_dic[key][k]
+                gr_spell_table += '<tr><td>' + c + '</td><td><a href="file://' + v.Path + '">' + v.Path + '</a></td><td>' + v.Info + '</td></tr>'
+            }
+        }
+        $(".gr_spell_table").html(gr_spell_table);
+    } else {
+        $(".gr_spell_tb").html(thumb+'<center>No spell errors</center>');
     }
 
     var c = 0;
