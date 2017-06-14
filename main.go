@@ -67,16 +67,20 @@ func main() {
 	}
 
 	startTime := strconv.FormatInt(time.Now().Unix(), 10)
-	reporter := engine.NewReporter(templateHtml)
+	reporter := engine.NewReporter()
 	reporter.Engine(*project, *except)
-	htmlData, err := tools.Json2Html(reporter.FormateReport2Json())
-	if err != nil {
-		glog.Errorln("Json2Html error")
-		return
-	}
+	jsonData := reporter.FormateReport2Json()
+
 	if *formate == "json" {
-		tools.SaveAsJson(reporter.FormateReport2Json(), *project, *report, startTime)
+		tools.SaveAsJson(jsonData, *project, *report, startTime)
+	} else if *formate == "text" {
+		tools.DisplayAsText(jsonData)
 	} else {
+		htmlData, err := tools.Json2Html(jsonData)
+		if err != nil {
+			glog.Errorln("Json2Html error")
+			return
+		}
 		tools.SaveAsHtml(htmlData, *project, *report, startTime, templateHtml)
 	}
 }

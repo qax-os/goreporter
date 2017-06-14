@@ -5,6 +5,6 @@ import (
 )
 
 func Test_Engine(t *testing.T) {
-	report := NewReporter("")
+	report := NewReporter()
 	report.Engine("../../logcool", "")
 }
