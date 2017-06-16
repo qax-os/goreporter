@@ -1029,3 +1029,7 @@ func Test_SaveAsJson(t *testing.T) {
 func Test_SaveAsJson_NoPath(t *testing.T) {
 	SaveAsJson([]byte(structJson), `github.com/wgliang/logcool`, "/Users/xxxxxx/Documents/xxx/src/github.com/wgliang/logcool", "221242124214")
 }
+
+func Test_DisplayAsText(t *testing.T) {
+    DisplayAsText([]byte(structJson))
+}

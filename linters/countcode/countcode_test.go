@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func Test_CountLines(t *testing.T) {
-	CountLines("../../../goreporter")
+func Test_CountCode(t *testing.T) {
+	CountCode("../../../goreporter")
 }

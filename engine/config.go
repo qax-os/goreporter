@@ -18,7 +18,7 @@ type Summary struct {
 }
 
 // Metric as template of report and will save all linters result
-// data.But may have some diffreence in diffrent linter.
+// data.But may have some difference in different linter.
 type Metric struct {
 	Name        string             `json:"name"`
 	Description string             `json:"description"`

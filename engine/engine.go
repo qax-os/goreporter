@@ -33,7 +33,7 @@ func (w *WaitGroupWrapper) Wrap(cb func()) {
 }
 
 // NewReporter will return Reporter.
-func NewReporter(templateHtml string) *Reporter {
+func NewReporter() *Reporter {
 	return &Reporter{
 		Metrics: make(map[string]Metric, 0),
 		syncRW:  new(sync.RWMutex),

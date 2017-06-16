@@ -82,7 +82,7 @@ $ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f
 - -p Must be a valid Golang project path.
 - -r Save the path to the report.
 - -e Exceptional packages (multiple separated by commas, for example: "linters/aligncheck,linters/cyclo" ).
-- -f report format json OR html.
+- -f report format json, html OR text.
 - -t Template path,if not specified, the default template will be used.
 
 By default, the default template is used to generate reports in html format.
