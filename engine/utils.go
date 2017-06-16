@@ -81,9 +81,9 @@ func PackageAbsPath(path string) (packagePath string) {
 		glog.Fatal(err)
 	}
 
-	packagePathIndex := strings.LastIndex(absPath, "src")
+	packagePathIndex := strings.LastIndex(absPath, "/src/")
 	if -1 != packagePathIndex {
-		packagePath = absPath[(packagePathIndex + 4):]
+		packagePath = absPath[(packagePathIndex + 5):]
 	}
 
 	return packagePath
