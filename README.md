@@ -76,7 +76,7 @@ Install goreporter (see above).
 ## Run it:
 
 ```
-$ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html]  {-t templatePathIfHtml}
+$ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html/text]  {-t templatePathIfHtml}
 ```
 
 - -p Must be a valid Golang project path.

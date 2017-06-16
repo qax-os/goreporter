@@ -1,8 +1,8 @@
 package tools
 
 import (
-	"os"
 	"encoding/json"
+	"os"
 
 	"github.com/fatih/color"
 	"github.com/wgliang/goreporter/engine"
@@ -28,7 +28,7 @@ _/_/                                  _/
 	`
 	metricsHeaderTpl = `>> %s Linter %s find:`
 	summaryHeaderTpl = ` %s: %s`
-	errorInfoTpl = `  %s at line %d`
+	errorInfoTpl     = `  %s at line %d`
 )
 
 // DisplayAsText will display the json data to console
@@ -36,12 +36,17 @@ func DisplayAsText(jsonData []byte) {
 	var structData engine.Reporter
 	json.Unmarshal(jsonData, &structData)
 
+	var score float64
+	for _, metric := range structData.Metrics {
+		score = score + metric.Percentage*metric.Weight
+	}
+
 	color.Magenta(
-		headerTpl, 
-		structData.Project, 
-		structData.Score, 
-		structData.Grade, 
-		structData.TimeStamp, 
+		headerTpl,
+		structData.Project,
+		int(score),
+		structData.Grade,
+		structData.TimeStamp,
 		structData.Issues,
 	)
 	for _, metric := range structData.Metrics {
