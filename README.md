@@ -1,6 +1,6 @@
 ![goreporter](./logo.png)
 
-# goreporter [![Version Status](https://img.shields.io/badge/v2.0-stable-orange.svg)](https://github.com/wgliang/goreporter/releases/tag/version2.0.0)
+# goreporter [![Version Status](https://img.shields.io/badge/v2.5-stable-orange.svg)](https://github.com/wgliang/goreporter/releases/tag/version2.5.0)
 
 [![Current Release](https://img.shields.io/github/release/wgliang/goreporter.svg)](https://github.com/wgliang/goreporter/releases/latest)
 [![Build Status](https://travis-ci.org/wgliang/goreporter.svg?branch=master)](https://travis-ci.org/wgliang/goreporter)
@@ -50,7 +50,6 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 ## Todo List
 
-- Develop more linter, such as code line count statistics, function statistics, project information layer structure display, etc.
 - There are still many shortcomings in the presentation of the report, showing that the model is not perfect, and hope that someone can help optimize it.
 
 ## Installing
@@ -60,14 +59,9 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [Go](https://golang.org/dl/) 1.6+
 - [Graphviz](http://www.graphviz.org/Download..php)
 
-There are two options for installing goreporter.
-
-- 1. Install a stable version, eg. `go get -u github.com/wgliang/goreporter/tree/version-1.0.0`.
-   I will generally only tag a new stable version when it has passed the Travis regression tests. 
-     The downside is that the binary will be called `goreporter.version-1.0.0`.
-
-- 2. Install from HEAD with: `go get -u github.com/wgliang/goreporter`.
-   This has the downside that changes to goreporter may break.
+```
+$ go get -u github.com/wgliang/goreporter
+```
 
 ## Quickstart
 
@@ -99,7 +93,5 @@ example:github.com/wgliang/logcool
 ![github.com/wgliang/logcool](./doc/github-com-wgliang-goreporter-logcool.png)
 
 ## Credits
-
-Templates is designed by liufeifei
 
 Logo is designed by [xuri](https://github.com/Luxurioust)
