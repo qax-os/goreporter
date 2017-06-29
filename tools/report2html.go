@@ -1,3 +1,16 @@
+// Copyright 2017 The GoReporter Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tools
 
 import (
@@ -15,8 +28,8 @@ import (
 	"github.com/wgliang/goreporter/engine"
 )
 
-// Json2Html will remake the reporter's data for the
-// format we need for the template.
+// Json2Html will rebuild the reporter's json data into html data in template.
+// It will parse json data and organize the data structure.
 func Json2Html(jsonData []byte) (HtmlData, error) {
 	var (
 		structData engine.Reporter
@@ -243,6 +256,8 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	return htmlData, nil
 }
 
+// SaveAsHtml is a function that save HtmlData as a html report.And will receive
+// htmlData, projectPath, savePath and tpl parameters.
 func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp, tpl string) {
 	if tpl == "" {
 		tpl = defaultTpl

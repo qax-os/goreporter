@@ -1,3 +1,16 @@
+// Copyright 2017 The GoReporter Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tools
 
 import (
@@ -9,7 +22,8 @@ import (
 	"github.com/wgliang/goreporter/engine"
 )
 
-// SaveAsJson will save as a json file with Reporter struct.
+// SaveAsJson is a function that save data as a json report.And will receive
+// jsonData, projectPath, savePath and timestamp parameters.
 func SaveAsJson(jsonData []byte, projectPath, savePath, timestamp string) {
 	saveAbsPath := engine.AbsPath(savePath)
 	projectName := engine.ProjectName(projectPath)

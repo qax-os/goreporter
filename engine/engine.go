@@ -486,7 +486,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	glog.Infoln("finished code quality assessment...")
 }
 
-// FormateReport2Json will formate struct reporter into json.
+// FormateReport2Json will marshal struct Reporter into json and
+// return a []byte data.
 func (r *Reporter) FormateReport2Json() []byte {
 	report, err := json.Marshal(r)
 	if err != nil {
@@ -511,6 +512,8 @@ func (r *Reporter) FormateReport2Json() []byte {
 //    +--------------------------------------------------+
 //    | [40,*)      | 0                                  |
 //    +--------------------------------------------------+
+//
+// It will return a float64 type score.
 func countPercentage(issues int) float64 {
 	if issues < 5 {
 		return float64(100 - issues*2)

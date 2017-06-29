@@ -1,3 +1,16 @@
+// Copyright 2017 The GoReporter Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package engine
 
 import (
@@ -48,7 +61,7 @@ func DirList(projectPath string, suffix, except string) (dirs map[string]string,
 	return dirs, nil
 }
 
-// ExceptPkg will determine whether the package is an exception.
+// ExceptPkg is a function that will determine whether the package is an exception.
 func ExceptPkg(except, pkg string) bool {
 	if except == "" {
 		return false
@@ -108,7 +121,7 @@ func PackageAbsPathExceptSuffix(path string) (packagePath string) {
 	return packagePath
 }
 
-// ProjectName gets project's name.
+// ProjectName is a function that gets project's name.
 func ProjectName(projectPath string) (project string) {
 	absPath, err := filepath.Abs(projectPath)
 	if err != nil {
@@ -122,7 +135,7 @@ func ProjectName(projectPath string) (project string) {
 	return project
 }
 
-// AbsPath will get absolute path of file.
+// AbsPath is a function that will get absolute path of file.
 func AbsPath(path string) string {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -132,7 +145,7 @@ func AbsPath(path string) string {
 	return absPath
 }
 
-// packageNameFromGoPath will get package's name from GOPATH.
+// packageNameFromGoPath is a function that will get package's name from GOPATH.
 func packageNameFromGoPath(path string) string {
 	names := strings.Split(path, string(filepath.Separator))
 	if len(names) >= 2 {

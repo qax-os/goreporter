@@ -1,3 +1,16 @@
+// Copyright 2017 The GoReporter Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package tools
 
 import (
@@ -8,6 +21,7 @@ import (
 	"github.com/wgliang/goreporter/engine"
 )
 
+// Text display description and logo.
 const (
 	headerTpl = `
 		                                                                                                        
@@ -31,7 +45,8 @@ _/_/                                  _/
 	errorInfoTpl     = `  %s at line %d`
 )
 
-// DisplayAsText will display the json data to console
+// DisplayAsText will display the json data to console.In your CI, all
+// the tips will be given a variety of color tips, very beautiful.
 func DisplayAsText(jsonData []byte) {
 	var structData engine.Reporter
 	json.Unmarshal(jsonData, &structData)
