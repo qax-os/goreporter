@@ -15,7 +15,6 @@ package tools
 
 import (
 	"encoding/json"
-	"os"
 
 	"github.com/fatih/color"
 	"github.com/wgliang/goreporter/engine"
@@ -75,11 +74,5 @@ func DisplayAsText(jsonData []byte) {
 				color.Red(errorInfoTpl, errorInfo.ErrorString, errorInfo.LineNumber)
 			}
 		}
-	}
-
-	if structData.Issues > 0 {
-		os.Exit(1)
-	} else {
-		os.Exit(0)
 	}
 }
