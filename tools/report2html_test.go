@@ -1032,11 +1032,11 @@ const structJson = `{
 
 func Test_Json2Html(t *testing.T) {
 	htmldata, _ := Json2Html([]byte(structJson))
-	SaveAsHtml(htmldata, `github.com/wgliang/logcool`, `../../logcool`, "221242124214", defaultTpl)
+	SaveAsHtml(htmldata, `github.com/wgliang/logcool`, `./`, "221242124214", defaultTpl)
 }
 
 func Test_SaveAsJson(t *testing.T) {
-	SaveAsJson([]byte(structJson), `github.com/wgliang/logcool`, `../../logcool`, "221242124214")
+	SaveAsJson([]byte(structJson), `github.com/wgliang/logcool`, `./`, "221242124214")
 }
 
 func Test_SaveAsJson_NoPath(t *testing.T) {
