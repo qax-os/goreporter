@@ -1,3 +1,16 @@
+// Copyright 2017 The GoReporter Authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package engine
 
 import (
@@ -18,12 +31,15 @@ import (
 	"github.com/wgliang/goreporter/linters/unittest"
 )
 
-// WaitGroupWrapper
+// WaitGroupWrapper is a struct that as a waiter for all linetr-tasks.And it
+// encapsulates sync.WaitGroup that can be call as a interface.
 type WaitGroupWrapper struct {
 	sync.WaitGroup
 }
 
-// Wrap
+// Wrap implements a interface that run the function cd as a goroutine.And it
+// encapsulates Add(1) and Done() operation.You can just think go cd() but not
+// worry about synchronization and security issues.
 func (w *WaitGroupWrapper) Wrap(cb func()) {
 	w.Add(1)
 	go func() {
@@ -32,7 +48,8 @@ func (w *WaitGroupWrapper) Wrap(cb func()) {
 	}()
 }
 
-// NewReporter will return Reporter.
+// NewReporter will initialize a Reporter struct and return address of the struct
+// which is safe for use.
 func NewReporter() *Reporter {
 	return &Reporter{
 		Metrics: make(map[string]Metric, 0),
@@ -40,8 +57,9 @@ func NewReporter() *Reporter {
 	}
 }
 
-// Engine, run all linters as our metrics in golang prohject.And all linters' result will
-// be as one metric data for Reporter.
+// Engine is a important function of goreporter, it will run all linters and rebuild
+// metrics data in a golang prohject. And all linters' result will be as one metric
+// data for Reporter.
 func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 	glog.Infoln("start code quality assessment...")
@@ -478,10 +496,24 @@ func (r *Reporter) FormateReport2Json() []byte {
 	return report
 }
 
-// countPercentage will count all linters' percentage.
+// countPercentage will count all linters' percentage.And rule is
+//
+//    +--------------------------------------------------+
+//    |   issues    |               score                |
+//    +==================================================+
+//    | 5           | 100-issues*2                            |
+//    +--------------------------------------------------+
+//    | [5,10)      | 100 - 10 - (issues-5)*4            |
+//    +--------------------------------------------------+
+//    | [10,20)     | 100 - 10 - 20 - (issues-10)*5      |
+//    +--------------------------------------------------+
+//    | [20,40)     | 100 - 10 - 20 - 50 - (issues-20)*1 |
+//    +--------------------------------------------------+
+//    | [40,*)      | 0                                  |
+//    +--------------------------------------------------+
 func countPercentage(issues int) float64 {
 	if issues < 5 {
-		return float64(100 - 5*2)
+		return float64(100 - issues*2)
 	} else if issues < 10 {
 		return float64(100 - 10 - (issues-5)*4)
 	} else if issues < 20 {
