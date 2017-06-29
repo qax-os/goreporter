@@ -10,7 +10,7 @@ go:
   - tip
 
 script:
-  - go test -v -coverprofile=coverage.txt -covermode=atomic
+  - ./go.test.sh
   - go build
 
 after_success:
