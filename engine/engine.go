@@ -426,7 +426,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			Summaries:   make(map[string]Summary, 0),
 		}
 		summaries := make(map[string]Summary, 0)
-		fileCount, codeLines, commentLines, totalLines := countcode.CountCode(projectPath)
+		fileCount, codeLines, commentLines, totalLines := countcode.CountCode(projectPath, exceptPackages)
 		summaries["FileCount"] = Summary{
 			Name:        "FileCount",
 			Description: strconv.Itoa(fileCount),
