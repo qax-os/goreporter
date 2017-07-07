@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
 var languages = []Language{
@@ -166,6 +167,7 @@ func handleFile(fname string) {
 }
 
 var files []string
+var expects []string
 
 func add(n string) {
 	fi, err := os.Stat(n)
@@ -178,6 +180,9 @@ func add(n string) {
 			goto invalid
 		}
 		for _, f := range fs {
+			if exceptPkg(path.Join(n, f.Name())) {
+				continue
+			}
 			if f.Name()[0] != '.' {
 				add(path.Join(n, f.Name()))
 			}
@@ -258,15 +263,28 @@ func printInfo() (fileCount, codeLines, commentLines, totalLines int) {
 	return 0, 0, 0, 0
 }
 
-func CountCode(projectPath string) (fileCount, codeLines, commentLines, totalLines int) {
+func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, totalLines int) {
 	args := []string{projectPath}
-
+	expects = strings.Split(except, ",")
 	for _, n := range args {
 		add(n)
 	}
-
+	fmt.Println(files)
 	for _, f := range files {
 		handleFile(f)
 	}
 	return printInfo()
+}
+
+// exceptPkg is a function that will determine whether the package is an exception.
+func exceptPkg(pkg string) bool {
+	if len(expects) == 0 {
+		return false
+	}
+	for _, va := range expects {
+		if strings.Contains(pkg, va) {
+			return true
+		}
+	}
+	return false
 }
