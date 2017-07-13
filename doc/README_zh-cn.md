@@ -1,4 +1,4 @@
-![goreporter](./logo.png)
+![goreporter](../logo.png)
 
 # goreporter
 
@@ -90,7 +90,7 @@ $ goreporter -p ../goreporter -r ../goreporter -t ./templates/template.html
 
 例子:github.com/wgliang/logcool
 
-![github.com/wgliang/logcool](./doc/github-com-wgliang-goreporter-logcool.png)
+![github.com/wgliang/logcool](./github-com-wgliang-goreporter-logcool.png)
 
 ## 致谢
 
