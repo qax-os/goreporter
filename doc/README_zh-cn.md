@@ -26,18 +26,18 @@ GoReporter是一个Golang编写的集代码静态分析，单元测试，代码�
 
 ## 检测项
 
-- [unittest](https://github.com/wgliang/goreporter/tree/master/linters/unittest) - Golang unit test status.
-- [deadcode](https://github.com/tsenart/deadcode) - Finds unused code.
-- [gocyclo](https://github.com/alecthomas/gocyclo) - Computes the cyclomatic complexity of functions.
-- [varcheck](https://github.com/opennota/check) - Find unused global variables and constants.
-- [structcheck](https://github.com/opennota/check) - Find unused struct fields.
-- [aligncheck](https://github.com/opennota/check) - Warn about un-optimally aligned structures.
-- [errcheck](https://github.com/kisielk/errcheck) - Check that error return values are used.
-- [copycode(dupl)](https://github.com/mibk/dupl) - Reports potentially duplicated code.
-- [gosimple](https://github.com/dominikh/go-tools/tree/master/cmd/gosimple) - Report simplifications in code.
-- [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
-- [godepgraph](https://github.com/kisielk/godepgraph) - Godepgraph is a program for generating a dependency graph of Go packages.
-- [misspell](https://github.com/client9/misspell) - Correct commonly misspelled English words... quickly.
+- [unittest](https://github.com/wgliang/goreporter/tree/master/linters/unittest) - 单元测试
+- [deadcode](https://github.com/tsenart/deadcode) - 无用代码
+- [gocyclo](https://github.com/alecthomas/gocyclo) - 圈复杂度
+- [varcheck](https://github.com/opennota/check) - 无用的常量和变量
+- [structcheck](https://github.com/opennota/check) - 无用结构体
+- [aligncheck](https://github.com/opennota/check) - 非对齐的结构体
+- [errcheck](https://github.com/kisielk/errcheck) - 检查返回值和错误
+- [copycode(dupl)](https://github.com/mibk/dupl) - 代码冗余
+- [gosimple](https://github.com/dominikh/go-tools/tree/master/cmd/gosimple) - 优化建议
+- [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - 静态检查
+- [godepgraph](https://github.com/kisielk/godepgraph) -包依赖图
+- [misspell](https://github.com/client9/misspell) - 英文命名
 
 ## 模版
 
