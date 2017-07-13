@@ -9,8 +9,6 @@
 
 A Golang tool that does static analysis, unit testing, code review and generate code quality report. This is a tool that concurrently runs a whole bunch of those linters and normalizes their output to a report:
 
-# Branch features
-
 <!-- MarkdownTOC -->
 
 - [Supported linters](#supported-linters)
