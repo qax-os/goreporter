@@ -1,8 +1,8 @@
 package staticscan
 
 import (
-	"github.com/wgliang/goreporter/linters/staticscan/lint/lintutil"
-	"github.com/wgliang/goreporter/linters/staticscan/staticcheck"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/lint/lintutil"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/staticcheck"
 )
 
 func StaticScan(projectPath string) []string {

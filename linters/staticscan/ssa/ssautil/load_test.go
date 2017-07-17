@@ -15,7 +15,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/wgliang/goreporter/linters/staticscan/ssa/ssautil"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa/ssautil"
 )
 
 const hello = `package main

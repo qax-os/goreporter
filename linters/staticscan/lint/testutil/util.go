@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file or at
 // https://developers.google.com/open-source/licenses/bsd.
 
-package testutil // import "github.com/wgliang/goreporter/linters/staticscan/lint/testutil"
+package testutil // import "github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/lint/testutil"
 
 import (
 	"flag"
@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wgliang/goreporter/linters/staticscan/lint"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/lint"
 
 	"golang.org/x/tools/go/loader"
 )

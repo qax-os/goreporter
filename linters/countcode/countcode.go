@@ -269,7 +269,6 @@ func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, 
 	for _, n := range args {
 		add(n)
 	}
-	fmt.Println(files)
 	for _, f := range files {
 		handleFile(f)
 	}

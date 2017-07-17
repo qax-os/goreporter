@@ -1,10 +1,10 @@
 ![goreporter](./logo.png)
 
-# goreporter [![Version Status](https://img.shields.io/badge/v2.5-stable-orange.svg)](https://github.com/wgliang/goreporter/releases/tag/version2.5.0)
+# goreporter [![Version Status](https://img.shields.io/badge/v2.5-stable-orange.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/tag/version2.5.0)
 
-[![Current Release](https://img.shields.io/github/release/wgliang/goreporter.svg)](https://github.com/wgliang/goreporter/releases/latest)
+[![Current Release](https://img.shields.io/github/release/wgliang/goreporter.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/latest)
 [![Build Status](https://travis-ci.org/wgliang/goreporter.svg?branch=master)](https://travis-ci.org/wgliang/goreporter)
-[![GoDoc](https://godoc.org/github.com/wgliang/goreporter?status.svg)](https://godoc.org/github.com/wgliang/goreporter)
+[![GoDoc](https://godoc.org/github.com/360EntSecGroup-Skylar/goreporter?status.svg)](https://godoc.org/github.com/360EntSecGroup-Skylar/goreporter)
 [![License](https://img.shields.io/badge/LICENSE-Apache2.0-ff69b4.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 A Golang tool that does static analysis, unit testing, code review and generate code quality report. This is a tool that concurrently runs a whole bunch of those linters and normalizes their output to a report:
@@ -26,7 +26,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 ## Supported linters
 
-- [unittest](https://github.com/wgliang/goreporter/tree/master/linters/unittest) - Golang unit test status.
+- [unittest](https://github.com/360EntSecGroup-Skylar/goreporter/tree/master/linters/unittest) - Golang unit test status.
 - [deadcode](https://github.com/tsenart/deadcode) - Finds unused code.
 - [gocyclo](https://github.com/alecthomas/gocyclo) - Computes the cyclomatic complexity of functions.
 - [varcheck](https://github.com/opennota/check) - Find unused global variables and constants.
@@ -65,7 +65,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 Install goreporter (see above).
 
 ```
-$ go get -u github.com/wgliang/goreporter
+$ go get -u github.com/360EntSecGroup-Skylar/goreporter
 ```
 
 ## Run it:

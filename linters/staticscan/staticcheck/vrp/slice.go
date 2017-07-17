@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"go/types"
 
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
 )
 
 type SliceInterval struct {

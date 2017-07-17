@@ -24,9 +24,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/360EntSecGroup-Skylar/goreporter/engine"
+	"github.com/360EntSecGroup-Skylar/goreporter/tools"
 	"github.com/golang/glog"
-	"github.com/wgliang/goreporter/engine"
-	"github.com/wgliang/goreporter/tools"
 )
 
 // Received parameters, you can control some features using:

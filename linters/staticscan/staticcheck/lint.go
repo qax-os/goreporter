@@ -1,5 +1,5 @@
 // Package staticcheck contains a linter for Go source code.
-package staticcheck // import "github.com/wgliang/goreporter/linters/staticscan/staticcheck"
+package staticcheck // import "github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/staticcheck"
 
 import (
 	"fmt"
@@ -16,11 +16,11 @@ import (
 	"sync"
 	texttemplate "text/template"
 
-	"github.com/wgliang/goreporter/linters/staticscan/functions"
-	"github.com/wgliang/goreporter/linters/staticscan/gcsizes"
-	"github.com/wgliang/goreporter/linters/staticscan/lint"
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
-	"github.com/wgliang/goreporter/linters/staticscan/staticcheck/vrp"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/functions"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/gcsizes"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/lint"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/staticcheck/vrp"
 
 	"golang.org/x/tools/go/ast/astutil"
 )

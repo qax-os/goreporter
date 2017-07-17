@@ -40,7 +40,7 @@
 // cmd/callgraph tool on its own source takes ~2.1s for RTA and ~5.4s
 // for points-to analysis.
 //
-package rta // import "github.com/wgliang/goreporter/linters/staticscan/callgraph/rta"
+package rta // import "github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/callgraph/rta"
 
 // TODO(adonovan): test it by connecting it to the interpreter and
 // replacing all "unreachable" functions by a special intrinsic, and
@@ -50,8 +50,8 @@ import (
 	"fmt"
 	"go/types"
 
-	"github.com/wgliang/goreporter/linters/staticscan/callgraph"
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/callgraph"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
 	"golang.org/x/tools/go/types/typeutil"
 )
 

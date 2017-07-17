@@ -1,8 +1,8 @@
 package job
 
 import (
-	"github.com/wgliang/goreporter/linters/copycheck/suffixtree"
-	"github.com/wgliang/goreporter/linters/copycheck/syntax"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck/suffixtree"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck/syntax"
 )
 
 func BuildTree(schan chan []*syntax.Node) (t *suffixtree.STree, d *[]*syntax.Node, done chan bool) {

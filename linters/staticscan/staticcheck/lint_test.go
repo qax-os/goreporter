@@ -3,7 +3,7 @@ package staticcheck
 import (
 	"testing"
 
-	"github.com/wgliang/goreporter/linters/staticscan/lint/testutil"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/lint/testutil"
 )
 
 func TestAll(t *testing.T) {

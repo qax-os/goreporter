@@ -2,9 +2,9 @@
 
 # goreporter
 
-[![Current Release](https://img.shields.io/github/release/wgliang/goreporter.svg)](https://github.com/wgliang/goreporter/releases/latest)
+[![Current Release](https://img.shields.io/github/release/wgliang/goreporter.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/latest)
 [![Build Status](https://travis-ci.org/wgliang/goreporter.svg?branch=master)](https://travis-ci.org/wgliang/goreporter)
-[![GoDoc](https://godoc.org/github.com/wgliang/goreporter?status.svg)](https://godoc.org/github.com/wgliang/goreporter)
+[![GoDoc](https://godoc.org/github.com/360EntSecGroup-Skylar/goreporter?status.svg)](https://godoc.org/github.com/360EntSecGroup-Skylar/goreporter)
 [![License](https://img.shields.io/badge/LICENSE-Apache2.0-ff69b4.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
 
 GoReporter是一个Golang编写的集代码静态分析，单元测试，代码审核和生成报告功能的工具。它会并发运行检测项并将结果规范化为报告：
@@ -26,7 +26,7 @@ GoReporter是一个Golang编写的集代码静态分析，单元测试，代码�
 
 ## 检测项
 
-- [unittest](https://github.com/wgliang/goreporter/tree/master/linters/unittest) - 单元测试
+- [unittest](https://github.com/360EntSecGroup-Skylar/goreporter/tree/master/linters/unittest) - 单元测试
 - [deadcode](https://github.com/tsenart/deadcode) - 无用代码
 - [gocyclo](https://github.com/alecthomas/gocyclo) - 圈复杂度
 - [varcheck](https://github.com/opennota/check) - 无用的常量和变量
@@ -61,7 +61,7 @@ GoReporter是一个Golang编写的集代码静态分析，单元测试，代码�
 
 - 1. 安装稳定版本，你可以到tag中下载
 
-- 2. 安装最新版本: `go get -u github.com/wgliang/goreporter`
+- 2. 安装最新版本: `go get -u github.com/360EntSecGroup-Skylar/goreporter`
 
 ## 快速开始
 

@@ -120,4 +120,4 @@
 // domains of source locations, ast.Nodes, types.Objects,
 // ssa.Values/Instructions.
 //
-package ssa // import "github.com/wgliang/goreporter/linters/staticscan/ssa"
+package ssa // import "github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"

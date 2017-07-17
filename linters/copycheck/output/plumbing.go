@@ -5,7 +5,7 @@ import (
 	"io"
 	"sort"
 
-	"github.com/wgliang/goreporter/linters/copycheck/syntax"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck/syntax"
 )
 
 type PlumbingPrinter struct {

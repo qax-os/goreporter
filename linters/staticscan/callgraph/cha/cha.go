@@ -21,14 +21,14 @@
 // and all concrete types are put into interfaces, it is sound to run on
 // partial programs, such as libraries without a main or test function.
 //
-package cha // import "github.com/wgliang/goreporter/linters/staticscan/callgraph/cha"
+package cha // import "github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/callgraph/cha"
 
 import (
 	"go/types"
 
-	"github.com/wgliang/goreporter/linters/staticscan/callgraph"
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
-	"github.com/wgliang/goreporter/linters/staticscan/ssa/ssautil"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/callgraph"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa/ssautil"
 	"golang.org/x/tools/go/types/typeutil"
 )
 

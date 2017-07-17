@@ -13,8 +13,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
-	"github.com/wgliang/goreporter/linters/staticscan/ssa/ssautil"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa/ssautil"
 	"golang.org/x/tools/go/loader"
 )
 

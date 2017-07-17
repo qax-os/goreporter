@@ -1,5 +1,5 @@
 // Package simple contains a linter for Go source code.
-package simple // import "github.com/wgliang/goreporter/linters/simplecode/simple"
+package simple // import "github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode/simple"
 
 import (
 	"go/ast"
@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/wgliang/goreporter/linters/simplecode/lint"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode/lint"
 )
 
 var Funcs = []lint.Func{

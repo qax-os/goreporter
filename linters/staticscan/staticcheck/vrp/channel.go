@@ -3,7 +3,7 @@ package vrp
 import (
 	"fmt"
 
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
 )
 
 type ChannelInterval struct {

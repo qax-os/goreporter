@@ -5,7 +5,7 @@
 // https://developers.google.com/open-source/licenses/bsd.
 
 // Package lint provides the foundation for tools like gosimple.
-package lint // import "github.com/wgliang/goreporter/linters/staticscan/lint"
+package lint // import "github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/lint"
 
 import (
 	"bytes"
@@ -21,8 +21,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
-	"github.com/wgliang/goreporter/linters/staticscan/ssa/ssautil"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa/ssautil"
 	"golang.org/x/tools/go/ast/astutil"
 	"golang.org/x/tools/go/loader"
 )

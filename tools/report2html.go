@@ -24,8 +24,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/golang/glog"
-	"github.com/wgliang/goreporter/engine"
 )
 
 // Json2Html will rebuild the reporter's json data into html data in template.

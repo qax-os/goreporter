@@ -20,15 +20,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/countcode"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/deadcode"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/depend"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
 	"github.com/golang/glog"
-	"github.com/wgliang/goreporter/linters/copycheck"
-	"github.com/wgliang/goreporter/linters/countcode"
-	"github.com/wgliang/goreporter/linters/cyclo"
-	"github.com/wgliang/goreporter/linters/deadcode"
-	"github.com/wgliang/goreporter/linters/depend"
-	"github.com/wgliang/goreporter/linters/simplecode"
-	"github.com/wgliang/goreporter/linters/spellcheck"
-	"github.com/wgliang/goreporter/linters/unittest"
 )
 
 // WaitGroupWrapper is a struct that as a waiter for all linetr-tasks.And it

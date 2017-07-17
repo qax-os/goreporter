@@ -18,8 +18,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/golang/glog"
-	"github.com/wgliang/goreporter/engine"
 )
 
 // SaveAsJson is a function that save data as a json report.And will receive

@@ -5,7 +5,7 @@
 // https://developers.google.com/open-source/licenses/bsd.
 
 // Package lintutil provides helpers for writing linter command lines.
-package lintutil // import "github.com/wgliang/goreporter/linters/simplecode/lint/lintutil"
+package lintutil // import "github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode/lint/lintutil"
 
 import (
 	"flag"
@@ -16,9 +16,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wgliang/goreporter/linters/simplecode/lint"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode/lint"
 
-	"github.com/wgliang/goreporter/linters/simplecode/gotool"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode/gotool"
 )
 
 func usage(name string, flags *flag.FlagSet) func() {

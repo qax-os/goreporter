@@ -5,7 +5,7 @@
 // https://developers.google.com/open-source/licenses/bsd.
 
 // Package lint provides the foundation for tools like gosimple.
-package lint // import "github.com/wgliang/goreporter/linters/simplecode/lint"
+package lint // import "github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode/lint"
 
 import (
 	"bytes"

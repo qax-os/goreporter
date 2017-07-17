@@ -6,7 +6,7 @@
 
 Check you have the latest version of its dependencies. Run
 ```
-go get -u github.com/wgliang/goreporter/linters/staticscan/staticcheck
+go get -u github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/staticcheck
 ```
 If you still have problems, consider searching for existing issues before filing a new issue.
 

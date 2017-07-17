@@ -32,7 +32,7 @@ in the call graph; they are treated like built-in operators of the
 language.
 
 */
-package callgraph // import "github.com/wgliang/goreporter/linters/staticscan/callgraph"
+package callgraph // import "github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/callgraph"
 
 // TODO(adonovan): add a function to eliminate wrappers from the
 // callgraph, preserving topology.
@@ -43,7 +43,7 @@ import (
 	"fmt"
 	"go/token"
 
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
 )
 
 // A Graph represents a call graph.

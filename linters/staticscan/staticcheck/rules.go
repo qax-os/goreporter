@@ -12,9 +12,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/wgliang/goreporter/linters/staticscan/lint"
-	"github.com/wgliang/goreporter/linters/staticscan/ssa"
-	"github.com/wgliang/goreporter/linters/staticscan/staticcheck/vrp"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/lint"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/ssa"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticscan/staticcheck/vrp"
 )
 
 const (
