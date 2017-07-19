@@ -70,6 +70,10 @@ $ go get -u github.com/360EntSecGroup-Skylar/goreporter
 
 ## Run it:
 
+### NOTE
+
+You have to confirm that your project is operational. In particular, the problem with vendor, when the package is not found in the default path, goreporter will look again from the possible vendor path.
+
 ```
 $ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html/text]  {-t templatePathIfHtml}
 ```
