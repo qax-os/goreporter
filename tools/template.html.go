@@ -499,7 +499,7 @@ $(function() {
         }
         $(".gr_simple_table").html(gr_simple_table);
     } else {
-        $(".gr_simple_tb").html(thumb+'<center>No code can be simplifying</center>');
+        $(".gr_simple_tb").html(thumb+'<center>No code can be simplified</center>');
     }
 
     var c = 0;
@@ -514,7 +514,7 @@ $(function() {
         }
         $(".gr_spell_table").html(gr_spell_table);
     } else {
-        $(".gr_spell_tb").html(thumb+'<center>No spell errors</center>');
+        $(".gr_spell_tb").html(thumb+'<center>No spelling errors</center>');
     }
 
     var c = 0;
