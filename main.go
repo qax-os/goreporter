@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/360EntSecGroup-Skylar/goreporter/tools"
-	"github.com/golang/glog"
 )
 
 // Received parameters, you can control some features using:
@@ -52,40 +52,40 @@ var (
 func main() {
 	flag.Parse()
 	if *projectPath == "" {
-		glog.Fatal("The project path is not specified")
+		log.Fatal("The project path is not specified")
 	} else {
 		_, err := os.Stat(*projectPath)
 		if err != nil {
-			glog.Fatal("project path is invalid")
+			log.Fatal("project path is invalid")
 		}
 	}
 
 	var templateHtml string
 	if *templatePath == "" {
-		glog.Warningln("The template path is not specified,and will use the default template")
+		log.Println("The template path is not specified,and will use the default template")
 	} else {
 		if !strings.HasSuffix(*templatePath, ".html") {
-			glog.Warningln("The template file is not a html template")
+			log.Println("The template file is not a html template")
 		}
 		fileData, err := ioutil.ReadFile(*templatePath)
 		if err != nil {
-			glog.Fatal(err)
+			log.Fatal(err)
 		} else {
 			templateHtml = string(fileData)
 		}
 	}
 
 	if *reportPath == "" {
-		glog.Warningln("The report path is not specified, and the current path is used by default")
+		log.Println("The report path is not specified, and the current path is used by default")
 	} else {
 		_, err := os.Stat(*reportPath)
 		if err != nil {
-			glog.Fatal("report path is invalid:", err)
+			log.Fatal("report path is invalid:", err)
 		}
 	}
 
 	if *exceptPackages == "" {
-		glog.Warningln("There are no packages that are excepted, review all items of the package")
+		log.Println("There are no packages that are excepted, review all items of the package")
 	}
 
 	startTime := strconv.FormatInt(time.Now().Unix(), 10)
@@ -100,7 +100,7 @@ func main() {
 	} else {
 		htmlData, err := tools.Json2Html(jsonData)
 		if err != nil {
-			glog.Errorln("Json2Html error:", err)
+			log.Println("Json2Html error:", err)
 			return
 		}
 		tools.SaveAsHtml(htmlData, *projectPath, *reportPath, startTime, templateHtml)
