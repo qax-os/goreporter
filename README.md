@@ -49,7 +49,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 - There are still many shortcomings in the presentation of the report, showing that the model is not perfect, and hope that someone can help optimize it.
 - Bad Practice:the code violates the accepted best practice standards
-- Malicious code vulnerbility
+- Malicious code vulnerability
 - Performance
 - Security
 
