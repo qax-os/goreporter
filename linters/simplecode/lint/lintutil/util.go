@@ -21,6 +21,10 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode/gotool"
 )
 
+var (
+	excepts = []string{"vendor"}
+)
+
 func usage(name string, flags *flag.FlagSet) func() {
 	return func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", name)
@@ -149,17 +153,41 @@ func (runner *runner) lintImportedPackage(pkg *build.Package, err error) {
 
 	var files []string
 	xtest := pkg.XTestGoFiles
-	files = append(files, pkg.GoFiles...)
-	files = append(files, pkg.CgoFiles...)
-	files = append(files, pkg.TestGoFiles...)
+	files = append(files, filterFiles(pkg.GoFiles, pkg.Dir)...)
+	files = append(files, filterFiles(pkg.CgoFiles, pkg.Dir)...)
+	files = append(files, filterFiles(pkg.TestGoFiles, pkg.Dir)...)
 	if pkg.Dir != "." {
-		for i, f := range files {
-			files[i] = filepath.Join(pkg.Dir, f)
-		}
 		for i, f := range xtest {
 			xtest[i] = filepath.Join(pkg.Dir, f)
 		}
 	}
 	runner.lintFiles(xtest...)
 	runner.lintFiles(files...)
+}
+
+func filterFiles(files []string, pkgDir string) (filtedFiles []string) {
+	if pkgDir != "." {
+		for i, f := range files {
+			files[i] = filepath.Join(pkgDir, f)
+			if !exceptPkg(files[i]) {
+				filtedFiles = append(filtedFiles, files[i])
+			}
+		}
+	} else {
+		return files
+	}
+	return filtedFiles
+}
+
+// exceptPkg is a function that will determine whether the package is an exception.
+func exceptPkg(pkg string) bool {
+	if len(excepts) == 0 {
+		return false
+	}
+	for _, va := range excepts {
+		if strings.Contains(pkg, va) {
+			return true
+		}
+	}
+	return false
 }
