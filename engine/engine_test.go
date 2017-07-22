@@ -15,9 +15,15 @@ package engine
 
 import (
 	"testing"
+	"time"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/tools/processbar"
 )
 
 func Test_Engine(t *testing.T) {
 	report := NewReporter()
-	report.Engine("../../logcool", "")
+	lintersProcessChans := make(chan int64, 20)
+	lintersFinishedSignal := make(chan string, 10)
+	go processbar.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
+	report.Engine("../../logcool", "", lintersProcessChans, lintersFinishedSignal, time.Now())
 }

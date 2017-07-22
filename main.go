@@ -28,6 +28,7 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/360EntSecGroup-Skylar/goreporter/tools"
+	"github.com/360EntSecGroup-Skylar/goreporter/tools/processbar"
 )
 
 // Received parameters, you can control some features using:
@@ -91,7 +92,7 @@ func main() {
 	// Displaying linters process bar.
 	lintersProcessChans := make(chan int64, 20)
 	lintersFinishedSignal := make(chan string, 10)
-	go tools.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
+	go processbar.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
 	start := time.Now()
 	startTime := strconv.FormatInt(start.Unix(), 10)
 	reporter := engine.NewReporter()
