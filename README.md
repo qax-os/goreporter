@@ -90,9 +90,6 @@ By default, the default template is used to generate reports in html format.
 
 ![goreporter-display](./DISPLAY.gif)
 
-```
-$ goreporter -p ../goreporter -r ../goreporter -t ./templates/template.html
-```
 you can see result detail:[online-example-report](http://fiisio.me/pages/goreporter-report.html)
 
 example:github.com/wgliang/logcool
