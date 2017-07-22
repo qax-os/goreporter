@@ -269,6 +269,7 @@ func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, 
 	for _, n := range args {
 		add(n)
 	}
+
 	for _, f := range files {
 		handleFile(f)
 	}
@@ -278,7 +279,7 @@ func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, 
 // exceptPkg is a function that will determine whether the package is an exception.
 func exceptPkg(pkg string) bool {
 	if len(expects) == 0 {
-		return false
+		expects = append(expects, "vendor")
 	}
 	for _, va := range expects {
 		if strings.Contains(pkg, va) {

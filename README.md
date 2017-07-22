@@ -88,6 +88,8 @@ By default, the default template is used to generate reports in html format.
 
 ## Example
 
+![goreporter-display](./DISPLAY.gif)
+
 ```
 $ goreporter -p ../goreporter -r ../goreporter -t ./templates/template.html
 ```

@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -87,17 +88,23 @@ func main() {
 	if *exceptPackages == "" {
 		log.Println("There are no packages that are excepted, review all items of the package")
 	}
-
-	startTime := strconv.FormatInt(time.Now().Unix(), 10)
+	// Displaying linters process bar.
+	lintersProcessChans := make(chan int64, 20)
+	lintersFinishedSignal := make(chan string, 10)
+	go tools.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
+	start := time.Now()
+	startTime := strconv.FormatInt(start.Unix(), 10)
 	reporter := engine.NewReporter()
-	reporter.Engine(*projectPath, *exceptPackages)
+	reporter.Engine(*projectPath, *exceptPackages, lintersProcessChans, lintersFinishedSignal, start)
 	jsonData := reporter.FormateReport2Json()
 
 	if *formateOfReport == "json" {
+		log.Println(fmt.Sprintf("Generating json report,time consuming %vs", time.Now().Sub(start).Seconds()))
 		tools.SaveAsJson(jsonData, *projectPath, *reportPath, startTime)
 	} else if *formateOfReport == "text" {
 		tools.DisplayAsText(jsonData)
 	} else {
+		log.Println(fmt.Sprintf("Generating HTML report,time consuming %vs", time.Now().Sub(start).Seconds()))
 		htmlData, err := tools.Json2Html(jsonData)
 		if err != nil {
 			log.Println("Json2Html error:", err)
@@ -105,4 +112,5 @@ func main() {
 		}
 		tools.SaveAsHtml(htmlData, *projectPath, *reportPath, startTime, templateHtml)
 	}
+	log.Println(fmt.Sprintf("GoReporter Finished,time consuming %vs", time.Now().Sub(start).Seconds()))
 }

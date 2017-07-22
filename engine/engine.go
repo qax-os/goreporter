@@ -15,6 +15,7 @@ package engine
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -60,8 +61,7 @@ func NewReporter() *Reporter {
 // Engine is a important function of goreporter, it will run all linters and rebuild
 // metrics data in a golang prohject. And all linters' result will be as one metric
 // data for Reporter.
-func (r *Reporter) Engine(projectPath string, exceptPackages string) {
-
+func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProcessChans chan int64, lintersFinishedSignal chan string, start time.Time) {
 	glog.Infoln("start code quality assessment...")
 	wg := &WaitGroupWrapper{}
 	lintersFunction := make(map[string]func(), 9)
@@ -92,6 +92,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 		sumCover := 0.0
 		countCover := 0
+		sumProcessNumber := int64(30)
+		processUnit := getProcessUnit(sumProcessNumber, len(dirsUnitTest))
 		var pkg sync.WaitGroup
 		for pkgName, pkgPath := range dirsUnitTest {
 			pkg.Add(1)
@@ -141,6 +143,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 				pkg.Done()
 			}(pkgName, pkgPath)
+			if sumProcessNumber > 0 {
+				lintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
 		}
 
 		pkg.Wait()
@@ -157,6 +163,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.syncRW.Lock()
 		r.Metrics["UnitTestTips"] = metricUnitTest
 		r.syncRW.Unlock()
+		lintersProcessChans <- sumProcessNumber
+		lintersFinishedSignal <- fmt.Sprintf("Linter:UnitTest over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("unit test over!")
 	}
 	// All directory that has .go files will be add into.
@@ -178,6 +186,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 		summaries := make(map[string]Summary, 0)
 		sumAverageCyclo := 0.0
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(dirsAll))
 		var compBigThan15 int
 		for pkgName, pkgPath := range dirsAll {
 			summary := Summary{
@@ -205,6 +215,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			summary.Errors = errors
 			summary.Description = avg
 			summaries[pkgName] = summary
+			if sumProcessNumber > 0 {
+				lintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
 		}
 
 		metricCyclo.Summaries = summaries
@@ -213,6 +227,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["CycloTips"] = metricCyclo
 		r.syncRW.Unlock()
+		lintersProcessChans <- sumProcessNumber
+		lintersFinishedSignal <- fmt.Sprintf("Linter:Cyclo over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("comput cyclo done!")
 	}
 	// linterfunction:simpleCodeF,all golang code hints that can be optimized
@@ -228,7 +244,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		summaries := make(map[string]Summary, 0)
 
 		simples := simplecode.Simple(dirsAll)
-
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(simples))
 		for _, simpleTip := range simples {
 			simpleTips := strings.Split(simpleTip, ":")
 			if len(simpleTips) == 4 {
@@ -251,6 +268,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 				}
 
 			}
+			if sumProcessNumber > 0 {
+				lintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
 		}
 		metricSimple.Summaries = summaries
 		metricSimple.Percentage = countPercentage(len(summaries))
@@ -258,6 +279,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["SimpleTips"] = metricSimple
 		r.syncRW.Unlock()
+		lintersProcessChans <- sumProcessNumber
+		lintersFinishedSignal <- fmt.Sprintf("Linter:Simple over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("simple code done!")
 	}
 
@@ -273,6 +296,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 
 		summaries := make(map[string]Summary, 0)
 		copyCodeList := copycheck.CopyCheck(projectPath, "_test.go")
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(copyCodeList))
 		for i := 0; i < len(copyCodeList); i++ {
 			summary := Summary{
 				Errors: make([]Error, 0),
@@ -296,6 +321,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 			}
 			summary.Name = strconv.Itoa(len(summary.Errors))
 			summaries[string(i)] = summary
+			if sumProcessNumber > 0 {
+				lintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
 		}
 
 		metricCopyCode.Summaries = summaries
@@ -304,6 +333,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["CopyCodeTips"] = metricCopyCode
 		r.syncRW.Unlock()
+		lintersProcessChans <- sumProcessNumber
+		lintersFinishedSignal <- fmt.Sprintf("Linter:CopyCode over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("checked copy code!")
 	}
 	// linterFunction:deadCodeF,all useless code, or never obsolete obsolete code.
@@ -318,6 +349,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		summaries := make(map[string]Summary, 0)
 
 		deadcode := deadcode.DeadCode(projectPath)
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(deadcode))
 		for _, simpleTip := range deadcode {
 			deadCodeTips := strings.Split(simpleTip, ":")
 			if len(deadCodeTips) == 4 {
@@ -338,7 +371,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 					summarie.Errors = append(summarie.Errors, erroru)
 					summaries[packageName] = summarie
 				}
-
+			}
+			if sumProcessNumber > 0 {
+				lintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
 		metricDeadCode.Summaries = summaries
@@ -347,6 +383,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DeadCodeTips"] = metricDeadCode
 		r.syncRW.Unlock()
+		lintersProcessChans <- sumProcessNumber
+		lintersFinishedSignal <- fmt.Sprintf("Linter:SwadCode over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("check dead code done.")
 	}
 	// linterFunction:spellCheckF,check the project variables, functions,
@@ -362,7 +400,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		summaries := make(map[string]Summary, 0)
 
 		spelltips := spellcheck.SpellCheck(projectPath, exceptPackages)
-
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(spelltips))
 		for _, simpleTip := range spelltips {
 			simpleTips := strings.Split(simpleTip, ":")
 			if len(simpleTips) == 4 {
@@ -383,7 +422,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 					summarie.Errors = append(summarie.Errors, erroru)
 					summaries[packageName] = summarie
 				}
-
+			}
+			if sumProcessNumber > 0 {
+				lintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
 		metricSpellTips.Summaries = summaries
@@ -392,6 +434,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["SpellCheckTips"] = metricSpellTips
 		r.syncRW.Unlock()
+		lintersProcessChans <- sumProcessNumber
+		lintersFinishedSignal <- fmt.Sprintf("Linter:Spell over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("checked spell error")
 	}
 	// linterFunction:importPackagesF,The project contains all the package lists.
@@ -413,6 +457,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.syncRW.Lock()
 		r.Metrics["ImportPackagesTips"] = metricImportPackageTips
 		r.syncRW.Unlock()
+		lintersProcessChans <- int64(5)
+		lintersFinishedSignal <- fmt.Sprintf("Linter:ImportPackages over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("import packages done.")
 	}
 
@@ -448,6 +494,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.syncRW.Lock()
 		r.Metrics["CountCodeTips"] = metricCountCodeTips
 		r.syncRW.Unlock()
+		lintersProcessChans <- int64(5)
+		lintersFinishedSignal <- fmt.Sprintf("Linter:CountCode over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("count code done.")
 	}
 
@@ -473,6 +521,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DependGraphTips"] = metricDependGraphTips
 		r.syncRW.Unlock()
+		lintersProcessChans <- int64(10)
+		lintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Now().Sub(start).Seconds())
 		glog.Infoln("created depend graph")
 	}
 	r.TimeStamp = time.Now().Format("2006-01-02 15:04:05")
@@ -482,7 +532,8 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string) {
 	}
 
 	wg.Wait()
-
+	// ensure peocessbar quit.
+	lintersProcessChans <- 100
 	glog.Infoln("finished code quality assessment...")
 }
 
@@ -525,5 +576,15 @@ func countPercentage(issues int) float64 {
 		return float64(100 - 10 - 20 - 50 - (issues-20)*1)
 	} else {
 		return 0.0
+	}
+}
+
+func getProcessUnit(sumProcessNumber int64, number int) int64 {
+	if number == 0 {
+		return sumProcessNumber
+	} else if sumProcessNumber/int64(number) <= 0 {
+		return int64(1)
+	} else {
+		return sumProcessNumber / int64(number)
 	}
 }
