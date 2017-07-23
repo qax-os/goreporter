@@ -13,7 +13,10 @@
 
 package engine
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 // Error contains the line number and the reason for
 // an error output from a command
@@ -41,6 +44,14 @@ type Metric struct {
 	Error       string             `json:"error"`
 }
 
+type InitConfig struct {
+	ProjectPath           string
+	ExceptPackages        string
+	LintersProcessChans   chan int64
+	LintersFinishedSignal chan string
+	StartTime             time.Time
+}
+
 // Reporter is the top struct of GoReporter.
 type Reporter struct {
 	Project   string            `json:"project"`
@@ -50,5 +61,7 @@ type Reporter struct {
 	Issues    int               `json:"issues"`
 	TimeStamp string            `json:"time_stamp"`
 
+	config InitConfig
 	syncRW *sync.RWMutex
+	waitGW *WaitGroupWrapper
 }

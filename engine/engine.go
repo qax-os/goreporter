@@ -51,32 +51,59 @@ func (w *WaitGroupWrapper) Wrap(cb func()) {
 
 // NewReporter will initialize a Reporter struct and return address of the struct
 // which is safe for use.
-func NewReporter() *Reporter {
+func NewReporter(eic InitConfig) *Reporter {
 	return &Reporter{
 		Metrics: make(map[string]Metric, 0),
+		config:  eic,
 		syncRW:  new(sync.RWMutex),
+		waitGW:  &WaitGroupWrapper{},
 	}
 }
 
 // Engine is a important function of goreporter, it will run all linters and rebuild
 // metrics data in a golang prohject. And all linters' result will be as one metric
 // data for Reporter.
-func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProcessChans chan int64, lintersFinishedSignal chan string, start time.Time) {
+func (r *Reporter) Engine() {
 	glog.Infoln("start code quality assessment...")
-	wg := &WaitGroupWrapper{}
-	lintersFunction := make(map[string]func(), 9)
+
 	// All directory that has _test.go files will be add into.
-	dirsUnitTest, err := DirList(projectPath, "_test.go", exceptPackages)
+	dirsUnitTest, err := DirList(r.config.ProjectPath, "_test.go", r.config.ExceptPackages)
 	if err != nil {
 		glog.Errorln(err)
 	}
 	r.syncRW.Lock()
-	r.Project = PackageAbsPath(projectPath)
+	r.Project = PackageAbsPath(r.config.ProjectPath)
 	r.syncRW.Unlock()
 
-	// linterFunction:unitTestF,Run all valid TEST in your golang package.And will measure
-	// from both coverage and time-consuming
-	lintersFunction["unitTestF"] = func() {
+	// All directory that has .go files will be add into.
+	dirsAll, err := DirList(r.config.ProjectPath, ".go", r.config.ExceptPackages)
+	if err != nil {
+		glog.Errorln(err)
+	}
+
+	r.linterUnitTest(dirsUnitTest)
+	r.linterCyclo(dirsAll)
+	r.linterSimple(dirsAll)
+	r.linterCopy()
+	r.linterDead()
+	r.linterSpellCheck()
+	r.linterImportPackages()
+	r.linterCount()
+	r.linterDependGraph()
+
+	r.waitGW.Wait()
+
+	r.TimeStamp = time.Now().Format("2006-01-02 15:04:05")
+
+	// ensure peocessbar quit.
+	r.config.LintersProcessChans <- 100
+	glog.Infoln("finished code quality assessment...")
+}
+
+// linterUnitTest is a function that wil run all valid TEST in your golang package.
+// And will measure from both coverage and time-consuming.
+func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("running unit test...")
 
 		metricUnitTest := Metric{
@@ -144,7 +171,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 				pkg.Done()
 			}(pkgName, pkgPath)
 			if sumProcessNumber > 0 {
-				lintersProcessChans <- processUnit
+				r.config.LintersProcessChans <- processUnit
 				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
@@ -163,19 +190,18 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.syncRW.Lock()
 		r.Metrics["UnitTestTips"] = metricUnitTest
 		r.syncRW.Unlock()
-		lintersProcessChans <- sumProcessNumber
-		lintersFinishedSignal <- fmt.Sprintf("Linter:UnitTest over,time consuming %vs", time.Now().Sub(start).Seconds())
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:UnitTest over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("unit test over!")
-	}
-	// All directory that has .go files will be add into.
-	dirsAll, err := DirList(projectPath, ".go", exceptPackages)
-	if err != nil {
-		glog.Errorln(err)
-	}
+	})
+}
 
-	// linterFunnction:cycloF,Computing all [.go] file's cyclo,and as an important
-	// indicator of the quality of the code.
-	lintersFunction["cycloF"] = func() {
+// linterCyclo provides a function that computs all [.go] file's cyclo,and as an important
+// indicator of the quality of the code.
+func (r *Reporter) linterCyclo(dirsAll map[string]string) {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("computing cyclo...")
 
 		metricCyclo := Metric{
@@ -216,7 +242,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 			summary.Description = avg
 			summaries[pkgName] = summary
 			if sumProcessNumber > 0 {
-				lintersProcessChans <- processUnit
+				r.config.LintersProcessChans <- processUnit
 				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
@@ -227,13 +253,18 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["CycloTips"] = metricCyclo
 		r.syncRW.Unlock()
-		lintersProcessChans <- sumProcessNumber
-		lintersFinishedSignal <- fmt.Sprintf("Linter:Cyclo over,time consuming %vs", time.Now().Sub(start).Seconds())
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Cyclo over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("comput cyclo done!")
-	}
-	// linterfunction:simpleCodeF,all golang code hints that can be optimized
-	// and give suggestions for changes.
-	lintersFunction["simpleCodeF"] = func() {
+	})
+}
+
+// linterSimple provides a function that scans all golang code hints that can be optimized
+// and give suggestions for changes.
+func (r *Reporter) linterSimple(dirsAll map[string]string) {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("simpling code...")
 
 		metricSimple := Metric{
@@ -269,7 +300,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 
 			}
 			if sumProcessNumber > 0 {
-				lintersProcessChans <- processUnit
+				r.config.LintersProcessChans <- processUnit
 				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
@@ -279,14 +310,18 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["SimpleTips"] = metricSimple
 		r.syncRW.Unlock()
-		lintersProcessChans <- sumProcessNumber
-		lintersFinishedSignal <- fmt.Sprintf("Linter:Simple over,time consuming %vs", time.Now().Sub(start).Seconds())
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Simple over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("simple code done!")
-	}
+	})
+}
 
-	// linterFunction:copycode,query all duplicate code in the project and give
-	// duplicate code locations and rows.
-	lintersFunction["copyCheckF"] = func() {
+// linterCopy provides a function that scans all duplicate code in the project and give
+// duplicate code locations and rows.
+func (r *Reporter) linterCopy() {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("checking copy code...")
 		metricCopyCode := Metric{
 			Name:        "CopyCode",
@@ -295,7 +330,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		}
 
 		summaries := make(map[string]Summary, 0)
-		copyCodeList := copycheck.CopyCheck(projectPath, "_test.go")
+		copyCodeList := copycheck.CopyCheck(r.config.ProjectPath, "_test.go")
 		sumProcessNumber := int64(10)
 		processUnit := getProcessUnit(sumProcessNumber, len(copyCodeList))
 		for i := 0; i < len(copyCodeList); i++ {
@@ -322,7 +357,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 			summary.Name = strconv.Itoa(len(summary.Errors))
 			summaries[string(i)] = summary
 			if sumProcessNumber > 0 {
-				lintersProcessChans <- processUnit
+				r.config.LintersProcessChans <- processUnit
 				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
@@ -333,12 +368,17 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["CopyCodeTips"] = metricCopyCode
 		r.syncRW.Unlock()
-		lintersProcessChans <- sumProcessNumber
-		lintersFinishedSignal <- fmt.Sprintf("Linter:CopyCode over,time consuming %vs", time.Now().Sub(start).Seconds())
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:CopyCode over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("checked copy code!")
-	}
-	// linterFunction:deadCodeF,all useless code, or never obsolete obsolete code.
-	lintersFunction["deadCodeF"] = func() {
+	})
+}
+
+// linterDead provides a function that will scans all useless code, or never obsolete obsolete code.
+func (r *Reporter) linterDead() {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("checking dead code...")
 
 		metricDeadCode := Metric{
@@ -348,7 +388,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		}
 		summaries := make(map[string]Summary, 0)
 
-		deadcode := deadcode.DeadCode(projectPath)
+		deadcode := deadcode.DeadCode(r.config.ProjectPath)
 		sumProcessNumber := int64(10)
 		processUnit := getProcessUnit(sumProcessNumber, len(deadcode))
 		for _, simpleTip := range deadcode {
@@ -373,7 +413,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 				}
 			}
 			if sumProcessNumber > 0 {
-				lintersProcessChans <- processUnit
+				r.config.LintersProcessChans <- processUnit
 				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
@@ -383,13 +423,18 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DeadCodeTips"] = metricDeadCode
 		r.syncRW.Unlock()
-		lintersProcessChans <- sumProcessNumber
-		lintersFinishedSignal <- fmt.Sprintf("Linter:SwadCode over,time consuming %vs", time.Now().Sub(start).Seconds())
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DeadCode over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("check dead code done.")
-	}
-	// linterFunction:spellCheckF,check the project variables, functions,
-	// etc. naming spelling is wrong.
-	lintersFunction["spellCheckF"] = func() {
+	})
+}
+
+// linterSpellCheck provides a function that checks the project variables, functions,
+// etc. naming spelling is wrong.
+func (r *Reporter) linterSpellCheck() {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("checking spell error...")
 
 		metricSpellTips := Metric{
@@ -399,7 +444,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		}
 		summaries := make(map[string]Summary, 0)
 
-		spelltips := spellcheck.SpellCheck(projectPath, exceptPackages)
+		spelltips := spellcheck.SpellCheck(r.config.ProjectPath, r.config.ExceptPackages)
 		sumProcessNumber := int64(10)
 		processUnit := getProcessUnit(sumProcessNumber, len(spelltips))
 		for _, simpleTip := range spelltips {
@@ -424,7 +469,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 				}
 			}
 			if sumProcessNumber > 0 {
-				lintersProcessChans <- processUnit
+				r.config.LintersProcessChans <- processUnit
 				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
@@ -434,12 +479,17 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["SpellCheckTips"] = metricSpellTips
 		r.syncRW.Unlock()
-		lintersProcessChans <- sumProcessNumber
-		lintersFinishedSignal <- fmt.Sprintf("Linter:Spell over,time consuming %vs", time.Now().Sub(start).Seconds())
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Spell over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("checked spell error")
-	}
-	// linterFunction:importPackagesF,The project contains all the package lists.
-	lintersFunction["ImportPackagesF"] = func() {
+	})
+}
+
+// linterImportPackages is a function that scan the project contains all the package lists.
+func (r *Reporter) linterImportPackages() {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("getting import packages...")
 		metricImportPackageTips := Metric{
 			Name:        "ImportPackages",
@@ -448,7 +498,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 			Summaries:   make(map[string]Summary, 0),
 		}
 		summaries := make(map[string]Summary, 0)
-		importPkgs := unittest.GoListWithImportPackages(projectPath)
+		importPkgs := unittest.GoListWithImportPackages(r.config.ProjectPath)
 		for i := 0; i < len(importPkgs); i++ {
 			summaries[importPkgs[i]] = Summary{Name: importPkgs[i]}
 		}
@@ -457,13 +507,15 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.syncRW.Lock()
 		r.Metrics["ImportPackagesTips"] = metricImportPackageTips
 		r.syncRW.Unlock()
-		lintersProcessChans <- int64(5)
-		lintersFinishedSignal <- fmt.Sprintf("Linter:ImportPackages over,time consuming %vs", time.Now().Sub(start).Seconds())
+		r.config.LintersProcessChans <- int64(5)
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:ImportPackages over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("import packages done.")
-	}
+	})
+}
 
-	// linterFunction:countCodeF,Count go files and go code lines of project.
-	lintersFunction["CountCodeF"] = func() {
+// linterCount is a function taht counts go files and go code lines of project.
+func (r *Reporter) linterCount() {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("countting code...")
 		metricCountCodeTips := Metric{
 			Name:        "CountCode",
@@ -472,7 +524,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 			Summaries:   make(map[string]Summary, 0),
 		}
 		summaries := make(map[string]Summary, 0)
-		fileCount, codeLines, commentLines, totalLines := countcode.CountCode(projectPath, exceptPackages)
+		fileCount, codeLines, commentLines, totalLines := countcode.CountCode(r.config.ProjectPath, r.config.ExceptPackages)
 		summaries["FileCount"] = Summary{
 			Name:        "FileCount",
 			Description: strconv.Itoa(fileCount),
@@ -494,14 +546,16 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.syncRW.Lock()
 		r.Metrics["CountCodeTips"] = metricCountCodeTips
 		r.syncRW.Unlock()
-		lintersProcessChans <- int64(5)
-		lintersFinishedSignal <- fmt.Sprintf("Linter:CountCode over,time consuming %vs", time.Now().Sub(start).Seconds())
+		r.config.LintersProcessChans <- int64(5)
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:CountCode over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("count code done.")
-	}
+	})
+}
 
-	// linterFunction:dependGraphF,The dependency graph for all packages in the
-	// project helps you optimize the project architecture.
-	lintersFunction["dependGraphF"] = func() {
+// linterDependGraph is a function that builds the dependency graph for all packages in the
+// project helps you optimize the project architecture.
+func (r *Reporter) linterDependGraph() {
+	r.waitGW.Wrap(func() {
 		glog.Infoln("creating depend graph...")
 		metricDependGraphTips := Metric{
 			Name:        "DependGraph",
@@ -510,7 +564,7 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		}
 		summaries := make(map[string]Summary, 0)
 
-		graph := depend.Depend(projectPath, exceptPackages)
+		graph := depend.Depend(r.config.ProjectPath, r.config.ExceptPackages)
 		summaries["graph"] = Summary{
 			Name:        "graph",
 			Description: graph,
@@ -521,20 +575,10 @@ func (r *Reporter) Engine(projectPath string, exceptPackages string, lintersProc
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DependGraphTips"] = metricDependGraphTips
 		r.syncRW.Unlock()
-		lintersProcessChans <- int64(10)
-		lintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Now().Sub(start).Seconds())
+		r.config.LintersProcessChans <- int64(10)
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("created depend graph")
-	}
-	r.TimeStamp = time.Now().Format("2006-01-02 15:04:05")
-	// run all linters.
-	for _, funcRun := range lintersFunction {
-		wg.Wrap(funcRun)
-	}
-
-	wg.Wait()
-	// ensure peocessbar quit.
-	lintersProcessChans <- 100
-	glog.Infoln("finished code quality assessment...")
+	})
 }
 
 // FormateReport2Json will marshal struct Reporter into json and

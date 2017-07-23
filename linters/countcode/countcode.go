@@ -167,7 +167,7 @@ func handleFile(fname string) {
 }
 
 var files []string
-var expects []string
+var excepts = make([]string, 0)
 
 func add(n string) {
 	fi, err := os.Stat(n)
@@ -179,6 +179,7 @@ func add(n string) {
 		if err != nil {
 			goto invalid
 		}
+
 		for _, f := range fs {
 			if exceptPkg(path.Join(n, f.Name())) {
 				continue
@@ -265,11 +266,19 @@ func printInfo() (fileCount, codeLines, commentLines, totalLines int) {
 
 func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, totalLines int) {
 	args := []string{projectPath}
-	expects = strings.Split(except, ",")
+
+	temp := strings.Split(except, ",")
+	temp = append(temp, "vendor")
+
+	for i := range temp {
+		if !(temp[i] == "") {
+			excepts = append(excepts, temp[i])
+		}
+	}
+
 	for _, n := range args {
 		add(n)
 	}
-
 	for _, f := range files {
 		handleFile(f)
 	}
@@ -278,10 +287,13 @@ func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, 
 
 // exceptPkg is a function that will determine whether the package is an exception.
 func exceptPkg(pkg string) bool {
-	if len(expects) == 0 {
-		expects = append(expects, "vendor")
+	if len(excepts) == 0 {
+		if strings.Contains(pkg, "vendor") {
+			return true
+		}
 	}
-	for _, va := range expects {
+
+	for _, va := range excepts {
 		if strings.Contains(pkg, va) {
 			return true
 		}

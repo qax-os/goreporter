@@ -95,8 +95,17 @@ func main() {
 	go processbar.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
 	start := time.Now()
 	startTime := strconv.FormatInt(start.Unix(), 10)
-	reporter := engine.NewReporter()
-	reporter.Engine(*projectPath, *exceptPackages, lintersProcessChans, lintersFinishedSignal, start)
+	reporter := engine.NewReporter(engine.InitConfig{
+		ProjectPath:           *projectPath,
+		ExceptPackages:        *exceptPackages,
+		LintersProcessChans:   lintersProcessChans,
+		LintersFinishedSignal: lintersFinishedSignal,
+		StartTime:             start,
+	})
+	reporter.Engine()
+	close(lintersFinishedSignal)
+	close(lintersProcessChans)
+
 	jsonData := reporter.FormateReport2Json()
 
 	if *formateOfReport == "json" {

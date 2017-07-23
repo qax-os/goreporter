@@ -21,9 +21,18 @@ import (
 )
 
 func Test_Engine(t *testing.T) {
-	report := NewReporter()
 	lintersProcessChans := make(chan int64, 20)
 	lintersFinishedSignal := make(chan string, 10)
 	go processbar.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
-	report.Engine("../../logcool", "", lintersProcessChans, lintersFinishedSignal, time.Now())
+	start := time.Now()
+	reporter := NewReporter(InitConfig{
+		ProjectPath:           "../../../wgliang/logcool",
+		ExceptPackages:        "",
+		LintersProcessChans:   lintersProcessChans,
+		LintersFinishedSignal: lintersFinishedSignal,
+		StartTime:             start,
+	})
+	reporter.Engine()
+	close(lintersFinishedSignal)
+	close(lintersProcessChans)
 }

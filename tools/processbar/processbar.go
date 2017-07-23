@@ -76,8 +76,6 @@ PROCESS:
 			bar.Render(os.Stderr)
 		}
 	}
-	close(lintersFinishedSignal)
-	close(lintersProcessChans)
 
 	bar.Clear(os.Stderr)
 	return

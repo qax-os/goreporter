@@ -38,5 +38,7 @@ func TestLinterProcessBar(t *testing.T) {
 	}
 
 	wg.Wait()
+	close(lintersFinishedSignal)
+	close(lintersProcessChans)
 	return
 }
