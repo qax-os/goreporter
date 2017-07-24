@@ -22,7 +22,7 @@ func Test_DirList(t *testing.T) {
 }
 
 func Test_ExceptPkg(t *testing.T) {
-	ExceptPkg("execpt", "github.com/except/src")
+	ExceptPkg("github.com/except/src")
 }
 
 func Test_PackageAbsPath(t *testing.T) {
@@ -46,7 +46,7 @@ func Test_DirList_NoPath(t *testing.T) {
 }
 
 func Test_ExceptPkg_NoPath(t *testing.T) {
-	ExceptPkg("execpt", "github.com/except/src")
+	ExceptPkg("github.com/except/src")
 }
 
 func Test_PackageAbsPath_NoPath(t *testing.T) {

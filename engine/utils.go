@@ -21,6 +21,10 @@ import (
 	"github.com/golang/glog"
 )
 
+var (
+	excepts []string
+)
+
 // DirList is a function that traverse the file directory containing the
 // specified file format according to the specified rule.
 func DirList(projectPath string, suffix, except string) (dirs map[string]string, err error) {
@@ -29,6 +33,7 @@ func DirList(projectPath string, suffix, except string) (dirs map[string]string,
 	if err != nil {
 		glog.Errorln("dir path is invalid")
 	}
+	exceptsFilter(except)
 	err = filepath.Walk(projectPath, func(subPath string, f os.FileInfo, err error) error {
 		if f == nil {
 			return err
@@ -46,7 +51,7 @@ func DirList(projectPath string, suffix, except string) (dirs map[string]string,
 					dir = subPath[0:sepIdx]
 				}
 			}
-			if ExceptPkg(except, dir) {
+			if ExceptPkg(dir) {
 				return nil
 			}
 			dirs[PackageAbsPath(dir)] = dir
@@ -62,12 +67,8 @@ func DirList(projectPath string, suffix, except string) (dirs map[string]string,
 }
 
 // ExceptPkg is a function that will determine whether the package is an exception.
-func ExceptPkg(except, pkg string) bool {
-	if except == "" {
-		return false
-	}
-	expects := strings.Split(except, ",")
-	for _, va := range expects {
+func ExceptPkg(pkg string) bool {
+	for _, va := range excepts {
 		if strings.Contains(pkg, va) {
 			return true
 		}
@@ -152,4 +153,14 @@ func packageNameFromGoPath(path string) string {
 		return names[len(names)-2]
 	}
 	return "null"
+}
+
+func exceptsFilter(except string) {
+	temp := strings.Split(except, ",")
+	temp = append(temp, "vendor")
+	for i, _ := range temp {
+		if temp[i] != "" {
+			excepts = append(excepts, temp[i])
+		}
+	}
 }
