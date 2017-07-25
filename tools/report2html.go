@@ -28,13 +28,16 @@ import (
 	"github.com/golang/glog"
 )
 
+var (
+	issues int
+)
+
 // Json2Html will rebuild the reporter's json data into html data in template.
 // It will parse json data and organize the data structure.
 func Json2Html(jsonData []byte) (HtmlData, error) {
 	var (
 		structData engine.Reporter
 		htmlData   HtmlData
-		issues     int
 	)
 	issues = 0
 
@@ -49,187 +52,17 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 		score = score + metric.Percentage*metric.Weight
 	}
 	htmlData.Score = int(score)
-	// convert test result
-	testHtmlRes := make([]Test, 0)
-	if result, ok := structData.Metrics["UnitTestTips"]; ok {
-		for pkgName, testRes := range result.Summaries {
-			var packageUnitTestResult PackageTest
-			json.Unmarshal([]byte(testRes.Description), &packageUnitTestResult)
-			srcLastIndex := strings.LastIndex(pkgName, htmlData.Project)
-			if srcLastIndex < len(pkgName) && srcLastIndex >= 0 {
-				test := Test{
-					Path: pkgName[srcLastIndex:],
-					Time: packageUnitTestResult.Time,
-				}
-				if len(packageUnitTestResult.Coverage) > 1 {
-					test.Cover, _ = strconv.ParseFloat(packageUnitTestResult.Coverage[:(len(packageUnitTestResult.Coverage)-1)], 64)
-				}
-				if packageUnitTestResult.IsPass {
-					test.Result = 1
-				}
-				testHtmlRes = append(testHtmlRes, test)
-			}
-		}
-		htmlData.TestSummaryCoverAvg = fmt.Sprintf("%0.1f", result.Percentage)
-	}
+	// convert all linter's data.
+	htmlData.converterUnitTest(structData)
+	htmlData.converterCopy(structData)
+	htmlData.converterCyclo(structData)
+	htmlData.converterInterfacer(structData)
+	htmlData.converterSimple(structData)
+	htmlData.converterSpell(structData)
+	htmlData.converterCount(structData)
+	htmlData.converterDead(structData)
+	htmlData.converterDependGraph(structData)
 
-	stringTestJson, err := json.Marshal(testHtmlRes)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.Tests = string(stringTestJson)
-
-	// convert cyclo result
-	cycloHtmlRes := make([]Cyclo, 0)
-	if result, ok := structData.Metrics["CycloTips"]; ok {
-		for pkgName, summary := range result.Summaries {
-			cycloTips := summary.Errors
-			cyclo := Cyclo{
-				Pkg:  pkgName,
-				Size: len(cycloTips),
-			}
-			var infos []CycloInfo
-			for i := 0; i < len(cycloTips); i++ {
-				cycloTip := strings.Split(cycloTips[i].ErrorString, ":")
-				if len(cycloTip) == 3 {
-					cycloInfo := CycloInfo{
-						Comp: cycloTips[i].LineNumber,
-						Info: strings.Join(cycloTip[0:], ":"),
-					}
-					if cycloTips[i].LineNumber > 15 {
-						htmlData.CycloBigThan15 = htmlData.CycloBigThan15 + 1
-						issues = issues + 1
-					}
-					infos = append(infos, cycloInfo)
-				}
-			}
-			cyclo.Info = infos
-			cycloHtmlRes = append(cycloHtmlRes, cyclo)
-		}
-	}
-
-	stringCycloJson, err := json.Marshal(cycloHtmlRes)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.Cyclos = string(stringCycloJson)
-
-	// convert simple code result
-	simpleHtmlRes := make([]Simple, 0)
-	if result, ok := structData.Metrics["SimpleTips"]; ok {
-		for _, summary := range result.Summaries {
-			simpleCodeTips := summary.Errors
-
-			for i := 0; i < len(simpleCodeTips); i++ {
-				simpleCodeTip := strings.Split(simpleCodeTips[i].ErrorString, ":")
-				if len(simpleCodeTip) == 4 {
-					simpecode := Simple{
-						Path: strings.Join(simpleCodeTip[0:3], ":"),
-						Info: simpleCodeTip[3],
-					}
-					simpleHtmlRes = append(simpleHtmlRes, simpecode)
-					issues = issues + 1
-				}
-			}
-		}
-	}
-
-	stringSimpleJson, err := json.Marshal(simpleHtmlRes)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.Simples = string(stringSimpleJson)
-	htmlData.SimpleIssues = len(simpleHtmlRes)
-
-	// convert spell code result
-	spellHtmlRes := make([]Spell, 0)
-	if result, ok := structData.Metrics["SpellCheckTips"]; ok {
-		for _, summary := range result.Summaries {
-			spellCodeTips := summary.Errors
-
-			for i := 0; i < len(spellCodeTips); i++ {
-				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
-				if len(spellCodeTip) == 4 {
-					spellcode := Spell{
-						Path: strings.Join(spellCodeTip[0:3], ":"),
-						Info: spellCodeTip[3],
-					}
-					spellHtmlRes = append(spellHtmlRes, spellcode)
-				}
-			}
-		}
-	}
-
-	stringSpellJson, err := json.Marshal(spellHtmlRes)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.Spells = string(stringSpellJson)
-
-	// convert copy code result
-	copyHtmlRes := make([]Copycode, 0)
-	if result, ok := structData.Metrics["CopyCodeTips"]; ok {
-		for _, copyResult := range result.Summaries {
-			copyTips := copyResult.Errors
-			var copyCodePathList []string
-			for i := 0; i < len(copyTips); i++ {
-				copyCodeTip := strings.Split(copyTips[i].ErrorString, ":")
-				if len(copyCodeTip) == 2 {
-					copyCodePathList = append(copyCodePathList, strings.Join(copyCodeTip[0:], ":"))
-				}
-			}
-			copycode := Copycode{
-				Files: strconv.Itoa(len(copyTips)),
-				Path:  copyCodePathList,
-			}
-			copyHtmlRes = append(copyHtmlRes, copycode)
-			issues = issues + 1
-		}
-	}
-
-	stringCopyJson, err := json.Marshal(copyHtmlRes)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.Copycodes = string(stringCopyJson)
-
-	// convert simple code result
-	deadcodeHtmlRes := make([]Deadcode, 0)
-	if result, ok := structData.Metrics["DeadCodeTips"]; ok {
-		for _, deadCodeResult := range result.Summaries {
-			deadCodeTips := deadCodeResult.Errors
-
-			for i := 0; i < len(deadCodeTips); i++ {
-				deadCodeTip := strings.Split(deadCodeTips[i].ErrorString, ":")
-				if len(deadCodeTip) == 4 {
-					deadcode := Deadcode{
-						Path: strings.Join(deadCodeTip[0:3], ":"),
-						Info: deadCodeTip[3],
-					}
-					deadcodeHtmlRes = append(deadcodeHtmlRes, deadcode)
-					issues = issues + 1
-				}
-			}
-		}
-	}
-
-	stringDeadCodeJson, err := json.Marshal(deadcodeHtmlRes)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.Deadcodes = string(stringDeadCodeJson)
-	htmlData.DeadcodeIssues = len(deadcodeHtmlRes)
-
-	// convert countline result
-	if result, ok := structData.Metrics["CountCodeTips"]; ok {
-		htmlData.FileCount, _ = strconv.Atoi(result.Summaries["FileCount"].Description)
-		htmlData.CodeLines, _ = strconv.Atoi(result.Summaries["CodeLines"].Description)
-		htmlData.CommentLines, _ = strconv.Atoi(result.Summaries["CommentLines"].Description)
-		htmlData.TotalLines, _ = strconv.Atoi(result.Summaries["TotalLines"].Description)
-	}
-
-	// convert depend graph
-	htmlData.DepGraph = template.HTML(structData.Metrics["DependGraphTips"].Summaries["graph"].Description)
 	noTestPackages := make([]string, 0)
 	importPackages := structData.Metrics["ImportPackagesTips"].Summaries
 	unitTestPackages := structData.Metrics["UnitTestTips"].Summaries
@@ -254,6 +87,233 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 		htmlData.AveragePackageCover = float64(0)
 	}
 	return htmlData, nil
+}
+
+// convert test result
+func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
+
+	testHtmlRes := make([]Test, 0)
+	if result, ok := structData.Metrics["UnitTestTips"]; ok {
+		for pkgName, testRes := range result.Summaries {
+			var packageUnitTestResult PackageTest
+			json.Unmarshal([]byte(testRes.Description), &packageUnitTestResult)
+			srcLastIndex := strings.LastIndex(pkgName, hd.Project)
+			if srcLastIndex < len(pkgName) && srcLastIndex >= 0 {
+				test := Test{
+					Path: pkgName[srcLastIndex:],
+					Time: packageUnitTestResult.Time,
+				}
+				if len(packageUnitTestResult.Coverage) > 1 {
+					test.Cover, _ = strconv.ParseFloat(packageUnitTestResult.Coverage[:(len(packageUnitTestResult.Coverage)-1)], 64)
+				}
+				if packageUnitTestResult.IsPass {
+					test.Result = 1
+				}
+				testHtmlRes = append(testHtmlRes, test)
+			}
+		}
+		hd.TestSummaryCoverAvg = fmt.Sprintf("%0.1f", result.Percentage)
+	}
+
+	stringTestJson, err := json.Marshal(testHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Tests = string(stringTestJson)
+}
+
+// convert cyclo result
+func (hd *HtmlData) converterCyclo(structData engine.Reporter) {
+	cycloHtmlRes := make([]Cyclo, 0)
+	if result, ok := structData.Metrics["CycloTips"]; ok {
+		for pkgName, summary := range result.Summaries {
+			cycloTips := summary.Errors
+			cyclo := Cyclo{
+				Pkg:  pkgName,
+				Size: len(cycloTips),
+			}
+			var infos []CycloInfo
+			for i := 0; i < len(cycloTips); i++ {
+				cycloTip := strings.Split(cycloTips[i].ErrorString, ":")
+				if len(cycloTip) == 3 {
+					cycloInfo := CycloInfo{
+						Comp: cycloTips[i].LineNumber,
+						Info: strings.Join(cycloTip[0:], ":"),
+					}
+					if cycloTips[i].LineNumber > 15 {
+						hd.CycloBigThan15 = hd.CycloBigThan15 + 1
+						issues = issues + 1
+					}
+					infos = append(infos, cycloInfo)
+				}
+			}
+			cyclo.Info = infos
+			cycloHtmlRes = append(cycloHtmlRes, cyclo)
+		}
+	}
+
+	stringCycloJson, err := json.Marshal(cycloHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Cyclos = string(stringCycloJson)
+}
+
+// convert simple code result
+func (hd *HtmlData) converterSimple(structData engine.Reporter) {
+	simpleHtmlRes := make([]Simple, 0)
+	if result, ok := structData.Metrics["SimpleTips"]; ok {
+		for _, summary := range result.Summaries {
+			simpleCodeTips := summary.Errors
+
+			for i := 0; i < len(simpleCodeTips); i++ {
+				simpleCodeTip := strings.Split(simpleCodeTips[i].ErrorString, ":")
+				if len(simpleCodeTip) == 4 {
+					simpecode := Simple{
+						Path: strings.Join(simpleCodeTip[0:3], ":"),
+						Info: simpleCodeTip[3],
+					}
+					simpleHtmlRes = append(simpleHtmlRes, simpecode)
+					issues = issues + 1
+				}
+			}
+		}
+	}
+
+	stringSimpleJson, err := json.Marshal(simpleHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Simples = string(stringSimpleJson)
+	hd.SimpleIssues = len(simpleHtmlRes)
+}
+
+// convert interfacer result
+func (hd *HtmlData) converterInterfacer(structData engine.Reporter) {
+	interfacerHtmlRes := make([]Interfacer, 0)
+	if result, ok := structData.Metrics["InterfacerTips"]; ok {
+		for _, summary := range result.Summaries {
+			interfacerCodeTips := summary.Errors
+
+			for i := 0; i < len(interfacerCodeTips); i++ {
+				interfacerCodeTip := strings.Split(interfacerCodeTips[i].ErrorString, ":")
+				if len(interfacerCodeTip) == 4 {
+					interfacer := Interfacer{
+						Path: strings.Join(interfacerCodeTip[0:3], ":"),
+						Info: interfacerCodeTip[3],
+					}
+					interfacerHtmlRes = append(interfacerHtmlRes, interfacer)
+					issues = issues + 1
+				}
+			}
+		}
+	}
+
+	stringInterfacerJson, err := json.Marshal(interfacerHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Interfacers = string(stringInterfacerJson)
+}
+
+// convert spell code result
+func (hd *HtmlData) converterSpell(structData engine.Reporter) {
+	spellHtmlRes := make([]Spell, 0)
+	if result, ok := structData.Metrics["SpellCheckTips"]; ok {
+		for _, summary := range result.Summaries {
+			spellCodeTips := summary.Errors
+
+			for i := 0; i < len(spellCodeTips); i++ {
+				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
+				if len(spellCodeTip) == 4 {
+					spellcode := Spell{
+						Path: strings.Join(spellCodeTip[0:3], ":"),
+						Info: spellCodeTip[3],
+					}
+					spellHtmlRes = append(spellHtmlRes, spellcode)
+				}
+			}
+		}
+	}
+
+	stringSpellJson, err := json.Marshal(spellHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Spells = string(stringSpellJson)
+}
+
+// convert copy code result
+func (hd *HtmlData) converterCopy(structData engine.Reporter) {
+	copyHtmlRes := make([]Copycode, 0)
+	if result, ok := structData.Metrics["CopyCodeTips"]; ok {
+		for _, copyResult := range result.Summaries {
+			copyTips := copyResult.Errors
+			var copyCodePathList []string
+			for i := 0; i < len(copyTips); i++ {
+				copyCodeTip := strings.Split(copyTips[i].ErrorString, ":")
+				if len(copyCodeTip) == 2 {
+					copyCodePathList = append(copyCodePathList, strings.Join(copyCodeTip[0:], ":"))
+				}
+			}
+			copycode := Copycode{
+				Files: strconv.Itoa(len(copyTips)),
+				Path:  copyCodePathList,
+			}
+			copyHtmlRes = append(copyHtmlRes, copycode)
+			issues = issues + 1
+		}
+	}
+
+	stringCopyJson, err := json.Marshal(copyHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Copycodes = string(stringCopyJson)
+}
+
+// convert simple code result
+func (hd *HtmlData) converterDead(structData engine.Reporter) {
+	deadcodeHtmlRes := make([]Deadcode, 0)
+	if result, ok := structData.Metrics["DeadCodeTips"]; ok {
+		for _, deadCodeResult := range result.Summaries {
+			deadCodeTips := deadCodeResult.Errors
+
+			for i := 0; i < len(deadCodeTips); i++ {
+				deadCodeTip := strings.Split(deadCodeTips[i].ErrorString, ":")
+				if len(deadCodeTip) == 4 {
+					deadcode := Deadcode{
+						Path: strings.Join(deadCodeTip[0:3], ":"),
+						Info: deadCodeTip[3],
+					}
+					deadcodeHtmlRes = append(deadcodeHtmlRes, deadcode)
+					issues = issues + 1
+				}
+			}
+		}
+	}
+
+	stringDeadCodeJson, err := json.Marshal(deadcodeHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Deadcodes = string(stringDeadCodeJson)
+	hd.DeadcodeIssues = len(deadcodeHtmlRes)
+}
+
+// convert countline result
+func (hd *HtmlData) converterCount(structData engine.Reporter) {
+	if result, ok := structData.Metrics["CountCodeTips"]; ok {
+		hd.FileCount, _ = strconv.Atoi(result.Summaries["FileCount"].Description)
+		hd.CodeLines, _ = strconv.Atoi(result.Summaries["CodeLines"].Description)
+		hd.CommentLines, _ = strconv.Atoi(result.Summaries["CommentLines"].Description)
+		hd.TotalLines, _ = strconv.Atoi(result.Summaries["TotalLines"].Description)
+	}
+}
+
+// convert depend graph
+func (hd *HtmlData) converterDependGraph(structData engine.Reporter) {
+	hd.DepGraph = template.HTML(structData.Metrics["DependGraphTips"].Summaries["graph"].Description)
 }
 
 // SaveAsHtml is a function that save HtmlData as a html report.And will receive

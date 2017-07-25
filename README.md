@@ -41,17 +41,14 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [countcode](https://github.com/bytbox/sloc) - Count lines and files of project.
 
 
-## Supported template
+## Template
 
 - html template file which can be loaded via `-t <file>`.
 
 ## Todo List
 
-- There are still many shortcomings in the presentation of the report, showing that the model is not perfect, and hope that someone can help optimize it.
-- Bad Practice:the code violates the accepted best practice standards
-- Malicious code vulnerability
-- Performance
-- Security
+- This version will re-design the template.
+- Add interfacer and safesql and gofmt(-s),govet linter.
 
 ## Installing
 

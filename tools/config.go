@@ -89,6 +89,13 @@ type Simple struct {
 	Info string
 }
 
+// Interfacer is a struct that contains Path and Info. The type of Path and Info MUST string.
+// The Interfacer warns about the usage of types that are more specific than necessary.
+type Interfacer struct {
+	Path string
+	Info string
+}
+
 // Spell is a struct that contains Path and Info. The type of Path and Info MUST string.
 // The Spell represents one word is misspelled.
 type Spell struct {
@@ -163,6 +170,8 @@ type Cyclo struct {
 //    +-----------------------+----------------------------------------------+
 //    | Simples               | Simpled cases of all packages information    |
 //    +-----------------------+----------------------------------------------+
+//    | Interfacers           | Warns about types specific  necessary        |
+//    +-----------------------+----------------------------------------------+
 //    | SimpleLevel           | Simple level of path                         |
 //    +-----------------------+----------------------------------------------+
 //    | Deadcodes             | Dead code cases information                  |
@@ -198,6 +207,7 @@ type HtmlData struct {
 	Races               []Race
 	NoTests             string
 	Simples             string
+	Interfacers         string
 	Spells              string
 	SimpleLevel         int
 	Deadcodes           string

@@ -26,6 +26,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/deadcode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depend"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
@@ -85,6 +86,7 @@ func (r *Reporter) Engine() {
 	r.linterCyclo(dirsAll)
 	r.linterSimple(dirsAll)
 	r.linterCopy()
+	r.linterInterfacer(dirsAll)
 	r.linterDead()
 	r.linterSpellCheck()
 	r.linterImportPackages()
@@ -275,7 +277,7 @@ func (r *Reporter) linterSimple(dirsAll map[string]string) {
 		summaries := make(map[string]Summary, 0)
 
 		simples := simplecode.Simple(dirsAll)
-		sumProcessNumber := int64(10)
+		sumProcessNumber := int64(5)
 		processUnit := getProcessUnit(sumProcessNumber, len(simples))
 		for _, simpleTip := range simples {
 			simpleTips := strings.Split(simpleTip, ":")
@@ -384,7 +386,7 @@ func (r *Reporter) linterDead() {
 		metricDeadCode := Metric{
 			Name:        "DeadCode",
 			Description: "All useless code, or never obsolete obsolete code.",
-			Weight:      0.1,
+			Weight:      0.04,
 		}
 		summaries := make(map[string]Summary, 0)
 
@@ -578,6 +580,60 @@ func (r *Reporter) linterDependGraph() {
 		r.config.LintersProcessChans <- int64(10)
 		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("created depend graph")
+	})
+}
+func (r *Reporter) linterInterfacer(dirAll map[string]string) {
+	r.waitGW.Wrap(func() {
+		glog.Infoln("scan interface of  code...")
+
+		metricInterfacer := Metric{
+			Name:        "Interfacer",
+			Description: "Suggests interface types. In other words, it warns about the usage of types that are more specific than necessary.",
+			Weight:      0.06,
+		}
+		summaries := make(map[string]Summary, 0)
+
+		interfacers := interfacer.Interfacer(dirAll)
+		sumProcessNumber := int64(5)
+		processUnit := getProcessUnit(sumProcessNumber, len(interfacers))
+		for _, interfaceTip := range interfacers {
+			interfaceTips := strings.Split(interfaceTip, ":")
+			if len(interfaceTips) == 4 {
+				packageName := packageNameFromGoPath(interfaceTips[0])
+				line, _ := strconv.Atoi(interfaceTips[1])
+				erroru := Error{
+					LineNumber:  line,
+					ErrorString: AbsPath(interfaceTips[0]) + ":" + strings.Join(interfaceTips[1:], ":"),
+				}
+				if summarie, ok := summaries[packageName]; ok {
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				} else {
+					summarie := Summary{
+						Name:   packageName,
+						Errors: make([]Error, 0),
+					}
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				}
+
+			}
+			if sumProcessNumber > 0 {
+				r.config.LintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
+		}
+		metricInterfacer.Summaries = summaries
+		metricInterfacer.Percentage = countPercentage(len(summaries))
+		r.syncRW.Lock()
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["InterfacerTips"] = metricInterfacer
+		r.syncRW.Unlock()
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Interfacer over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		glog.Infoln("scan interfacer code done!")
 	})
 }
 
