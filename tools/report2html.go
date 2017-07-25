@@ -20,7 +20,11 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"log"
+	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -346,27 +350,72 @@ func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp, tpl string)
 		glog.Errorln(err)
 	}
 
-	var out bytes.Buffer
+	var (
+		out      bytes.Buffer
+		htmlpath string
+	)
 	err = t.Execute(&out, htmlData)
 	if err != nil {
 		glog.Errorln(err)
 	}
 	projectName := engine.ProjectName(projectPath)
 	if savePath != "" {
-		htmlpath := strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".html", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
+		htmlpath = strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".html", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
 		if err != nil {
 			glog.Errorln(err)
 		} else {
 			glog.Info("Html report was saved in:", htmlpath)
 		}
+		absPath, err := filepath.Abs(htmlpath)
+		if err != nil {
+			log.Println(err)
+		} else {
+			displayReport(absPath)
+		}
+
 	} else {
-		htmlpath := projectName + "-" + timestamp + ".html"
+		htmlpath = projectName + "-" + timestamp + ".html"
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)
 		if err != nil {
 			glog.Errorln(err)
 		} else {
 			glog.Info("Html report was saved in:", htmlpath)
+		}
+		absPath, err := filepath.Abs("." + string(filepath.Separator) + htmlpath)
+		if err != nil {
+			log.Println(err)
+		} else {
+			displayReport(absPath)
 		}
 	}
+}
+
+// displayReport function can be open system default browser automatic.
+func displayReport(filePath string) {
+	fileURL := fmt.Sprintf("file://%v", filePath)
+	log.Println("To display report", fileURL, "in browser")
+	var err error
+	switch runtime.GOOS {
+	case "linux":
+		err = callSystemCmd("xdg-open", fileURL)
+	case "darwin":
+		err = callSystemCmd("open", fileURL)
+	case "windows":
+		r := strings.NewReplacer("&", "^&")
+		err = callSystemCmd("cmd", "/c", "start", r.Replace(fileURL))
+	default:
+		err = fmt.Errorf("Unsupported platform,please view report file.")
+	}
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+// callSystemCmd call system command opens a new browser window pointing to url.
+func callSystemCmd(prog string, args ...string) error {
+	cmd := exec.Command(prog, args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }

@@ -187,8 +187,10 @@ func buildStats(f *ast.File, fset *token.FileSet, stats []stat) []stat {
 // "(Type).Name" for methods or simply "Name" for functions.
 func funcName(fn *ast.FuncDecl) string {
 	if fn.Recv != nil {
-		typ := fn.Recv.List[0].Type
-		return fmt.Sprintf("(%s).%s", recvString(typ), fn.Name)
+		if fn.Recv.NumFields() > 0 {
+			typ := fn.Recv.List[0].Type
+			return fmt.Sprintf("(%s).%s", recvString(typ), fn.Name)
+		}
 	}
 	return fn.Name.Name
 }
