@@ -89,7 +89,9 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	return htmlData, nil
 }
 
-// convert test result
+// converterUnitTest provides function that convert unit test data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
 
 	testHtmlRes := make([]Test, 0)
@@ -122,7 +124,9 @@ func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
 	hd.Tests = string(stringTestJson)
 }
 
-// convert cyclo result
+// converterCyclo provides function that convert cyclo data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterCyclo(structData engine.Reporter) {
 	cycloHtmlRes := make([]Cyclo, 0)
 	if result, ok := structData.Metrics["CycloTips"]; ok {
@@ -159,7 +163,9 @@ func (hd *HtmlData) converterCyclo(structData engine.Reporter) {
 	hd.Cyclos = string(stringCycloJson)
 }
 
-// convert simple code result
+// converterSimple provides function that convert simplecode data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterSimple(structData engine.Reporter) {
 	simpleHtmlRes := make([]Simple, 0)
 	if result, ok := structData.Metrics["SimpleTips"]; ok {
@@ -188,7 +194,9 @@ func (hd *HtmlData) converterSimple(structData engine.Reporter) {
 	hd.SimpleIssues = len(simpleHtmlRes)
 }
 
-// convert interfacer result
+// converterInterfacer provides function that convert interfacer data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterInterfacer(structData engine.Reporter) {
 	interfacerHtmlRes := make([]Interfacer, 0)
 	if result, ok := structData.Metrics["InterfacerTips"]; ok {
@@ -216,7 +224,9 @@ func (hd *HtmlData) converterInterfacer(structData engine.Reporter) {
 	hd.Interfacers = string(stringInterfacerJson)
 }
 
-// convert spell code result
+// converterSpell provides function that convert spellcheck data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterSpell(structData engine.Reporter) {
 	spellHtmlRes := make([]Spell, 0)
 	if result, ok := structData.Metrics["SpellCheckTips"]; ok {
@@ -243,7 +253,9 @@ func (hd *HtmlData) converterSpell(structData engine.Reporter) {
 	hd.Spells = string(stringSpellJson)
 }
 
-// convert copy code result
+// converterCopy provides function that convert copycode data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterCopy(structData engine.Reporter) {
 	copyHtmlRes := make([]Copycode, 0)
 	if result, ok := structData.Metrics["CopyCodeTips"]; ok {
@@ -272,7 +284,9 @@ func (hd *HtmlData) converterCopy(structData engine.Reporter) {
 	hd.Copycodes = string(stringCopyJson)
 }
 
-// convert simple code result
+// converterDead provides function that convert deadcode data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterDead(structData engine.Reporter) {
 	deadcodeHtmlRes := make([]Deadcode, 0)
 	if result, ok := structData.Metrics["DeadCodeTips"]; ok {
@@ -301,7 +315,9 @@ func (hd *HtmlData) converterDead(structData engine.Reporter) {
 	hd.DeadcodeIssues = len(deadcodeHtmlRes)
 }
 
-// convert countline result
+// converterCount provides function that convert countcode data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterCount(structData engine.Reporter) {
 	if result, ok := structData.Metrics["CountCodeTips"]; ok {
 		hd.FileCount, _ = strconv.Atoi(result.Summaries["FileCount"].Description)
@@ -311,7 +327,9 @@ func (hd *HtmlData) converterCount(structData engine.Reporter) {
 	}
 }
 
-// convert depend graph
+// converterDependGraph provides function that convert depend graph data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterDependGraph(structData engine.Reporter) {
 	hd.DepGraph = template.HTML(structData.Metrics["DependGraphTips"].Summaries["graph"].Description)
 }

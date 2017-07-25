@@ -44,6 +44,8 @@ type Metric struct {
 	Error       string             `json:"error"`
 }
 
+// InitConfig is a struct that load Reporter's config information.
+// It's data will be as the main config of Report.
 type InitConfig struct {
 	ProjectPath           string
 	ExceptPackages        string

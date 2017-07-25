@@ -103,7 +103,8 @@ func (r *Reporter) Engine() {
 }
 
 // linterUnitTest is a function that wil run all valid TEST in your golang package.
-// And will measure from both coverage and time-consuming.
+// And will measure from both coverage and time-consuming.It will extract from the
+// linter need to convert the data.The result will be saved in the r's attributes.
 func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("running unit test...")
@@ -201,7 +202,8 @@ func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
 }
 
 // linterCyclo provides a function that computs all [.go] file's cyclo,and as an important
-// indicator of the quality of the code.
+// indicator of the quality of the code.It will extract from the linter need to convert
+// the data.The result will be saved in the r's attributes.
 func (r *Reporter) linterCyclo(dirsAll map[string]string) {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("computing cyclo...")
@@ -264,7 +266,8 @@ func (r *Reporter) linterCyclo(dirsAll map[string]string) {
 }
 
 // linterSimple provides a function that scans all golang code hints that can be optimized
-// and give suggestions for changes.
+// and give suggestions for changes.It will extract from the linter need to convert the
+// data.The result will be saved in the r's attributes.
 func (r *Reporter) linterSimple(dirsAll map[string]string) {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("simpling code...")
@@ -321,7 +324,8 @@ func (r *Reporter) linterSimple(dirsAll map[string]string) {
 }
 
 // linterCopy provides a function that scans all duplicate code in the project and give
-// duplicate code locations and rows.
+// duplicate code locations and rows.It will extract from the linter need to convert the
+// data.The result will be saved in the r's attributes.
 func (r *Reporter) linterCopy() {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("checking copy code...")
@@ -378,7 +382,9 @@ func (r *Reporter) linterCopy() {
 	})
 }
 
-// linterDead provides a function that will scans all useless code, or never obsolete obsolete code.
+// linterDead provides a function that will scans all useless code, or never
+// obsolete obsolete code.It will extract from the linter need to convert
+// the data.The result will be saved in the r's attributes.
 func (r *Reporter) linterDead() {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("checking dead code...")
@@ -434,7 +440,8 @@ func (r *Reporter) linterDead() {
 }
 
 // linterSpellCheck provides a function that checks the project variables, functions,
-// etc. naming spelling is wrong.
+// etc. naming spelling is wrong.It will extract from the linter need to convert
+// the data.The result will be saved in the r's attributes.
 func (r *Reporter) linterSpellCheck() {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("checking spell error...")
@@ -489,7 +496,9 @@ func (r *Reporter) linterSpellCheck() {
 	})
 }
 
-// linterImportPackages is a function that scan the project contains all the package lists.
+// linterImportPackages is a function that scan the project contains all the
+// package lists.It will extract from the linter need to convert
+// the data.The result will be saved in the r's attributes.
 func (r *Reporter) linterImportPackages() {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("getting import packages...")
@@ -515,7 +524,9 @@ func (r *Reporter) linterImportPackages() {
 	})
 }
 
-// linterCount is a function taht counts go files and go code lines of project.
+// linterCount is a function taht counts go files and go code lines of
+// project.It will extract from the linter need to convert the data.
+// The result will be saved in the r's attributes.
 func (r *Reporter) linterCount() {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("countting code...")
@@ -554,8 +565,9 @@ func (r *Reporter) linterCount() {
 	})
 }
 
-// linterDependGraph is a function that builds the dependency graph for all packages in the
-// project helps you optimize the project architecture.
+// linterDependGraph is a function that builds the dependency graph of all packages in the
+// project helps you optimize the project architecture.It will extract from the linter need
+// to convert the data.The result will be saved in the r's attributes.
 func (r *Reporter) linterDependGraph() {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("creating depend graph...")
@@ -582,6 +594,10 @@ func (r *Reporter) linterDependGraph() {
 		glog.Infoln("created depend graph")
 	})
 }
+
+// linterInterfacer is a function that scan the interface of all packages in the
+// project helps you optimize the project architecture.It will extract from the
+// linter need to convert the data.The result will be saved in the r's attributes.
 func (r *Reporter) linterInterfacer(dirAll map[string]string) {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("scan interface of  code...")
@@ -679,6 +695,10 @@ func countPercentage(issues int) float64 {
 	}
 }
 
+// getProcessUnit provides function that will get sumProcessNumber of linter's
+// weight and the number of current linter's case.It will return 1 if
+// sumProcessNumber/int64(number) <= 0 or  sumProcessNumber / int64(number).
+// Just for communication.
 func getProcessUnit(sumProcessNumber int64, number int) int64 {
 	if number == 0 {
 		return sumProcessNumber

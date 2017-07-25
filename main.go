@@ -89,12 +89,15 @@ func main() {
 	if *exceptPackages == "" {
 		log.Println("There are no packages that are excepted, review all items of the package")
 	}
+
 	// Displaying linters process bar.
 	lintersProcessChans := make(chan int64, 20)
 	lintersFinishedSignal := make(chan string, 10)
 	go processbar.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
 	start := time.Now()
 	startTime := strconv.FormatInt(start.Unix(), 10)
+
+	// New a Reporter and run all linters in engine.
 	reporter := engine.NewReporter(engine.InitConfig{
 		ProjectPath:           *projectPath,
 		ExceptPackages:        *exceptPackages,
@@ -106,8 +109,10 @@ func main() {
 	close(lintersFinishedSignal)
 	close(lintersProcessChans)
 
+	// Formate report data into json.
 	jsonData := reporter.FormateReport2Json()
 
+	// Display the report according to the set formateOfReport.
 	if *formateOfReport == "json" {
 		log.Println(fmt.Sprintf("Generating json report,time consuming %vs", time.Now().Sub(start).Seconds()))
 		tools.SaveAsJson(jsonData, *projectPath, *reportPath, startTime)

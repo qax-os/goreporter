@@ -155,6 +155,8 @@ func packageNameFromGoPath(path string) string {
 	return "null"
 }
 
+// exceptsFilter provides function that filte except string check it's
+// value is not a null string.
 func exceptsFilter(except string) {
 	temp := strings.Split(except, ",")
 	temp = append(temp, "vendor")
