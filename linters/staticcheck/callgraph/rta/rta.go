@@ -50,8 +50,8 @@ import (
 	"fmt"
 	"go/types"
 
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/simpler/ssa"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticcheck/callgraph"
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticcheck/ssa"
 	"golang.org/x/tools/go/types/typeutil"
 )
 
