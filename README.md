@@ -39,6 +39,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [godepgraph](https://github.com/kisielk/godepgraph) - Godepgraph is a program for generating a dependency graph of Go packages.
 - [misspell](https://github.com/client9/misspell) - Correct commonly misspelled English words... quickly.
 - [countcode](https://github.com/bytbox/sloc) - Count lines and files of project.
+- [interfacer](https://github.com/mvdan/interfacer) - Suggest narrower interfaces that can be used.
 
 
 ## Template
