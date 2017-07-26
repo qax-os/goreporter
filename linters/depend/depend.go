@@ -77,7 +77,7 @@ func Depend(path, expect string) string {
 		glog.Errorf("failed to get cwd: %s", err)
 		return ""
 	}
-	if err := processPackage(cwd, args[0]); err != nil {
+	if err := processPackage(cwd, strings.Replace(args[0], `\`, "/", -1)); err != nil {
 		glog.Errorln(err)
 		return ""
 	}

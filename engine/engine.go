@@ -16,6 +16,7 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -128,7 +129,7 @@ func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
 		for pkgName, pkgPath := range dirsUnitTest {
 			pkg.Add(1)
 			go func(pkgName, pkgPath string) {
-				unitTestRes, _ := unittest.UnitTest("./" + pkgPath)
+				unitTestRes, _ := unittest.UnitTest("." + string(filepath.Separator) + pkgPath)
 				var packageTest PackageTest
 				if len(unitTestRes) >= 5 {
 					if unitTestRes[0] == "ok" {
