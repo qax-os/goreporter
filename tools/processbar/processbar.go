@@ -16,6 +16,7 @@ package processbar
 import (
 	"log"
 	"os"
+	"runtime"
 	"sync/atomic"
 	"time"
 
@@ -55,25 +56,42 @@ func LinterProcessBar(lintersProcessChans chan int64, lintersFinishedSignal chan
 	)
 
 	bar.SetStatus(status)
-	bar.Render(os.Stderr)
 	processCount := int64(100)
 
-PROCESS:
-	for {
-		select {
-		case process := <-lintersProcessChans:
-			atomic.AddInt64(&status.Done, process)
-			atomic.AddInt64(&status.Updated, process)
-			bar.Render(os.Stderr)
-			processCount = processCount - process
-			if processCount <= int64(0) {
-				break PROCESS
+	if runtime.GOOS == "windows" {
+	PROCESSNORENDER:
+		for {
+			select {
+			case process := <-lintersProcessChans:
+				atomic.AddInt64(&status.Done, process)
+				atomic.AddInt64(&status.Updated, process)
+				processCount = processCount - process
+				if processCount <= int64(0) {
+					break PROCESSNORENDER
+				}
+			case signal := <-lintersFinishedSignal:
+				log.Println(signal)
 			}
-		case signal := <-lintersFinishedSignal:
-			log.Println(signal)
-			bar.Render(os.Stderr)
-		case <-time.After(1 * time.Second):
-			bar.Render(os.Stderr)
+		}
+	} else {
+		bar.Render(os.Stderr)
+	PROCESSRENDER:
+		for {
+			select {
+			case process := <-lintersProcessChans:
+				atomic.AddInt64(&status.Done, process)
+				atomic.AddInt64(&status.Updated, process)
+				bar.Render(os.Stderr)
+				processCount = processCount - process
+				if processCount <= int64(0) {
+					break PROCESSRENDER
+				}
+			case signal := <-lintersFinishedSignal:
+				log.Println(signal)
+				bar.Render(os.Stderr)
+			case <-time.After(1 * time.Second):
+				bar.Render(os.Stderr)
+			}
 		}
 	}
 

@@ -77,7 +77,7 @@ func Depend(path, expect string) string {
 		glog.Errorf("failed to get cwd: %s", err)
 		return ""
 	}
-	if err := processPackage(cwd, args[0]); err != nil {
+	if err := processPackage(cwd, strings.Replace(args[0], `\`, "/", -1)); err != nil {
 		glog.Errorln(err)
 		return ""
 	}
@@ -161,6 +161,7 @@ func processPackage(root string, pkgName string) error {
 	if ignored[pkgName] {
 		return nil
 	}
+
 	pkg, err := buildContext.Import(pkgName, root, 0)
 	if err != nil {
 		flag := false

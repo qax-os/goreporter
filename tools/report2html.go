@@ -91,7 +91,7 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			var infos []CycloInfo
 			for i := 0; i < len(cycloTips); i++ {
 				cycloTip := strings.Split(cycloTips[i].ErrorString, ":")
-				if len(cycloTip) == 3 {
+				if len(cycloTip) >= 3 {
 					cycloInfo := CycloInfo{
 						Comp: cycloTips[i].LineNumber,
 						Info: strings.Join(cycloTip[0:], ":"),
@@ -129,6 +129,13 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 					}
 					simpleHtmlRes = append(simpleHtmlRes, simpecode)
 					issues = issues + 1
+				} else if len(simpleCodeTip) == 5 {
+					simpecode := Simple{
+						Path: strings.Join(simpleCodeTip[0:4], ":"),
+						Info: simpleCodeTip[4],
+					}
+					simpleHtmlRes = append(simpleHtmlRes, simpecode)
+					issues = issues + 1
 				}
 			}
 		}
@@ -155,6 +162,12 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 						Info: spellCodeTip[3],
 					}
 					spellHtmlRes = append(spellHtmlRes, spellcode)
+				} else if len(spellCodeTip) == 5 {
+					spellcode := Spell{
+						Path: strings.Join(spellCodeTip[0:4], ":"),
+						Info: spellCodeTip[4],
+					}
+					spellHtmlRes = append(spellHtmlRes, spellcode)
 				}
 			}
 		}
@@ -174,7 +187,7 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			var copyCodePathList []string
 			for i := 0; i < len(copyTips); i++ {
 				copyCodeTip := strings.Split(copyTips[i].ErrorString, ":")
-				if len(copyCodeTip) == 2 {
+				if len(copyCodeTip) >= 2 {
 					copyCodePathList = append(copyCodePathList, strings.Join(copyCodeTip[0:], ":"))
 				}
 			}
@@ -205,6 +218,13 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 					deadcode := Deadcode{
 						Path: strings.Join(deadCodeTip[0:3], ":"),
 						Info: deadCodeTip[3],
+					}
+					deadcodeHtmlRes = append(deadcodeHtmlRes, deadcode)
+					issues = issues + 1
+				} else if len(deadCodeTip) == 5 {
+					deadcode := Deadcode{
+						Path: strings.Join(deadCodeTip[0:4], ":"),
+						Info: deadCodeTip[4],
 					}
 					deadcodeHtmlRes = append(deadcodeHtmlRes, deadcode)
 					issues = issues + 1
