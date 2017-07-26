@@ -27,6 +27,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/deadcode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depend"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/depth"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
@@ -84,6 +85,7 @@ func (r *Reporter) Engine() {
 
 	r.linterUnitTest(dirsUnitTest)
 	r.linterCyclo(dirsAll)
+	r.linterDepth(dirsAll)
 	r.linterSimple(dirsAll)
 	r.linterCopy()
 	r.linterDead()
@@ -136,9 +138,9 @@ func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
 					}
 					timeLen := len(unitTestRes[2])
 					if timeLen > 1 {
-						time, err := strconv.ParseFloat(unitTestRes[2][:(timeLen-1)], 64)
+						t, err := strconv.ParseFloat(unitTestRes[2][:(timeLen-1)], 64)
 						if err == nil {
-							packageTest.Time = time
+							packageTest.Time = t
 						} else {
 							glog.Errorln(err)
 						}
@@ -262,6 +264,68 @@ func (r *Reporter) linterCyclo(dirsAll map[string]string) {
 	})
 }
 
+// linterDepth provides a function that computs all [.go] file's depth
+func (r *Reporter) linterDepth(dirsAll map[string]string) {
+	r.waitGW.Wrap(func() {
+		glog.Infoln("computing depth...")
+
+		metricDepth := Metric{
+			Name:        "Depth",
+			Description: "Computing all [.go] file's max depth",
+			Weight:      0.2,
+		}
+
+		summaries := make(map[string]Summary, 0)
+		sumAverageDepth := 0.0
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(dirsAll))
+		var compBigThan3 int
+		for pkgName, pkgPath := range dirsAll {
+			summary := Summary{
+				Name: pkgName,
+			}
+			summary.Errors = make([]Error, 0)
+			errors := make([]Error, 0)
+			depthResult, avg := depth.Depth(pkgPath)
+			avgfloat, _ := strconv.ParseFloat(avg, 64)
+			sumAverageDepth = sumAverageDepth + avgfloat
+			for _, val := range depthResult {
+				depthvalues := strings.Split(val, " ")
+				if len(depthvalues) == 4 {
+					comp, _ := strconv.Atoi(depthvalues[0])
+					erroru := Error{
+						LineNumber:  comp,
+						ErrorString: AbsPath(depthvalues[3]),
+					}
+					if comp >= 3 {
+						compBigThan3 = compBigThan3 + 1
+					}
+					errors = append(errors, erroru)
+				}
+			}
+			summary.Errors = errors
+			summary.Description = avg
+			summaries[pkgName] = summary
+			if sumProcessNumber > 0 {
+				r.config.LintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
+		}
+
+		metricDepth.Summaries = summaries
+		metricDepth.Percentage = countPercentage(compBigThan3 + int(sumAverageDepth/float64(len(dirsAll))) - 1)
+		r.syncRW.Lock()
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["DepthTips"] = metricDepth
+		r.syncRW.Unlock()
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Depth over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		glog.Infoln("comput depth done!")
+	})
+}
+
 // linterSimple provides a function that scans all golang code hints that can be optimized
 // and give suggestions for changes.
 func (r *Reporter) linterSimple(dirsAll map[string]string) {
@@ -377,7 +441,7 @@ func (r *Reporter) linterCopy() {
 	})
 }
 
-// linterDead provides a function that will scans all useless code, or never obsolete obsolete code.
+// linterDead provides a function that will scans all useless code, or never obsolete code.
 func (r *Reporter) linterDead() {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("checking dead code...")

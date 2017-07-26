@@ -522,9 +522,7 @@ $(function() {
                 c++;
                 var v = resData.copycode[key]
                 var files = v.Files
-                if (v.Path != null) {
-                    gr_copied_code_table += '<tr><td rowspan="' + files + '">' + c + '</td><td rowspan="' + files + '">' + files + '</td><td><a href="file://' + v.Path[0] + '">' + v.Path[0] + '</a></td></tr>'
-                }
+                gr_copied_code_table += '<tr><td rowspan="' + files + '">' + c + '</td><td rowspan="' + files + '">' + files + '</td><td><a href="file://' + v.Path[0] + '">' + v.Path[0] + '</a></td></tr>'
                 for (fd in v.Path) {
                     if (fd != 0) {
                         gr_copied_code_table += '<tr><td><a href="file://' + v.Path[fd] + '">' + v.Path[fd] + '</td></tr>';

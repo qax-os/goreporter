@@ -108,11 +108,40 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 		}
 	}
 
-	stringCycloJson, err := json.Marshal(cycloHtmlRes)
+	// convert depth result
+	depthHtmlRes := make([]Depth, 0)
+	if result, ok := structData.Metrics["DepthTips"]; ok {
+		for pkgName, summary := range result.Summaries {
+			depthTips := summary.Errors
+			depth := Depth{
+				Pkg:  pkgName,
+				Size: len(depthTips),
+			}
+			var infos []DepthInfo
+			for i := 0; i < len(depthTips); i++ {
+				cycloTip := strings.Split(depthTips[i].ErrorString, ":")
+				if len(cycloTip) >= 3 {
+					depthInfo := DepthInfo{
+						Comp: depthTips[i].LineNumber,
+						Info: strings.Join(cycloTip[0:], ":"),
+					}
+					if depthTips[i].LineNumber > 15 {
+						htmlData.CycloBigThan15 = htmlData.CycloBigThan15 + 1
+						issues = issues + 1
+					}
+					infos = append(infos, depthInfo)
+				}
+			}
+			depth.Info = infos
+			depthHtmlRes = append(depthHtmlRes, depth)
+		}
+	}
+
+	stringDepthJson, err := json.Marshal(depthHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
-	htmlData.Cyclos = string(stringCycloJson)
+	htmlData.Depths = string(stringDepthJson)
 
 	// convert simple code result
 	simpleHtmlRes := make([]Simple, 0)
