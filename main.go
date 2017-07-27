@@ -44,11 +44,11 @@ import (
 //    necessarily using the default formate-html.
 
 var (
-	projectPath     = flag.String("p", "", "path of project.")
-	reportPath      = flag.String("r", "", "path of report.")
-	exceptPackages  = flag.String("e", "", "except packages.")
-	templatePath    = flag.String("t", "", "report html template path.")
-	formateOfReport = flag.String("f", "", "project report formate(text/json/html).")
+	projectPath    = flag.String("p", "", "path of project.")
+	reportPath     = flag.String("r", "", "path of report.")
+	exceptPackages = flag.String("e", "", "except packages.")
+	templatePath   = flag.String("t", "", "report html template path.")
+	formatOfReport = flag.String("f", "", "project report format(text/json/html).")
 )
 
 func main() {
@@ -112,11 +112,11 @@ func main() {
 	// Formate report data into json.
 	jsonData := reporter.FormateReport2Json()
 
-	// Display the report according to the set formateOfReport.
-	if *formateOfReport == "json" {
+	// Display the report according to the set formatOfReport.
+	if *formatOfReport == "json" {
 		log.Println(fmt.Sprintf("Generating json report,time consuming %vs", time.Now().Sub(start).Seconds()))
 		tools.SaveAsJson(jsonData, *projectPath, *reportPath, startTime)
-	} else if *formateOfReport == "text" {
+	} else if *formatOfReport == "text" {
 		tools.DisplayAsText(jsonData)
 	} else {
 		log.Println(fmt.Sprintf("Generating HTML report,time consuming %vs", time.Now().Sub(start).Seconds()))

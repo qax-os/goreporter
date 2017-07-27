@@ -25,6 +25,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/countcode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/depth"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/deadcode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depend"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
@@ -85,6 +86,7 @@ func (r *Reporter) Engine() {
 
 	r.linterUnitTest(dirsUnitTest)
 	r.linterCyclo(dirsAll)
+	r.linterDepth(dirsAll)
 	r.linterSimple(dirsAll)
 	r.linterCopy()
 	r.linterInterfacer(dirsAll)
@@ -263,6 +265,69 @@ func (r *Reporter) linterCyclo(dirsAll map[string]string) {
 		}
 		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Cyclo over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("comput cyclo done!")
+	})
+}
+
+// linterDepth provides a function that computs all [.go] file's function maximum depth. It is an important indicator
+// that allows developer to see whether a function needs to be splitted into smaller functions for readability purpose
+func (r *Reporter) linterDepth(dirsAll map[string]string) {
+	r.waitGW.Wrap(func() {
+		glog.Infoln("computing depth...")
+
+		metricDepth := Metric{
+			Name:        "Depth",
+			Description: "Computing all [.go] file's max depth",
+			Weight:      0.2,
+		}
+
+		summaries := make(map[string]Summary, 0)
+		sumAverageDepth := 0.0
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(dirsAll))
+		var compBigThan3 int
+		for pkgName, pkgPath := range dirsAll {
+			summary := Summary{
+				Name: pkgName,
+			}
+			summary.Errors = make([]Error, 0)
+			errors := make([]Error, 0)
+			depthResult, avg := depth.Depth(pkgPath)
+			avgfloat, _ := strconv.ParseFloat(avg, 64)
+			sumAverageDepth = sumAverageDepth + avgfloat
+			for _, val := range depthResult {
+				depthvalues := strings.Split(val, " ")
+				if len(depthvalues) == 4 {
+					comp, _ := strconv.Atoi(depthvalues[0])
+					erroru := Error{
+						LineNumber:  comp,
+						ErrorString: AbsPath(depthvalues[3]),
+					}
+					if comp >= 3 {
+						compBigThan3 = compBigThan3 + 1
+					}
+					errors = append(errors, erroru)
+				}
+			}
+			summary.Errors = errors
+			summary.Description = avg
+			summaries[pkgName] = summary
+			if sumProcessNumber > 0 {
+				r.config.LintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
+		}
+
+		metricDepth.Summaries = summaries
+		metricDepth.Percentage = countPercentage(compBigThan3 + int(sumAverageDepth/float64(len(dirsAll))) - 1)
+		r.syncRW.Lock()
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["DepthTips"] = metricDepth
+		r.syncRW.Unlock()
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Depth over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		glog.Infoln("comput depth done!")
 	})
 }
 
