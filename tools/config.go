@@ -132,6 +132,15 @@ type Cyclo struct {
 	Info []CycloInfo
 }
 
+// Depth is a struct that contains Pkg, Size and Info. Info is an alias to CycloInfo
+type Depth struct {
+	Pkg  string
+	Size int
+	Info []DepthInfo
+}
+
+type DepthInfo CycloInfo
+
 // UnitTest is a struct that contains some features in a report of html.
 //         GoReporter HTML Report Features
 //
@@ -204,6 +213,7 @@ type HtmlData struct {
 	SimpleIssues        int
 	DeadcodeIssues      int
 	CycloBigThan15      int
+	DepthBigThan3       int
 	Races               []Race
 	NoTests             string
 	Simples             string
@@ -213,6 +223,7 @@ type HtmlData struct {
 	Deadcodes           string
 	Copycodes           string
 	Cyclos              string
+	Depths              string
 	DepGraph            template.HTML
 
 	LastRefresh          time.Time `json:"last_refresh"`

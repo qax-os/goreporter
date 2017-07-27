@@ -60,6 +60,7 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	htmlData.converterUnitTest(structData)
 	htmlData.converterCopy(structData)
 	htmlData.converterCyclo(structData)
+	htmlData.converterDepth(structData)
 	htmlData.converterInterfacer(structData)
 	htmlData.converterSimple(structData)
 	htmlData.converterSpell(structData)
@@ -97,7 +98,6 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
-
 	testHtmlRes := make([]Test, 0)
 	if result, ok := structData.Metrics["UnitTestTips"]; ok {
 		for pkgName, testRes := range result.Summaries {
@@ -165,6 +165,46 @@ func (hd *HtmlData) converterCyclo(structData engine.Reporter) {
 		glog.Errorln(err)
 	}
 	hd.Cyclos = string(stringCycloJson)
+}
+
+// converterCyclo provides function that convert cyclo data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
+func (hd *HtmlData) converterDepth(structData engine.Reporter) {
+	// convert depth result
+		depthHtmlRes := make([]Depth, 0)
+		if result, ok := structData.Metrics["DepthTips"]; ok {
+			for pkgName, summary := range result.Summaries {
+				depthTips := summary.Errors
+				depth := Depth{
+					Pkg:  pkgName,
+					Size: len(depthTips),
+				}
+				var infos []DepthInfo
+				for i := 0; i < len(depthTips); i++ {
+					cycloTip := strings.Split(depthTips[i].ErrorString, ":")
+					if len(cycloTip) >= 3 {
+						depthInfo := DepthInfo{
+							Comp: depthTips[i].LineNumber,
+							Info: strings.Join(cycloTip[0:], ":"),
+						}
+						if depthTips[i].LineNumber > 3 {
+							hd.CycloBigThan15 = hd.CycloBigThan15 + 1
+							issues = issues + 1
+						}
+						infos = append(infos, depthInfo)
+					}
+				}
+				depth.Info = infos
+				depthHtmlRes = append(depthHtmlRes, depth)
+			}
+	}
+
+	stringDepthJson, err := json.Marshal(depthHtmlRes)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.Depths = string(stringDepthJson)
 }
 
 // converterSimple provides function that convert simplecode data into the
