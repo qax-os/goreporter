@@ -1,4 +1,5 @@
 package depth
+
 // godepth calculates maximum depth of go methods in Go source code.
 //
 // This work was mainly inspired by github.com/fzipp/gocyclo
@@ -16,13 +17,13 @@ package depth
 // <depth> <package> <function> <file:row:column>
 
 import (
-"fmt"
-"go/ast"
-"go/parser"
-"go/token"
-"os"
-"path/filepath"
-"sort"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+	"sort"
 )
 
 const usageDoc = `Calculate maximum depth of Go functions.

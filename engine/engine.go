@@ -25,9 +25,9 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/countcode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/depth"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/deadcode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depend"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/depth"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
@@ -282,7 +282,7 @@ func (r *Reporter) linterDepth(dirsAll map[string]string) {
 
 		summaries := make(map[string]Summary, 0)
 		sumAverageDepth := 0.0
-		sumProcessNumber := int64(10)
+		sumProcessNumber := int64(3)
 		processUnit := getProcessUnit(sumProcessNumber, len(dirsAll))
 		var compBigThan3 int
 		for pkgName, pkgPath := range dirsAll {
@@ -346,7 +346,7 @@ func (r *Reporter) linterSimple(dirsAll map[string]string) {
 		summaries := make(map[string]Summary, 0)
 
 		simples := simplecode.Simple(dirsAll)
-		sumProcessNumber := int64(5)
+		sumProcessNumber := int64(10)
 		processUnit := getProcessUnit(sumProcessNumber, len(simples))
 		for _, simpleTip := range simples {
 			simpleTips := strings.Split(simpleTip, ":")
@@ -403,7 +403,7 @@ func (r *Reporter) linterCopy() {
 
 		summaries := make(map[string]Summary, 0)
 		copyCodeList := copycheck.CopyCheck(r.config.ProjectPath, "_test.go")
-		sumProcessNumber := int64(10)
+		sumProcessNumber := int64(7)
 		processUnit := getProcessUnit(sumProcessNumber, len(copyCodeList))
 		for i := 0; i < len(copyCodeList); i++ {
 			summary := Summary{
@@ -655,7 +655,7 @@ func (r *Reporter) linterDependGraph() {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DependGraphTips"] = metricDependGraphTips
 		r.syncRW.Unlock()
-		r.config.LintersProcessChans <- int64(10)
+		r.config.LintersProcessChans <- int64(5)
 		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
 		glog.Infoln("created depend graph")
 	})

@@ -59,7 +59,6 @@ func LinterProcessBar(lintersProcessChans chan int64, lintersFinishedSignal chan
 	processCount := int64(100)
 
 	if runtime.GOOS == "windows" {
-		bar.Render(os.Stderr)
 	PROCESSNORENDER:
 		for {
 			select {
@@ -75,6 +74,7 @@ func LinterProcessBar(lintersProcessChans chan int64, lintersFinishedSignal chan
 			}
 		}
 	} else {
+		bar.Render(os.Stderr)
 	PROCESSRENDER:
 		for {
 			select {
