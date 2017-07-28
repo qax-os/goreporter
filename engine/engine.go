@@ -199,7 +199,7 @@ func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:UnitTest over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:UnitTest over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("unit test over!")
 	})
 }
@@ -263,7 +263,7 @@ func (r *Reporter) linterCyclo(dirsAll map[string]string) {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Cyclo over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Cyclo over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("comput cyclo done!")
 	})
 }
@@ -326,7 +326,7 @@ func (r *Reporter) linterDepth(dirsAll map[string]string) {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Depth over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Depth over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("comput depth done!")
 	})
 }
@@ -384,7 +384,7 @@ func (r *Reporter) linterSimple(dirsAll map[string]string) {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Simple over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Simple over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("simple code done!")
 	})
 }
@@ -443,7 +443,7 @@ func (r *Reporter) linterCopy() {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:CopyCode over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:CopyCode over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("checked copy code!")
 	})
 }
@@ -500,7 +500,7 @@ func (r *Reporter) linterDead() {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DeadCode over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DeadCode over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("check dead code done.")
 	})
 }
@@ -557,7 +557,7 @@ func (r *Reporter) linterSpellCheck() {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Spell over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Spell over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("checked spell error")
 	})
 }
@@ -585,12 +585,12 @@ func (r *Reporter) linterImportPackages() {
 		r.Metrics["ImportPackagesTips"] = metricImportPackageTips
 		r.syncRW.Unlock()
 		r.config.LintersProcessChans <- int64(5)
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:ImportPackages over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:ImportPackages over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("import packages done.")
 	})
 }
 
-// linterCount is a function taht counts go files and go code lines of
+// linterCount is a function that counts go files and go code lines of
 // project.It will extract from the linter need to convert the data.
 // The result will be saved in the r's attributes.
 func (r *Reporter) linterCount() {
@@ -626,7 +626,7 @@ func (r *Reporter) linterCount() {
 		r.Metrics["CountCodeTips"] = metricCountCodeTips
 		r.syncRW.Unlock()
 		r.config.LintersProcessChans <- int64(5)
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:CountCode over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:CountCode over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("count code done.")
 	})
 }
@@ -656,7 +656,7 @@ func (r *Reporter) linterDependGraph() {
 		r.Metrics["DependGraphTips"] = metricDependGraphTips
 		r.syncRW.Unlock()
 		r.config.LintersProcessChans <- int64(5)
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("created depend graph")
 	})
 }
@@ -714,7 +714,7 @@ func (r *Reporter) linterInterfacer(dirAll map[string]string) {
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Interfacer over,time consuming %vs", time.Now().Sub(r.config.StartTime).Seconds())
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Interfacer over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("scan interfacer code done!")
 	})
 }

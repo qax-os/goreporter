@@ -365,10 +365,7 @@ func (p *pkg) isMain() bool {
 }
 
 func (f *file) isMain() bool {
-	if f.f.Name.Name == "main" {
-		return true
-	}
-	return false
+	return f.f.Name.Name == "main"
 }
 
 // lintPackageComment checks package comments. It complains if

@@ -45,9 +45,7 @@ func GoLinter(projectPath []string) (results []string) {
 	for _, arg := range projectPath {
 		if strings.HasSuffix(arg, "/...") && isDir(arg[:len(arg)-len("/...")]) {
 			dirsRun = 1
-			for _, dirname := range allPackagesInFS(arg) {
-				args = append(args, dirname)
-			}
+			args = append(args, allPackagesInFS(arg)...)
 		} else if isDir(arg) {
 			dirsRun = 1
 			args = append(args, arg)

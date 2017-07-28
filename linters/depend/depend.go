@@ -240,7 +240,7 @@ func hasPrefixes(s string, prefixes []string) bool {
 
 func hasPackage(pkgpath string) bool {
 	for k, _ := range ignored {
-		if strings.Index(pkgpath, k) >= 0 {
+		if strings.Contains(pkgpath, k) {
 			return true
 		}
 	}

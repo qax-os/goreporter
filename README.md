@@ -40,7 +40,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [misspell](https://github.com/client9/misspell) - Correct commonly misspelled English words... quickly.
 - [countcode](https://github.com/bytbox/sloc) - Count lines and files of project.
 - [interfacer](https://github.com/mvdan/interfacer) - Suggest narrower interfaces that can be used.
-
+- [depth](https://github.com/360EntSecGroup-Skylar/goreporter/tree/feature-3.0/linters/depth) - Count the maxdepth of go functions.
 
 ## Template
 

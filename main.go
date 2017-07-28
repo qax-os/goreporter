@@ -114,12 +114,12 @@ func main() {
 
 	// Display the report according to the set formatOfReport.
 	if *formatOfReport == "json" {
-		log.Println(fmt.Sprintf("Generating json report,time consuming %vs", time.Now().Sub(start).Seconds()))
+		log.Println(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(start).Seconds()))
 		tools.SaveAsJson(jsonData, *projectPath, *reportPath, startTime)
 	} else if *formatOfReport == "text" {
 		tools.DisplayAsText(jsonData)
 	} else {
-		log.Println(fmt.Sprintf("Generating HTML report,time consuming %vs", time.Now().Sub(start).Seconds()))
+		log.Println(fmt.Sprintf("Generating HTML report,time consuming %vs", time.Since(start).Seconds()))
 		htmlData, err := tools.Json2Html(jsonData)
 		if err != nil {
 			log.Println("Json2Html error:", err)
@@ -127,5 +127,5 @@ func main() {
 		}
 		tools.SaveAsHtml(htmlData, *projectPath, *reportPath, startTime, templateHtml)
 	}
-	log.Println(fmt.Sprintf("GoReporter Finished,time consuming %vs", time.Now().Sub(start).Seconds()))
+	log.Println(fmt.Sprintf("GoReporter Finished,time consuming %vs", time.Since(start).Seconds()))
 }
