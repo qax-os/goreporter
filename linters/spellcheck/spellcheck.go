@@ -305,8 +305,10 @@ func checkExcept(path string, excepts []string) bool {
 }
 
 func setExcept(except string) (excepts []string) {
+	excepts = append(excepts, "vendor")
 	if except == "" || except == " " {
 		return excepts
 	}
+
 	return append(excepts, strings.Split(except, ",")...)
 }
