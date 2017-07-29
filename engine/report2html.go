@@ -11,12 +11,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package engine
 
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -28,76 +27,107 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/golang/glog"
+	"time"
 )
 
 var (
 	issues int
 )
 
-// Json2Html will rebuild the reporter's json data into html data in template.
-// It will parse json data and organize the data structure.
-func Json2Html(jsonData []byte) (HtmlData, error) {
-	var (
-		structData engine.Reporter
-		htmlData   HtmlData
-	)
-	issues = 0
+// UnitTest is a struct that contains some features in a report of html.
+//         GoReporter HTML Report Features
+//
+//    +----------------------------------------------------------------------+
+//    |        Feature        |                 Information                  |
+//    +=======================+==============================================+
+//    | Project               | The path address of the item being detected  |
+//    +-----------------------+----------------------------------------------+
+//    | Score                 | The score of the tested project              |
+//    +-----------------------+----------------------------------------------+
+//    | Tests                 | Unit test results                            |
+//    +-----------------------+----------------------------------------------+
+//    | Date                  | Date assessment of the project               |
+//    +-----------------------+----------------------------------------------+
+//    | Issues                | Issues number of the project                 |
+//    +-----------------------+----------------------------------------------+
+//    | FileCount             | Go file number of the peoject                |
+//    +-----------------------+----------------------------------------------+
+//    | CodeLines             | Number of lines of code                      |
+//    +-----------------------+----------------------------------------------+
+//    | CommentLines          | Number of lines of Comment                   |
+//    +-----------------------+----------------------------------------------+
+//    | TestSummaryCoverAvg   | Code cover average of all unit test          |
+//    +-----------------------+----------------------------------------------+
+//    | AveragePackageCover   | Package cover average of all packages        |
+//    +-----------------------+----------------------------------------------+
+//    | SimpleIssues          | Simpled issues number                        |
+//    +-----------------------+----------------------------------------------+
+//    | DeadcodeIssues        | Dead code issues number                      |
+//    +-----------------------+----------------------------------------------+
+//    | CycloBigThan15        | Cyclo more than 15 number                    |
+//    +-----------------------+----------------------------------------------+
+//    | Races                 | Race result of all packages                  |
+//    +-----------------------+----------------------------------------------+
+//    | NoTests               | No unit test packages information            |
+//    +-----------------------+----------------------------------------------+
+//    | Simples               | Simpled cases of all packages information    |
+//    +-----------------------+----------------------------------------------+
+//    | Interfacers           | Warns about types specific  necessary        |
+//    +-----------------------+----------------------------------------------+
+//    | SimpleLevel           | Simple level of path                         |
+//    +-----------------------+----------------------------------------------+
+//    | Deadcodes             | Dead code cases information                  |
+//    +-----------------------+----------------------------------------------+
+//    | Copycodes             | Copy code cases information                  |
+//    +-----------------------+----------------------------------------------+
+//    | Cyclos                | Cyclo of funtion cases information           |
+//    +-----------------------+----------------------------------------------+
+//    | DepGraph              | Depend graph of all packages in the project  |
+//    +-----------------------+----------------------------------------------+
+//    | LastRefresh           | Last refresh time of one project             |
+//    +-----------------------+----------------------------------------------+
+//    | HumanizedLastRefresh  | Humanized last refresh setting               |
+//    +-----------------------+----------------------------------------------+
+//
+// And the HtmlData just as data for default html template. If you want to customize
+// your own template file, please follow these data, or you can redefine it yourself.
+type HtmlData struct {
+	Project             string
+	Score               int
+	Tests               string
+	Date                string
+	Issues              int
+	FileCount           int
+	CodeLines           int
+	CommentLines        int
+	TotalLines          int
+	TestSummaryCoverAvg string
+	AveragePackageCover float64
+	SimpleIssues        int
+	DeadcodeIssues      int
+	CycloBigThan15      int
+	DepthBigThan3       int
+	Races               []Race
+	NoTests             string
+	Simples             string
+	Interfacers         string
+	Spells              string
+	SimpleLevel         int
+	Deadcodes           string
+	Copycodes           string
+	Cyclos              string
+	Depths              string
+	DepGraph            template.HTML
 
-	if jsonData == nil {
-		return htmlData, errors.New("json is null")
-	}
-	json.Unmarshal(jsonData, &structData)
-
-	htmlData.Project = structData.Project
-	var score float64
-	for _, metric := range structData.Metrics {
-		score = score + metric.Percentage*metric.Weight
-	}
-	htmlData.Score = int(score)
-	// convert all linter's data.
-	htmlData.converterUnitTest(structData)
-	htmlData.converterCopy(structData)
-	htmlData.converterCyclo(structData)
-	htmlData.converterDepth(structData)
-	htmlData.converterInterfacer(structData)
-	htmlData.converterSimple(structData)
-	htmlData.converterSpell(structData)
-	htmlData.converterCount(structData)
-	htmlData.converterDead(structData)
-	htmlData.converterDependGraph(structData)
-
-	noTestPackages := make([]string, 0)
-	importPackages := structData.Metrics["ImportPackagesTips"].Summaries
-	unitTestPackages := structData.Metrics["UnitTestTips"].Summaries
-	for packageName, _ := range importPackages {
-		if _, ok := unitTestPackages[packageName]; !ok {
-			noTestPackages = append(noTestPackages, packageName)
-		}
-	}
-	stringNoTestJson, err := json.Marshal(noTestPackages)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.NoTests = string(stringNoTestJson)
-	htmlData.Issues = issues
-	htmlData.Date = structData.TimeStamp
-
-	if len(importPackages) > 0 && len(noTestPackages) == 0 {
-		htmlData.AveragePackageCover = float64(100)
-	} else if len(importPackages) > 0 {
-		htmlData.AveragePackageCover = float64(100 * (len(importPackages) - len(noTestPackages)) / len(importPackages))
-	} else {
-		htmlData.AveragePackageCover = float64(0)
-	}
-	return htmlData, nil
+	LastRefresh          time.Time `json:"last_refresh"`
+	HumanizedLastRefresh string    `json:"humanized_last_refresh"`
 }
 
 // converterUnitTest provides function that convert unit test data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
+func (hd *HtmlData) converterUnitTest(structData Reporter) {
 	testHtmlRes := make([]Test, 0)
 	if result, ok := structData.Metrics["UnitTestTips"]; ok {
 		for pkgName, testRes := range result.Summaries {
@@ -131,7 +161,7 @@ func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
 // converterCyclo provides function that convert cyclo data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterCyclo(structData engine.Reporter) {
+func (hd *HtmlData) converterCyclo(structData Reporter) {
 	cycloHtmlRes := make([]Cyclo, 0)
 	if result, ok := structData.Metrics["CycloTips"]; ok {
 		for pkgName, summary := range result.Summaries {
@@ -170,7 +200,7 @@ func (hd *HtmlData) converterCyclo(structData engine.Reporter) {
 // converterCyclo provides function that convert cyclo data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterDepth(structData engine.Reporter) {
+func (hd *HtmlData) converterDepth(structData Reporter) {
 	// convert depth result
 	depthHtmlRes := make([]Depth, 0)
 	if result, ok := structData.Metrics["DepthTips"]; ok {
@@ -210,7 +240,7 @@ func (hd *HtmlData) converterDepth(structData engine.Reporter) {
 // converterSimple provides function that convert simplecode data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterSimple(structData engine.Reporter) {
+func (hd *HtmlData) converterSimple(structData Reporter) {
 	simpleHtmlRes := make([]Simple, 0)
 	if result, ok := structData.Metrics["SimpleTips"]; ok {
 		for _, summary := range result.Summaries {
@@ -248,7 +278,7 @@ func (hd *HtmlData) converterSimple(structData engine.Reporter) {
 // converterInterfacer provides function that convert interfacer data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterInterfacer(structData engine.Reporter) {
+func (hd *HtmlData) converterInterfacer(structData Reporter) {
 	interfacerHtmlRes := make([]Interfacer, 0)
 	if result, ok := structData.Metrics["InterfacerTips"]; ok {
 		for _, summary := range result.Summaries {
@@ -285,7 +315,7 @@ func (hd *HtmlData) converterInterfacer(structData engine.Reporter) {
 // converterSpell provides function that convert spellcheck data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterSpell(structData engine.Reporter) {
+func (hd *HtmlData) converterSpell(structData Reporter) {
 	spellHtmlRes := make([]Spell, 0)
 	if result, ok := structData.Metrics["SpellCheckTips"]; ok {
 		for _, summary := range result.Summaries {
@@ -320,7 +350,7 @@ func (hd *HtmlData) converterSpell(structData engine.Reporter) {
 // converterCopy provides function that convert copycode data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterCopy(structData engine.Reporter) {
+func (hd *HtmlData) converterCopy(structData Reporter) {
 	copyHtmlRes := make([]Copycode, 0)
 	if result, ok := structData.Metrics["CopyCodeTips"]; ok {
 		for _, copyResult := range result.Summaries {
@@ -351,7 +381,7 @@ func (hd *HtmlData) converterCopy(structData engine.Reporter) {
 // converterDead provides function that convert deadcode data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterDead(structData engine.Reporter) {
+func (hd *HtmlData) converterDead(structData Reporter) {
 	deadcodeHtmlRes := make([]Deadcode, 0)
 	if result, ok := structData.Metrics["DeadCodeTips"]; ok {
 		for _, deadCodeResult := range result.Summaries {
@@ -360,7 +390,7 @@ func (hd *HtmlData) converterDead(structData engine.Reporter) {
 			for i := 0; i < len(deadCodeTips); i++ {
 				deadCodeTip := strings.Split(deadCodeTips[i].ErrorString, ":")
 				if len(deadCodeTip) == 4 {
-					deadcode := Deadcode{
+					deadcode := Deadcode {
 						Path: strings.Join(deadCodeTip[0:3], ":"),
 						Info: deadCodeTip[3],
 					}
@@ -389,7 +419,7 @@ func (hd *HtmlData) converterDead(structData engine.Reporter) {
 // converterCount provides function that convert countcode data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterCount(structData engine.Reporter) {
+func (hd *HtmlData) converterCount(structData Reporter) {
 	if result, ok := structData.Metrics["CountCodeTips"]; ok {
 		hd.FileCount, _ = strconv.Atoi(result.Summaries["FileCount"].Description)
 		hd.CodeLines, _ = strconv.Atoi(result.Summaries["CodeLines"].Description)
@@ -401,17 +431,13 @@ func (hd *HtmlData) converterCount(structData engine.Reporter) {
 // converterDependGraph provides function that convert depend graph data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func (hd *HtmlData) converterDependGraph(structData engine.Reporter) {
+func (hd *HtmlData) converterDependGraph(structData Reporter) {
 	hd.DepGraph = template.HTML(structData.Metrics["DependGraphTips"].Summaries["graph"].Description)
 }
 
 // SaveAsHtml is a function that save HtmlData as a html report.And will receive
 // htmlData, projectPath, savePath and tpl parameters.
 func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp, tpl string) {
-	if tpl == "" {
-		tpl = defaultTpl
-	}
-
 	t, err := template.New("goreporter").Parse(tpl)
 	if err != nil {
 		glog.Errorln(err)
@@ -425,7 +451,7 @@ func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp, tpl string)
 	if err != nil {
 		glog.Errorln(err)
 	}
-	projectName := engine.ProjectName(projectPath)
+	projectName := ProjectName(projectPath)
 	if savePath != "" {
 		htmlpath = strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".html", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)

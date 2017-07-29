@@ -13,57 +13,125 @@
 
 package engine
 
-import (
-	"sync"
-	"time"
-)
-
-// Error contains the line number and the reason for
-// an error output from a command
-type Error struct {
-	LineNumber  int    `json:"line_number"`
-	ErrorString string `json:"error_string"`
+// UnitTest is a struct that contains AvgCover, PackagesTestDetail and
+// PackagesRaceDetail. The type of AvgCover MUST string that represents
+// the code coverage of the entire project. The type of PackagesTestDetail
+// MUST map[string]PackageTest(contains pass-status,code-coverage and time).
+// and it has all packages' detail infomation. PackagesRaceDetail contains
+// all packages' race cases.
+//
+// And the UnitTest contains all packages' result.
+type UnitTest struct {
+	AvgCover           string                 `json:"average_cover"`
+	PackagesTestDetail map[string]PackageTest `json:"packages_test_detail"`
+	PackagesRaceDetail map[string][]string    `json:"packages_race_detail"`
 }
 
-// FileSummary contains the filename, location of the file
-// on GitHub, and all of the errors related to the file
-type Summary struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Errors      []Error `json:"errors"`
+// PackageTest is a struct that contains IsPass, Coverage and Time. The
+// type of Time MUST float64.
+type PackageTest struct {
+	IsPass   bool    `json:"is_pass"`
+	Coverage string  `json:"coverage"`
+	Time     float64 `json:"time"`
 }
 
-// Metric as template of report and will save all linters result
-// data.But may have some difference in different linter.
-type Metric struct {
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	Summaries   map[string]Summary `json:"summaries"`
-	Weight      float64            `json:"weight"`
-	Percentage  float64            `json:"percentage"`
-	Error       string             `json:"error"`
+// Cycloi is a struct that contains Average and Result. The Average is
+// one package's cyclo coverage. And Result is the detail cyclo of the package's
+// all function.
+type Cycloi struct {
+	Average string
+	Result  []string
 }
 
-// InitConfig is a struct that load Reporter's config information.
-// It's data will be as the main config of Report.
-type InitConfig struct {
-	ProjectPath           string
-	ExceptPackages        string
-	LintersProcessChans   chan int64
-	LintersFinishedSignal chan string
-	StartTime             time.Time
+// Test is a struct that contains Path, Result, Time and Cover. The type of
+// Time and Cover MUST float64. And it is just for one package's display.
+type Test struct {
+	Path   string
+	Result int
+	Time   float64
+	Cover  float64
 }
 
-// Reporter is the top struct of GoReporter.
-type Reporter struct {
-	Project   string            `json:"project"`
-	Score     int               `json:"score"`
-	Grade     int               `json:"grade"`
-	Metrics   map[string]Metric `json:"metrics"`
-	Issues    int               `json:"issues"`
-	TimeStamp string            `json:"time_stamp"`
-
-	config InitConfig
-	syncRW *sync.RWMutex
-	waitGW *WaitGroupWrapper
+// File is a struct that contains Color, CycloVal and CycloInfo. And it is just
+// for one file's display. The CycloInfo contains all cyclo detail information.
+type File struct {
+	Color     string
+	CycloVal  string
+	CycloInfo string
 }
+
+// Copycode is a struct that contains Files and Path. The type of Path MUST []string
+// that contains more than one file path. The Copycode represents some copyed code
+// information.
+type Copycode struct {
+	Files string
+	Path  []string
+}
+
+// Race is a struct that contains Pkg, Len, Leng and Info. The type of Info MUST
+// []string that represents more than one race case. Len is the number of cases.
+type Race struct {
+	Pkg  string
+	Len  string
+	Leng string
+	Info []string
+}
+
+// Simple is a struct that contains Path and Info. The type of Path and Info MUST string.
+// The Simple represents one can be simpled code case.
+type Simple struct {
+	Path string
+	Info string
+}
+
+// Interfacer is a struct that contains Path and Info. The type of Path and Info MUST string.
+// The Interfacer warns about the usage of types that are more specific than necessary.
+type Interfacer struct {
+	Path string
+	Info string
+}
+
+// Spell is a struct that contains Path and Info. The type of Path and Info MUST string.
+// The Spell represents one word is misspelled.
+type Spell struct {
+	Path string
+	Info string
+}
+
+// Scan is a struct that contains Path and Info. The type of Path and Info MUST string.
+// The Scan represents one defect case.
+type Scan struct {
+	Path string
+	Info string
+}
+
+// Deadcode is a struct that contains Path and Info. The type of Path and Info MUST string.
+// The Deadcode represents one dead code.
+type Deadcode struct {
+	Path string
+	Info string
+}
+
+// Cyclo is a struct that contains Pkg, Size and Info. The type of Info MUST []CycloInfo that represents
+// detail information of all function.
+type Cyclo struct {
+	Pkg  string
+	Size int
+	Info []CycloInfo
+}
+
+// CycloInfo is a struct that contains Comp and Info. The type of Comp MUST int that represents
+// the cyclo of one function.The CycloInfo represents one cyclo function information.
+type CycloInfo struct {
+	Comp int
+	Info string
+}
+
+// Depth is a struct that contains Pkg, Size and Info. Info is an alias to CycloInfo
+type Depth struct {
+	Pkg  string
+	Size int
+	Info []DepthInfo
+}
+
+type DepthInfo CycloInfo

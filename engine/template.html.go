@@ -1,6 +1,6 @@
-package tools
+package engine
 
-const defaultTpl = `
+const DefaultTpl = `
 <!DOCTYPE html>
 <html>
 <head>

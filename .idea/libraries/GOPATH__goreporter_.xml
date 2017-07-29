@@ -1,0 +1,29 @@
+<component name="libraryTable">
+  <library name="GOPATH &lt;goreporter&gt;">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../../googlesource.com" />
+      <root url="file://$PROJECT_DIR$/../../../golang.org" />
+      <root url="file://$PROJECT_DIR$/../../../google.golang.org" />
+      <root url="file://$PROJECT_DIR$/../../../gnu.org" />
+      <root url="file://$PROJECT_DIR$/../../../report" />
+      <root url="file://$PROJECT_DIR$/../../../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../../../airbus" />
+      <root url="file://$PROJECT_DIR$/../../../cloud.google.com" />
+      <root url="file://$PROJECT_DIR$/../.." />
+    </CLASSES>
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../../googlesource.com" />
+      <root url="file://$PROJECT_DIR$/../../../golang.org" />
+      <root url="file://$PROJECT_DIR$/../../../google.golang.org" />
+      <root url="file://$PROJECT_DIR$/../../../gnu.org" />
+      <root url="file://$PROJECT_DIR$/../../../report" />
+      <root url="file://$PROJECT_DIR$/../../../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../../../airbus" />
+      <root url="file://$PROJECT_DIR$/../../../cloud.google.com" />
+      <root url="file://$PROJECT_DIR$/../.." />
+    </SOURCES>
+    <excluded>
+      <root url="file://$PROJECT_DIR$" />
+    </excluded>
+  </library>
+</component>
