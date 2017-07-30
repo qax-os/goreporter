@@ -63,7 +63,7 @@ type Reporter struct {
 	Issues    int               `json:"issues"`
 	TimeStamp string            `json:"time_stamp"`
 
-	config InitConfig
-	syncRW *sync.RWMutex
-	waitGW *WaitGroupWrapper
+	config InitConfig        `json:"-"`
+	syncRW *sync.RWMutex     `json:"-"`
+	waitGW *WaitGroupWrapper `json:"-"`
 }

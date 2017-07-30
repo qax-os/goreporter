@@ -14,10 +14,9 @@
 package tools
 
 import (
-	"encoding/json"
-
 	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/fatih/color"
+	"github.com/json-iterator/go"
 )
 
 // Text display description and logo.
@@ -48,7 +47,7 @@ _/_/                                  _/
 // the tips will be given a variety of color tips, very beautiful.
 func DisplayAsText(jsonData []byte) {
 	var structData engine.Reporter
-	json.Unmarshal(jsonData, &structData)
+	jsoniter.Unmarshal(jsonData, &structData)
 
 	var score float64
 	for _, metric := range structData.Metrics {

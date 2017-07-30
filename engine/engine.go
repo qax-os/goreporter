@@ -14,7 +14,6 @@
 package engine
 
 import (
-	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -34,6 +33,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticcheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
 	"github.com/golang/glog"
+	"github.com/json-iterator/go"
 )
 
 // WaitGroupWrapper is a struct that as a waiter for all linetr-tasks.And it
@@ -67,6 +67,34 @@ func NewReporter(eic InitConfig) *Reporter {
 // Engine is a important function of goreporter, it will run all linters and rebuild
 // metrics data in a golang prohject. And all linters' result will be as one metric
 // data for Reporter.
+// Linter weight distribution:
+//
+//    +----------------------------------------------------+
+//    |      Linter     |    Weight    |     ProceeeBar    |
+//    +====================================================+
+//    |     UnitTest    |     30       |        30         |
+//    +----------------------------------------------------+
+//    |      Cyclo      |     20       |        10         |
+//    +----------------------------------------------------+
+//    |      Simple     |     10       |        10         |
+//    +----------------------------------------------------+
+//    |   StaticCheck   |     10       |        10         |
+//    +----------------------------------------------------+
+//    |    Interfacer   |     10       |         5         |
+//    +----------------------------------------------------+
+//    |       Dead      |      5       |         5         |
+//    +----------------------------------------------------+
+//    |    SpellCheck   |     10       |         5         |
+//    +----------------------------------------------------+
+//    |      Depth      |      5       |         5         |
+//    +----------------------------------------------------+
+//    |      Count      |      0       |         5         |
+//    +----------------------------------------------------+
+//    |   DependGraph   |      0       |        10         |
+//    +----------------------------------------------------+
+//    |  ImportPackages |      0       |         5         |
+//    +----------------------------------------------------+
+//
 func (r *Reporter) Engine() {
 	glog.Infoln("start code quality assessment...")
 
@@ -117,7 +145,7 @@ func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
 		metricUnitTest := Metric{
 			Name:        "UnitTest",
 			Description: "Run all valid TEST in your golang package.And will measure from both coverage and time-consuming.",
-			Weight:      0.4,
+			Weight:      0.3,
 		}
 
 		packagesTestDetail := struct {
@@ -164,7 +192,7 @@ func (r *Reporter) linterUnitTest(dirsUnitTest map[string]string) {
 					packageTest.Coverage = "0%"
 					countCover = countCover + 1
 				}
-				jsonStringPackageTest, err := json.Marshal(packageTest)
+				jsonStringPackageTest, err := jsoniter.Marshal(packageTest)
 				if err != nil {
 					glog.Errorln(err)
 				}
@@ -279,12 +307,12 @@ func (r *Reporter) linterDepth(dirsAll map[string]string) {
 		metricDepth := Metric{
 			Name:        "Depth",
 			Description: "Computing all [.go] file's max depth",
-			Weight:      0.2,
+			Weight:      0.05,
 		}
 
 		summaries := make(map[string]Summary, 0)
 		sumAverageDepth := 0.0
-		sumProcessNumber := int64(3)
+		sumProcessNumber := int64(5)
 		processUnit := getProcessUnit(sumProcessNumber, len(dirsAll))
 		var compBigThan3 int
 		for pkgName, pkgPath := range dirsAll {
@@ -497,7 +525,7 @@ func (r *Reporter) linterCopy() {
 
 		summaries := make(map[string]Summary, 0)
 		copyCodeList := copycheck.CopyCheck(r.config.ProjectPath, "_test.go")
-		sumProcessNumber := int64(7)
+		sumProcessNumber := int64(5)
 		processUnit := getProcessUnit(sumProcessNumber, len(copyCodeList))
 		for i := 0; i < len(copyCodeList); i++ {
 			summary := Summary{
@@ -552,12 +580,12 @@ func (r *Reporter) linterDead() {
 		metricDeadCode := Metric{
 			Name:        "DeadCode",
 			Description: "All useless code, or never obsolete obsolete code.",
-			Weight:      0.04,
+			Weight:      0.05,
 		}
 		summaries := make(map[string]Summary, 0)
 
 		deadcode := deadcode.DeadCode(r.config.ProjectPath)
-		sumProcessNumber := int64(10)
+		sumProcessNumber := int64(5)
 		processUnit := getProcessUnit(sumProcessNumber, len(deadcode))
 		for _, simpleTip := range deadcode {
 			deadCodeTips := strings.Split(simpleTip, ":")
@@ -614,7 +642,7 @@ func (r *Reporter) linterSpellCheck() {
 		summaries := make(map[string]Summary, 0)
 
 		spelltips := spellcheck.SpellCheck(r.config.ProjectPath, r.config.ExceptPackages)
-		sumProcessNumber := int64(10)
+		sumProcessNumber := int64(5)
 		processUnit := getProcessUnit(sumProcessNumber, len(spelltips))
 		for _, simpleTip := range spelltips {
 			simpleTips := strings.Split(simpleTip, ":")
@@ -749,7 +777,7 @@ func (r *Reporter) linterDependGraph() {
 		r.Issues = r.Issues + len(summaries)
 		r.Metrics["DependGraphTips"] = metricDependGraphTips
 		r.syncRW.Unlock()
-		r.config.LintersProcessChans <- int64(5)
+		r.config.LintersProcessChans <- int64(10)
 		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:DependGraph over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
 		glog.Infoln("created depend graph")
 	})
@@ -765,7 +793,7 @@ func (r *Reporter) linterInterfacer(dirAll map[string]string) {
 		metricInterfacer := Metric{
 			Name:        "Interfacer",
 			Description: "Suggests interface types. In other words, it warns about the usage of types that are more specific than necessary.",
-			Weight:      0.06,
+			Weight:      0.1,
 		}
 		summaries := make(map[string]Summary, 0)
 
@@ -816,7 +844,7 @@ func (r *Reporter) linterInterfacer(dirAll map[string]string) {
 // FormateReport2Json will marshal struct Reporter into json and
 // return a []byte data.
 func (r *Reporter) FormateReport2Json() []byte {
-	report, err := json.Marshal(r)
+	report, err := jsoniter.Marshal(r)
 	if err != nil {
 		glog.Errorln("json err:", err)
 	}

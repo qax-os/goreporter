@@ -15,7 +15,6 @@ package tools
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/golang/glog"
+	"github.com/json-iterator/go"
 )
 
 var (
@@ -48,7 +48,7 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 	if jsonData == nil {
 		return htmlData, errors.New("json is null")
 	}
-	json.Unmarshal(jsonData, &structData)
+	jsoniter.Unmarshal(jsonData, &structData)
 
 	htmlData.Project = structData.Project
 	var score float64
@@ -76,7 +76,7 @@ func Json2Html(jsonData []byte) (HtmlData, error) {
 			noTestPackages = append(noTestPackages, packageName)
 		}
 	}
-	stringNoTestJson, err := json.Marshal(noTestPackages)
+	stringNoTestJson, err := jsoniter.Marshal(noTestPackages)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -102,7 +102,7 @@ func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
 	if result, ok := structData.Metrics["UnitTestTips"]; ok {
 		for pkgName, testRes := range result.Summaries {
 			var packageUnitTestResult PackageTest
-			json.Unmarshal([]byte(testRes.Description), &packageUnitTestResult)
+			jsoniter.Unmarshal([]byte(testRes.Description), &packageUnitTestResult)
 			srcLastIndex := strings.LastIndex(pkgName, hd.Project)
 			if srcLastIndex < len(pkgName) && srcLastIndex >= 0 {
 				test := Test{
@@ -121,7 +121,7 @@ func (hd *HtmlData) converterUnitTest(structData engine.Reporter) {
 		hd.TestSummaryCoverAvg = fmt.Sprintf("%0.1f", result.Percentage)
 	}
 
-	stringTestJson, err := json.Marshal(testHtmlRes)
+	stringTestJson, err := jsoniter.Marshal(testHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -160,7 +160,7 @@ func (hd *HtmlData) converterCyclo(structData engine.Reporter) {
 		}
 	}
 
-	stringCycloJson, err := json.Marshal(cycloHtmlRes)
+	stringCycloJson, err := jsoniter.Marshal(cycloHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -200,7 +200,7 @@ func (hd *HtmlData) converterDepth(structData engine.Reporter) {
 		}
 	}
 
-	stringDepthJson, err := json.Marshal(depthHtmlRes)
+	stringDepthJson, err := jsoniter.Marshal(depthHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -237,7 +237,7 @@ func (hd *HtmlData) converterSimple(structData engine.Reporter) {
 		}
 	}
 
-	stringSimpleJson, err := json.Marshal(simpleHtmlRes)
+	stringSimpleJson, err := jsoniter.Marshal(simpleHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -275,7 +275,7 @@ func (hd *HtmlData) converterInterfacer(structData engine.Reporter) {
 		}
 	}
 
-	stringInterfacerJson, err := json.Marshal(interfacerHtmlRes)
+	stringInterfacerJson, err := jsoniter.Marshal(interfacerHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -310,7 +310,7 @@ func (hd *HtmlData) converterSpell(structData engine.Reporter) {
 		}
 	}
 
-	stringSpellJson, err := json.Marshal(spellHtmlRes)
+	stringSpellJson, err := jsoniter.Marshal(spellHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -341,7 +341,7 @@ func (hd *HtmlData) converterCopy(structData engine.Reporter) {
 		}
 	}
 
-	stringCopyJson, err := json.Marshal(copyHtmlRes)
+	stringCopyJson, err := jsoniter.Marshal(copyHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -378,7 +378,7 @@ func (hd *HtmlData) converterDead(structData engine.Reporter) {
 		}
 	}
 
-	stringDeadCodeJson, err := json.Marshal(deadcodeHtmlRes)
+	stringDeadCodeJson, err := jsoniter.Marshal(deadcodeHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
