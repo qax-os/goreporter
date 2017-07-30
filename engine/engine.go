@@ -85,7 +85,7 @@ func (r *Reporter) Engine() {
 	r.linterUnitTest(dirsUnitTest)
 	r.linterCyclo(dirsAll)
 	r.linterSimple(dirsAll)
-	r.linterCopy()
+	// r.linterCopy()
 	r.linterDead()
 	r.linterSpellCheck()
 	r.linterImportPackages()
