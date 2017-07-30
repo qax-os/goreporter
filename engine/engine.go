@@ -31,6 +31,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticcheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
 	"github.com/golang/glog"
 )
@@ -88,7 +89,8 @@ func (r *Reporter) Engine() {
 	r.linterCyclo(dirsAll)
 	r.linterDepth(dirsAll)
 	r.linterSimple(dirsAll)
-	r.linterCopy()
+	r.linterStaticCheck(dirsAll)
+	// r.linterCopy()
 	r.linterInterfacer(dirsAll)
 	r.linterDead()
 	r.linterSpellCheck()
@@ -368,7 +370,99 @@ func (r *Reporter) linterSimple(dirsAll map[string]string) {
 					summarie.Errors = append(summarie.Errors, erroru)
 					summaries[packageName] = summarie
 				}
+			} else if len(simpleTips) == 5 {
+				packageName := packageNameFromGoPath(strings.Join(simpleTips[0:2], ":"))
+				line, _ := strconv.Atoi(simpleTips[2])
+				erroru := Error{
+					LineNumber:  line,
+					ErrorString: AbsPath(strings.Join(simpleTips[0:2], ":")) + ":" + strings.Join(simpleTips[2:], ":"),
+				}
+				if summarie, ok := summaries[packageName]; ok {
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				} else {
+					summarie := Summary{
+						Name:   packageName,
+						Errors: make([]Error, 0),
+					}
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				}
+			}
+			if sumProcessNumber > 0 {
+				r.config.LintersProcessChans <- processUnit
+				sumProcessNumber = sumProcessNumber - processUnit
+			}
+		}
+		metricSimple.Summaries = summaries
+		metricSimple.Percentage = countPercentage(len(summaries))
+		r.syncRW.Lock()
+		r.Issues = r.Issues + len(summaries)
+		r.Metrics["SimpleTips"] = metricSimple
+		r.syncRW.Unlock()
+		if sumProcessNumber > 0 {
+			r.config.LintersProcessChans <- sumProcessNumber
+		}
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Simple over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
+		glog.Infoln("simple code done!")
+	})
+}
 
+// linterStaticCheck provides a function that check all golang code hints that can be optimized
+// and give suggestions for changes.It will extract from the linter need to convert the
+// data.The result will be saved in the r's attributes.
+func (r *Reporter) linterStaticCheck(dirsAll map[string]string) {
+	r.waitGW.Wrap(func() {
+		glog.Infoln("static check code...")
+
+		metricSimple := Metric{
+			Name:        "StaticCheck",
+			Description: "All golang code hints that will apply a ton of static analysis checks.",
+			Weight:      0.1,
+		}
+		summaries := make(map[string]Summary, 0)
+
+		staticChecks := staticcheck.StaticCheck(dirsAll)
+		sumProcessNumber := int64(10)
+		processUnit := getProcessUnit(sumProcessNumber, len(staticChecks))
+		for _, staticCheckTip := range staticChecks {
+			staticCheckTips := strings.Split(staticCheckTip, ":")
+			if len(staticCheckTips) == 4 {
+				packageName := packageNameFromGoPath(staticCheckTips[0])
+				line, _ := strconv.Atoi(staticCheckTips[1])
+				erroru := Error{
+					LineNumber:  line,
+					ErrorString: AbsPath(staticCheckTips[0]) + ":" + strings.Join(staticCheckTips[1:], ":"),
+				}
+				if summarie, ok := summaries[packageName]; ok {
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				} else {
+					summarie := Summary{
+						Name:   packageName,
+						Errors: make([]Error, 0),
+					}
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				}
+			} else if len(staticCheckTips) == 5 {
+				packageName := packageNameFromGoPath(strings.Join(staticCheckTips[0:2], ":"))
+				line, _ := strconv.Atoi(staticCheckTips[2])
+				erroru := Error{
+					LineNumber:  line,
+					ErrorString: AbsPath(strings.Join(staticCheckTips[0:2], ":")) + ":" + strings.Join(staticCheckTips[2:], ":"),
+				}
+				if summarie, ok := summaries[packageName]; ok {
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				} else {
+					summarie := Summary{
+						Name:   packageName,
+						Errors: make([]Error, 0),
+					}
+					summarie.Errors = append(summarie.Errors, erroru)
+					summaries[packageName] = summarie
+				}
 			}
 			if sumProcessNumber > 0 {
 				r.config.LintersProcessChans <- processUnit

@@ -5,5 +5,7 @@ import (
 )
 
 func TestStaticCheck(t *testing.T) {
-	StaticCheck([]string{"../../engine"})
+	path := make(map[string]string, 0)
+	path["../../engine"] = "../../engine"
+	StaticCheck(path)
 }

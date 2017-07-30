@@ -33,7 +33,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [structcheck](https://github.com/opennota/check) - Find unused struct fields.
 - [aligncheck](https://github.com/opennota/check) - Warn about un-optimally aligned structures.
 - [errcheck](https://github.com/kisielk/errcheck) - Check that error return values are used.
-- [copycode(dupl)](https://github.com/mibk/dupl) - Reports potentially duplicated code.
+- ~~[copycode(dupl)](https://github.com/mibk/dupl) - Reports potentially duplicated code.~~
 - [gosimple](https://github.com/dominikh/go-tools/tree/master/cmd/gosimple) - Report simplifications in code.
 - [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 - [godepgraph](https://github.com/kisielk/godepgraph) - Godepgraph is a program for generating a dependency graph of Go packages.
@@ -41,6 +41,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [countcode](https://github.com/bytbox/sloc) - Count lines and files of project.
 - [interfacer](https://github.com/mvdan/interfacer) - Suggest narrower interfaces that can be used.
 - [depth](https://github.com/360EntSecGroup-Skylar/goreporter/tree/feature-3.0/linters/depth) - Count the maxdepth of go functions.
+- [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 
 ## Template
 
