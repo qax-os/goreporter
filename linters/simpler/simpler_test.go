@@ -1,10 +1,11 @@
 package simpler
 
 import (
-	"fmt"
 	"testing"
 )
 
 func TestSimpler(t *testing.T) {
-	fmt.Println(Simpler([]string{"../../engine"}))
+	path := make(map[string]string, 0)
+	path["../../engine"] = "../../engine"
+	Simpler(path)
 }

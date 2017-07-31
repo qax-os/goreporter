@@ -28,7 +28,7 @@ import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depend"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depth"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/simpler"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/staticcheck"
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
@@ -375,7 +375,7 @@ func (r *Reporter) linterSimple(dirsAll map[string]string) {
 		}
 		summaries := make(map[string]Summary, 0)
 
-		simples := simplecode.Simple(dirsAll)
+		simples := simpler.Simpler(dirsAll)
 		sumProcessNumber := int64(10)
 		processUnit := getProcessUnit(sumProcessNumber, len(simples))
 		for _, simpleTip := range simples {
@@ -443,7 +443,7 @@ func (r *Reporter) linterStaticCheck(dirsAll map[string]string) {
 	r.waitGW.Wrap(func() {
 		glog.Infoln("static check code...")
 
-		metricSimple := Metric{
+		metricStaticCheck := Metric{
 			Name:        "StaticCheck",
 			Description: "All golang code hints that will apply a ton of static analysis checks.",
 			Weight:      0.1,
@@ -497,17 +497,17 @@ func (r *Reporter) linterStaticCheck(dirsAll map[string]string) {
 				sumProcessNumber = sumProcessNumber - processUnit
 			}
 		}
-		metricSimple.Summaries = summaries
-		metricSimple.Percentage = countPercentage(len(summaries))
+		metricStaticCheck.Summaries = summaries
+		metricStaticCheck.Percentage = countPercentage(len(summaries))
 		r.syncRW.Lock()
 		r.Issues = r.Issues + len(summaries)
-		r.Metrics["SimpleTips"] = metricSimple
+		r.Metrics["StaticCheckTips"] = metricStaticCheck
 		r.syncRW.Unlock()
 		if sumProcessNumber > 0 {
 			r.config.LintersProcessChans <- sumProcessNumber
 		}
-		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:Simple over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
-		glog.Infoln("simple code done!")
+		r.config.LintersFinishedSignal <- fmt.Sprintf("Linter:StaticCheck over,time consuming %vs", time.Since(r.config.StartTime).Seconds())
+		glog.Infoln("static check done!")
 	})
 }
 
