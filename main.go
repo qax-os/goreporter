@@ -22,13 +22,14 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/engine"
-	"github.com/360EntSecGroup-Skylar/goreporter/tools"
-	"github.com/360EntSecGroup-Skylar/goreporter/tools/processbar"
+	"github.com/360EntSecGroup-Skylar/goreporter/engine/processbar"
+	"github.com/facebookgo/inject"
+	"github.com/golang/glog"
+	"sync"
 )
 
 // Received parameters, you can control some features using:
@@ -48,7 +49,7 @@ var (
 	reportPath     = flag.String("r", "", "path of report.")
 	exceptPackages = flag.String("e", "", "except packages.")
 	templatePath   = flag.String("t", "", "report html template path.")
-	formatOfReport = flag.String("f", "", "project report format(text/json/html).")
+	reportFormat   = flag.String("f", "", "project report format(text/json/html).")
 )
 
 func main() {
@@ -64,6 +65,7 @@ func main() {
 
 	var templateHtml string
 	if *templatePath == "" {
+		templateHtml = engine.DefaultTpl
 		log.Println("The template path is not specified,and will use the default template")
 	} else {
 		if !strings.HasSuffix(*templatePath, ".html") {
@@ -90,42 +92,58 @@ func main() {
 		log.Println("There are no packages that are excepted, review all items of the package")
 	}
 
-	// Displaying linters process bar.
-	lintersProcessChans := make(chan int64, 20)
-	lintersFinishedSignal := make(chan string, 10)
-	go processbar.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
-	start := time.Now()
-	startTime := strconv.FormatInt(start.Unix(), 10)
-
-	// New a Reporter and run all linters in engine.
-	reporter := engine.NewReporter(engine.InitConfig{
-		ProjectPath:           *projectPath,
-		ExceptPackages:        *exceptPackages,
-		LintersProcessChans:   lintersProcessChans,
-		LintersFinishedSignal: lintersFinishedSignal,
-		StartTime:             start,
-	})
-	reporter.Engine()
-	close(lintersFinishedSignal)
-	close(lintersProcessChans)
-
-	// Formate report data into json.
-	jsonData := reporter.FormateReport2Json()
-
-	// Display the report according to the set formatOfReport.
-	if *formatOfReport == "json" {
-		log.Println(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(start).Seconds()))
-		tools.SaveAsJson(jsonData, *projectPath, *reportPath, startTime)
-	} else if *formatOfReport == "text" {
-		tools.DisplayAsText(jsonData)
-	} else {
-		log.Println(fmt.Sprintf("Generating HTML report,time consuming %vs", time.Since(start).Seconds()))
-		htmlData, err := tools.Json2Html(jsonData)
-		if err != nil {
-			log.Println("Json2Html error:", err)
-			return
-		}
-		tools.SaveAsHtml(htmlData, *projectPath, *reportPath, startTime, templateHtml)
+	synchronizer := &engine.Synchronizer{
+		LintersProcessChans:   make(chan int64, 20),
+		LintersFinishedSignal: make(chan string, 10),
 	}
-	log.Println(fmt.Sprintf("GoReporter Finished,time consuming %vs", time.Since(start).Seconds()))
+	syncRW := &sync.RWMutex{}
+	waitGW := &engine.WaitGroupWrapper{}
+
+	reporter := engine.NewReporter(*projectPath, *reportPath, *reportFormat, templateHtml)
+	strategyCopyCheck := &engine.StrategyCopyCheck{}
+	strategyCountCode := &engine.StrategyCountCode{}
+	strategyCyclo := &engine.StrategyCyclo{}
+	strategyDeadCode := &engine.StrategyDeadCode{}
+	strategyDependGraph := &engine.StrategyDependGraph{}
+	strategyDepth := &engine.StrategyDepth{}
+	strategyImportPackages := &engine.StrategyImportPackages{}
+	strategyInterfacer := &engine.StrategyInterfacer{}
+	strategySimpleCode := &engine.StrategySimpleCode{}
+	strategySpellCheck := &engine.StrategySpellCheck{}
+	strategyUnitTest := &engine.StrategyUnitTest{}
+
+	if err := inject.Populate(
+		reporter,
+		synchronizer,
+		strategyCopyCheck,
+		strategyCountCode,
+		strategyCyclo,
+		strategyDeadCode,
+		strategyDependGraph,
+		strategyDepth,
+		strategyImportPackages,
+		strategyInterfacer,
+		strategySimpleCode,
+		strategySpellCheck,
+		strategyUnitTest,
+		syncRW,
+		waitGW,
+	); err != nil {
+		log.Fatal(err)
+	}
+
+	reporter.AddLinters(strategyCopyCheck, strategyCountCode, strategyCyclo, strategyDeadCode, strategyDependGraph,
+		strategyDepth, strategyImportPackages, strategyInterfacer, strategySimpleCode, strategySpellCheck, strategyUnitTest)
+
+	go processbar.LinterProcessBar(synchronizer.LintersProcessChans, synchronizer.LintersFinishedSignal)
+
+	if err := reporter.Report(); err != nil {
+		glog.Errorln(err)
+	}
+
+	if err := reporter.Render(); err != nil {
+		glog.Errorln(err)
+	}
+
+	log.Println(fmt.Sprintf("GoReporter Finished,time consuming %vs", time.Since(reporter.StartTime).Seconds()))
 }
