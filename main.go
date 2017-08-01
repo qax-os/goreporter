@@ -99,7 +99,6 @@ func main() {
 	waitGW := &engine.WaitGroupWrapper{}
 
 	reporter := engine.NewReporter(*projectPath, *reportPath, *reportFormat, templateHtml)
-	strategyCopyCheck := &engine.StrategyCopyCheck{}
 	strategyCountCode := &engine.StrategyCountCode{}
 	strategyCyclo := &engine.StrategyCyclo{}
 	strategyDeadCode := &engine.StrategyDeadCode{}
@@ -114,7 +113,6 @@ func main() {
 	if err := inject.Populate(
 		reporter,
 		synchronizer,
-		strategyCopyCheck,
 		strategyCountCode,
 		strategyCyclo,
 		strategyDeadCode,
@@ -131,7 +129,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	reporter.AddLinters(strategyCopyCheck, strategyCountCode, strategyCyclo, strategyDeadCode, strategyDependGraph,
+	reporter.AddLinters(strategyCountCode, strategyCyclo, strategyDeadCode, strategyDependGraph,
 		strategyDepth, strategyImportPackages, strategyInterfacer, strategySimpleCode, strategySpellCheck, strategyUnitTest)
 
 	go processbar.LinterProcessBar(synchronizer.LintersProcessChans, synchronizer.LintersFinishedSignal)

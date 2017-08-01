@@ -81,7 +81,7 @@ var (
 //    +-----------------------+----------------------------------------------+
 //    | Copycodes             | Copy code cases information                  |
 //    +-----------------------+----------------------------------------------+
-//    | Cyclos                | Cyclo of funtion cases information           |
+//    | Cyclos                | Cyclo of function cases information           |
 //    +-----------------------+----------------------------------------------+
 //    | DepGraph              | Depend graph of all packages in the project  |
 //    +-----------------------+----------------------------------------------+

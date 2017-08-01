@@ -17,7 +17,7 @@ package engine
 // PackagesRaceDetail. The type of AvgCover MUST string that represents
 // the code coverage of the entire project. The type of PackagesTestDetail
 // MUST map[string]PackageTest(contains pass-status,code-coverage and time).
-// and it has all packages' detail infomation. PackagesRaceDetail contains
+// and it has all packages' detail information. PackagesRaceDetail contains
 // all packages' race cases.
 //
 // And the UnitTest contains all packages' result.

@@ -275,9 +275,7 @@ func NewReporter(projectPath, reportPath, reportFormat, htmlTemplate string) *Re
 }
 
 func (r *Reporter) AddLinters(strategies ...StrategyLinter) {
-	for _, s := range strategies {
-		r.Linters = append(r.Linters, s)
-	}
+	r.Linters = append(r.Linters, strategies...)
 }
 
 func (r *Reporter) Close() {
