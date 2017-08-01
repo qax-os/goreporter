@@ -5,5 +5,5 @@ import (
 )
 
 func Test_AlignCheck(t *testing.T) {
-	AlignCheck("net/http")
+	LinterAligncheck{}.ComputeMetric("net/http")
 }
