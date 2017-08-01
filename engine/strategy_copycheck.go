@@ -3,6 +3,7 @@ package engine
 import (
 	"strconv"
 	"strings"
+
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck"
 )
 
@@ -52,7 +53,7 @@ func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Sum
 			errorSlice = append(errorSlice, Error{LineNumber: line, ErrorString: strings.Join(values, ":")})
 		}
 		summaries[string(i)] = Summary{
-			Name: strconv.Itoa(len(errorSlice)),
+			Name:   strconv.Itoa(len(errorSlice)),
 			Errors: errorSlice,
 		}
 		if sumProcessNumber > 0 {

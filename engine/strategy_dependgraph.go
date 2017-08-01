@@ -37,4 +37,3 @@ func (s *StrategyDependGraph) Compute(parameters StrategyParameter) (summaries S
 func (s *StrategyDependGraph) Percentage(summaries Summaries) float64 {
 	return 0.
 }
-

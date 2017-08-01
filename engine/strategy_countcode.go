@@ -2,6 +2,7 @@ package engine
 
 import (
 	"strconv"
+
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/countcode"
 )
 
@@ -50,4 +51,3 @@ func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries Sum
 func (s *StrategyCountCode) Percentage(summaries Summaries) float64 {
 	return 0.
 }
-

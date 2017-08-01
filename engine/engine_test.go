@@ -14,19 +14,19 @@
 package engine
 
 import (
-	"testing"
-	"sync"
 	"log"
+	"sync"
+	"testing"
 
-	"github.com/facebookgo/inject"
 	"github.com/360EntSecGroup-Skylar/goreporter/engine/processbar"
+	"github.com/facebookgo/inject"
 	"github.com/golang/glog"
 )
 
 func Test_Engine(t *testing.T) {
 	synchronizer := &Synchronizer{
-		LintersProcessChans: make(chan int64, 20),
-		LintersFinishedSignal : make(chan string, 10),
+		LintersProcessChans:   make(chan int64, 20),
+		LintersFinishedSignal: make(chan string, 10),
 	}
 	syncRW := &sync.RWMutex{}
 	waitGW := &WaitGroupWrapper{}
@@ -64,8 +64,8 @@ func Test_Engine(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	reporter.AddLinters(strategyCopyCheck,strategyCountCode,strategyCyclo,strategyDeadCode,strategyDependGraph,
-		strategyDepth,strategyImportPackages,strategyInterfacer,strategySimpleCode,strategySpellCheck,strategyUnitTest)
+	reporter.AddLinters(strategyCopyCheck, strategyCountCode, strategyCyclo, strategyDeadCode, strategyDependGraph,
+		strategyDepth, strategyImportPackages, strategyInterfacer, strategySimpleCode, strategySpellCheck, strategyUnitTest)
 
 	go processbar.LinterProcessBar(synchronizer.LintersProcessChans, synchronizer.LintersFinishedSignal)
 

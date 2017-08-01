@@ -3,6 +3,7 @@ package engine
 import (
 	"strconv"
 	"strings"
+
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
 )
 
@@ -33,7 +34,7 @@ func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Su
 		if len(simpleTips) == 4 {
 			packageName := PackageNameFromGoPath(simpleTips[0])
 			line, _ := strconv.Atoi(simpleTips[1])
-			erroru := Error {
+			erroru := Error{
 				LineNumber:  line,
 				ErrorString: AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
 			}

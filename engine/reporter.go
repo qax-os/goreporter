@@ -14,23 +14,24 @@
 package engine
 
 import (
-	"sync"
-	"time"
-	"github.com/golang/glog"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/fatih/color"
 	"io/ioutil"
-	"strings"
 	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/fatih/color"
+	"github.com/golang/glog"
+	"github.com/json-iterator/go"
 )
 
 type Synchronizer struct {
-	SyncRW *sync.RWMutex `inject:""`
-	WaitGW *WaitGroupWrapper `inject:""`
-	LintersProcessChans   chan int64 `json:"-"`
-	LintersFinishedSignal chan string `json:"-"`
+	SyncRW                *sync.RWMutex     `inject:""`
+	WaitGW                *WaitGroupWrapper `inject:""`
+	LintersProcessChans   chan int64        `json:"-"`
+	LintersFinishedSignal chan string       `json:"-"`
 }
 
 // Reporter is the top struct of GoReporter.
@@ -42,15 +43,15 @@ type Reporter struct {
 	Issues    int               `json:"issues"`
 	TimeStamp string            `json:"time_stamp"`
 	Linters   []StrategyLinter
-	Sync      *Synchronizer      `inject:"" json:"-"`
+	Sync      *Synchronizer `inject:"" json:"-"`
 
-	ProjectPath string `json:"-"`
-	ReportPath string `json:"-"`
-	HtmlTemplate           string `json:"-"`
-	ReportFormat           string `json:"-"`
-	ExceptPackages        string  `json:"-"`
+	ProjectPath    string `json:"-"`
+	ReportPath     string `json:"-"`
+	HtmlTemplate   string `json:"-"`
+	ReportFormat   string `json:"-"`
+	ExceptPackages string `json:"-"`
 
-	StartTime             time.Time
+	StartTime time.Time
 }
 
 // WaitGroupWrapper is a struct that as a waiter for all linetr-tasks.And it
@@ -71,7 +72,7 @@ func (w *WaitGroupWrapper) Wrap(cb func()) {
 }
 
 type StrategyParameter struct {
-	AllDirs, UnitTestDirs map[string]string
+	AllDirs, UnitTestDirs       map[string]string
 	ProjectPath, ExceptPackages string
 }
 
@@ -97,9 +98,9 @@ func (r *Reporter) Report() error {
 	}
 
 	params := StrategyParameter{
-		AllDirs: dirsAll,
+		AllDirs:      dirsAll,
 		UnitTestDirs: dirsUnitTest,
-		ProjectPath: r.ProjectPath,
+		ProjectPath:  r.ProjectPath,
 	}
 
 	for _, linter := range r.Linters {
@@ -119,12 +120,12 @@ func (r *Reporter) compute(strategy StrategyLinter, params StrategyParameter) {
 
 	summaries := strategy.Compute(params)
 
-	r.Metrics[strategy.GetName()+"Tips"] = Metric {
+	r.Metrics[strategy.GetName()+"Tips"] = Metric{
 		Name:        strategy.GetName(),
 		Description: strategy.GetDescription(),
 		Weight:      strategy.GetWeight(),
-		Summaries: summaries,
-		Percentage: strategy.Percentage(summaries),
+		Summaries:   summaries,
+		Percentage:  strategy.Percentage(summaries),
 	}
 
 	r.Sync.LintersFinishedSignal <- fmt.Sprintf("Linter:%s over,time consuming %vs", strategy.GetName(), time.Since(r.StartTime).Seconds())
@@ -149,12 +150,11 @@ func (r *Reporter) Render() (err error) {
 	return
 }
 
-
 // toJson will marshal struct Reporter into json and
 // return a []byte data.
 func (r *Reporter) toJson() (err error) {
 	glog.Infoln(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(r.StartTime).Seconds()))
-	jsonReport, err := json.Marshal(r)
+	jsonReport, err := jsoniter.Marshal(r)
 	if err != nil {
 		return
 	}
@@ -202,7 +202,7 @@ func (r *Reporter) toText() (err error) {
 // It will parse json data and organize the data structure.
 func (r *Reporter) toHtml() (err error) {
 	glog.Infoln(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(r.StartTime).Seconds()))
-	jsonReport, err := json.Marshal(r)
+	jsonReport, err := jsoniter.Marshal(r)
 	if err != nil {
 		return
 	}
@@ -235,7 +235,7 @@ func (r *Reporter) toHtml() (err error) {
 			noTestPackages = append(noTestPackages, packageName)
 		}
 	}
-	stringNoTestJson, err := json.Marshal(noTestPackages)
+	stringNoTestJson, err := jsoniter.Marshal(noTestPackages)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -254,11 +254,9 @@ func (r *Reporter) toHtml() (err error) {
 	SaveAsHtml(htmlData, r.ProjectPath, r.ReportPath, r.StartTime.String(), r.HtmlTemplate)
 
 	return
-
 }
 
-
-func (r *Reporter) GetFinalScore() (score float64){
+func (r *Reporter) GetFinalScore() (score float64) {
 	for _, metric := range r.Metrics {
 		score = score + metric.Percentage*metric.Weight
 	}
@@ -267,10 +265,10 @@ func (r *Reporter) GetFinalScore() (score float64){
 
 func NewReporter(projectPath, reportPath, reportFormat, htmlTemplate string) *Reporter {
 	return &Reporter{
-		StartTime: time.Now(),
-		Metrics: make(map[string]Metric,0),
-		ProjectPath: projectPath,
-		ReportPath: reportPath,
+		StartTime:    time.Now(),
+		Metrics:      make(map[string]Metric, 0),
+		ProjectPath:  projectPath,
+		ReportPath:   reportPath,
 		ReportFormat: reportFormat,
 		HtmlTemplate: htmlTemplate,
 	}
@@ -301,8 +299,8 @@ type Summary struct {
 	Description string  `json:"description"`
 	Errors      []Error `json:"errors"`
 	SumCover    float64
-	CountCover int
-	Avg float64
+	CountCover  int
+	Avg         float64
 }
 
 type Summaries map[string]Summary

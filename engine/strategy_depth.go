@@ -3,6 +3,7 @@ package engine
 import (
 	"strconv"
 	"strings"
+
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depth"
 )
 
@@ -56,8 +57,8 @@ func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries Summari
 		}
 
 		summaries[pkgName] = Summary{
-			Name: pkgName,
-			Errors: errors,
+			Name:        pkgName,
+			Errors:      errors,
 			Description: avg,
 		}
 		if sumProcessNumber > 0 {

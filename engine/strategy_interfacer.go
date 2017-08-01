@@ -1,11 +1,11 @@
 package engine
 
 import (
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
-	"strings"
 	"strconv"
-)
+	"strings"
 
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
+)
 
 type StrategyInterfacer struct {
 	Sync *Synchronizer `inject:""`
@@ -64,5 +64,3 @@ func (s *StrategyInterfacer) Compute(parameters StrategyParameter) (summaries Su
 func (s *StrategyInterfacer) Percentage(summaries Summaries) float64 {
 	return 0.
 }
-
-

@@ -3,6 +3,7 @@ package engine
 import (
 	"strconv"
 	"strings"
+
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/deadcode"
 )
 
@@ -63,4 +64,3 @@ func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summ
 func (s *StrategyDeadCode) Percentage(summaries Summaries) float64 {
 	return CountPercentage(len(summaries))
 }
-

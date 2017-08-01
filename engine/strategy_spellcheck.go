@@ -3,6 +3,7 @@ package engine
 import (
 	"strconv"
 	"strings"
+
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
 )
 

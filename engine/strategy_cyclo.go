@@ -2,15 +2,16 @@ package engine
 
 import (
 	"strconv"
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
 	"strings"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
 )
 
 type StrategyCyclo struct {
-	Sync 	*Synchronizer `inject:""`
-	compBigThan15 int
+	Sync            *Synchronizer `inject:""`
+	compBigThan15   int
 	sumAverageCyclo float64
-	allDirs map[string]string
+	allDirs         map[string]string
 }
 
 func (s *StrategyCyclo) GetName() string {
@@ -55,10 +56,10 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 			}
 		}
 
-		summaries[pkgName] =  Summary {
-			Name: pkgName,
+		summaries[pkgName] = Summary{
+			Name:   pkgName,
 			Errors: errSlice,
-			Avg: average,
+			Avg:    average,
 		}
 		if sumProcessNumber > 0 {
 			s.Sync.LintersProcessChans <- processUnit

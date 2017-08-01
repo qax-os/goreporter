@@ -23,13 +23,12 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/engine"
 	"github.com/360EntSecGroup-Skylar/goreporter/engine/processbar"
 	"github.com/facebookgo/inject"
-	"github.com/golang/glog"
-	"sync"
 )
 
 // Received parameters, you can control some features using:
@@ -138,11 +137,11 @@ func main() {
 	go processbar.LinterProcessBar(synchronizer.LintersProcessChans, synchronizer.LintersFinishedSignal)
 
 	if err := reporter.Report(); err != nil {
-		glog.Errorln(err)
+		log.Fatal(err)
 	}
 
 	if err := reporter.Render(); err != nil {
-		glog.Errorln(err)
+		log.Fatal(err)
 	}
 
 	log.Println(fmt.Sprintf("GoReporter Finished,time consuming %vs", time.Since(reporter.StartTime).Seconds()))

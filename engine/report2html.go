@@ -15,7 +15,6 @@ package engine
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -26,9 +25,10 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
-	"time"
+	"github.com/json-iterator/go"
 )
 
 var (
@@ -132,7 +132,7 @@ func (hd *HtmlData) converterUnitTest(structData Reporter) {
 	if result, ok := structData.Metrics["UnitTestTips"]; ok {
 		for pkgName, testRes := range result.Summaries {
 			var packageUnitTestResult PackageTest
-			json.Unmarshal([]byte(testRes.Description), &packageUnitTestResult)
+			jsoniter.Unmarshal([]byte(testRes.Description), &packageUnitTestResult)
 			srcLastIndex := strings.LastIndex(pkgName, hd.Project)
 			if srcLastIndex < len(pkgName) && srcLastIndex >= 0 {
 				test := Test{
@@ -151,7 +151,7 @@ func (hd *HtmlData) converterUnitTest(structData Reporter) {
 		hd.TestSummaryCoverAvg = fmt.Sprintf("%0.1f", result.Percentage)
 	}
 
-	stringTestJson, err := json.Marshal(testHtmlRes)
+	stringTestJson, err := jsoniter.Marshal(testHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -190,7 +190,7 @@ func (hd *HtmlData) converterCyclo(structData Reporter) {
 		}
 	}
 
-	stringCycloJson, err := json.Marshal(cycloHtmlRes)
+	stringCycloJson, err := jsoniter.Marshal(cycloHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -230,7 +230,7 @@ func (hd *HtmlData) converterDepth(structData Reporter) {
 		}
 	}
 
-	stringDepthJson, err := json.Marshal(depthHtmlRes)
+	stringDepthJson, err := jsoniter.Marshal(depthHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -267,7 +267,7 @@ func (hd *HtmlData) converterSimple(structData Reporter) {
 		}
 	}
 
-	stringSimpleJson, err := json.Marshal(simpleHtmlRes)
+	stringSimpleJson, err := jsoniter.Marshal(simpleHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -305,7 +305,7 @@ func (hd *HtmlData) converterInterfacer(structData Reporter) {
 		}
 	}
 
-	stringInterfacerJson, err := json.Marshal(interfacerHtmlRes)
+	stringInterfacerJson, err := jsoniter.Marshal(interfacerHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -340,7 +340,7 @@ func (hd *HtmlData) converterSpell(structData Reporter) {
 		}
 	}
 
-	stringSpellJson, err := json.Marshal(spellHtmlRes)
+	stringSpellJson, err := jsoniter.Marshal(spellHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -371,7 +371,7 @@ func (hd *HtmlData) converterCopy(structData Reporter) {
 		}
 	}
 
-	stringCopyJson, err := json.Marshal(copyHtmlRes)
+	stringCopyJson, err := jsoniter.Marshal(copyHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}
@@ -390,7 +390,7 @@ func (hd *HtmlData) converterDead(structData Reporter) {
 			for i := 0; i < len(deadCodeTips); i++ {
 				deadCodeTip := strings.Split(deadCodeTips[i].ErrorString, ":")
 				if len(deadCodeTip) == 4 {
-					deadcode := Deadcode {
+					deadcode := Deadcode{
 						Path: strings.Join(deadCodeTip[0:3], ":"),
 						Info: deadCodeTip[3],
 					}
@@ -408,7 +408,7 @@ func (hd *HtmlData) converterDead(structData Reporter) {
 		}
 	}
 
-	stringDeadCodeJson, err := json.Marshal(deadcodeHtmlRes)
+	stringDeadCodeJson, err := jsoniter.Marshal(deadcodeHtmlRes)
 	if err != nil {
 		glog.Errorln(err)
 	}

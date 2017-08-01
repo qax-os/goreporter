@@ -3,10 +3,11 @@ package engine
 import (
 	"path/filepath"
 	"strconv"
-	"github.com/golang/glog"
-	"encoding/json"
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
 	"sync"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
+	"github.com/golang/glog"
+	"github.com/json-iterator/go"
 )
 
 type StrategyUnitTest struct {
@@ -67,7 +68,7 @@ func (s *StrategyUnitTest) Compute(parameters StrategyParameter) (summaries Summ
 				packageTest.Coverage = "0%"
 				s.countCover++
 			}
-			jsonStringPackageTest, err := json.Marshal(packageTest)
+			jsonStringPackageTest, err := jsoniter.Marshal(packageTest)
 			if err != nil {
 				glog.Errorln(err)
 			}
