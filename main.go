@@ -43,7 +43,10 @@ import (
 // -f:Set the format to generate reports, support text, html and json,not
 //    necessarily using the default formate-html.
 
+const Version = "3.0.0"
+
 var (
+	verPtr         = flag.Bool("version", false, "Output version and exit.")
 	projectPath    = flag.String("p", "", "path of project.")
 	reportPath     = flag.String("r", "", "path of report.")
 	exceptPackages = flag.String("e", "", "except packages.")
@@ -53,6 +56,12 @@ var (
 
 func main() {
 	flag.Parse()
+
+	if *verPtr {
+		fmt.Printf("goreporter version: %s\r\n", Version)
+		os.Exit(0)
+	}
+
 	if *projectPath == "" {
 		log.Fatal("The project path is not specified")
 	} else {
