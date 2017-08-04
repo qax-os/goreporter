@@ -43,10 +43,10 @@ import (
 // -f:Set the format to generate reports, support text, html and json,not
 //    necessarily using the default formate-html.
 
-const Version = "3.0.0"
+const VERSION = "3.0.0-dev"
 
 var (
-	verPtr         = flag.Bool("version", false, "Output version and exit.")
+	version        = flag.Bool("version", false, "print GoReporter version.")
 	projectPath    = flag.String("p", "", "path of project.")
 	reportPath     = flag.String("r", "", "path of report.")
 	exceptPackages = flag.String("e", "", "except packages.")
@@ -57,8 +57,8 @@ var (
 func main() {
 	flag.Parse()
 
-	if *verPtr {
-		fmt.Printf("goreporter version: %s\r\n", Version)
+	if *version {
+		fmt.Printf("GoReporter %s\r\n", VERSION)
 		os.Exit(0)
 	}
 
