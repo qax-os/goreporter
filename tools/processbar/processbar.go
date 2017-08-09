@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/reconquest/loreley"
-	"github.com/wgliang/barely"
+	"github.com/reconquest/barely"
 )
 
 // LinterProcessBar provides a function to display the current progress of
