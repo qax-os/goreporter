@@ -69,12 +69,12 @@ func Cyclo(packagePath string) ([]string, string) {
 	if avg {
 		packageAvg = getAverage(stats)
 	}
+	result := make([]string, 0)
 
 	if over > 0 {
-		os.Exit(1)
+		return result, packageAvg
 	}
 
-	result := make([]string, 0)
 	for _, stat := range stats {
 		result = append(result, stat.String())
 	}
@@ -118,7 +118,7 @@ func analyzeDir(dirname string, stats []stat) []stat {
 
 func exitError(err error) {
 	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
+	// os.Exit(1)
 }
 
 func writeStats(w io.Writer, sortedStats []stat) int {
@@ -187,8 +187,10 @@ func buildStats(f *ast.File, fset *token.FileSet, stats []stat) []stat {
 // "(Type).Name" for methods or simply "Name" for functions.
 func funcName(fn *ast.FuncDecl) string {
 	if fn.Recv != nil {
-		typ := fn.Recv.List[0].Type
-		return fmt.Sprintf("(%s).%s", recvString(typ), fn.Name)
+		if fn.Recv.NumFields() > 0 {
+			typ := fn.Recv.List[0].Type
+			return fmt.Sprintf("(%s).%s", recvString(typ), fn.Name)
+		}
 	}
 	return fn.Name.Name
 }
