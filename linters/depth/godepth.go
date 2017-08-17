@@ -110,7 +110,7 @@ func analyzeFile(fname string, stats []stat) []stat {
 
 func exitError(err error) {
 	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
+	// os.Exit(1)
 }
 
 func getAverage(stats []stat) string {

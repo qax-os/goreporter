@@ -143,6 +143,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 
 func StructCheck(projectPath string) []string {
 	flag.Parse()
+	structChecks := make([]string, 0)
 	importPaths := []string{projectPath}
 	if len(importPaths) == 0 {
 		importPaths = []string{"."}
@@ -154,19 +155,18 @@ func StructCheck(projectPath string) []string {
 	rest, err := loadcfg.FromArgs(importPaths, loadTestFiles)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not parse arguments: %s", err)
-		os.Exit(1)
+		return structChecks
 	}
 	if len(rest) > 0 {
 		fmt.Fprintf(os.Stderr, "unhandled extra arguments: %v", rest)
-		os.Exit(1)
+		return structChecks
 	}
 	program, err := loadcfg.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not type check: %s", err)
-		os.Exit(1)
+		return structChecks
 	}
 
-	structChecks := make([]string, 0)
 	for _, pkg := range program.InitialPackages() {
 		visitor := &visitor{
 			m:    make(map[types.Type]map[string]int),

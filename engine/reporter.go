@@ -116,7 +116,7 @@ func (r *Reporter) Report() error {
 }
 
 func (r *Reporter) compute(strategy StrategyLinter, params StrategyParameter) {
-	glog.Infoln("running %s...", strategy.GetName())
+	glog.Infof("running %s...", strategy.GetName())
 
 	summaries := strategy.Compute(params)
 
@@ -129,7 +129,7 @@ func (r *Reporter) compute(strategy StrategyLinter, params StrategyParameter) {
 	}
 
 	r.Sync.LintersFinishedSignal <- fmt.Sprintf("Linter:%s over,time consuming %vs", strategy.GetName(), time.Since(r.StartTime).Seconds())
-	glog.Infoln("%s over!", strategy.GetName())
+	glog.Infof("%s over!", strategy.GetName())
 }
 
 func (r *Reporter) Render() (err error) {
@@ -139,7 +139,7 @@ func (r *Reporter) Render() (err error) {
 	case "text":
 		err = r.toText()
 	default:
-		glog.Infoln(fmt.Sprintf("Generating HTML report,time consuming %vs", time.Since(r.StartTime).Seconds()))
+		glog.Infof(fmt.Sprintf("Generating HTML report,time consuming %vs", time.Since(r.StartTime).Seconds()))
 		err = r.toHtml()
 		if err != nil {
 			glog.Infoln("Json2Html error:", err)
@@ -153,7 +153,7 @@ func (r *Reporter) Render() (err error) {
 // toJson will marshal struct Reporter into json and
 // return a []byte data.
 func (r *Reporter) toJson() (err error) {
-	glog.Infoln(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(r.StartTime).Seconds()))
+	glog.Infof(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(r.StartTime).Seconds()))
 	jsonReport, err := jsoniter.Marshal(r)
 	if err != nil {
 		return
@@ -174,7 +174,7 @@ func (r *Reporter) toJson() (err error) {
 }
 
 func (r *Reporter) toText() (err error) {
-	glog.Infoln(fmt.Sprintf("Generating text report,time consuming %vs", time.Since(r.StartTime).Seconds()))
+	glog.Infof(fmt.Sprintf("Generating text report,time consuming %vs", time.Since(r.StartTime).Seconds()))
 	color.Magenta(
 		headerTpl,
 		r.Project,
@@ -201,7 +201,7 @@ func (r *Reporter) toText() (err error) {
 // toHtml will rebuild the reporter's json data into html data in template.
 // It will parse json data and organize the data structure.
 func (r *Reporter) toHtml() (err error) {
-	glog.Infoln(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(r.StartTime).Seconds()))
+	glog.Infof(fmt.Sprintf("Generating json report,time consuming %vs", time.Since(r.StartTime).Seconds()))
 	jsonReport, err := jsoniter.Marshal(r)
 	if err != nil {
 		return
