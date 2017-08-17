@@ -2,6 +2,7 @@ package engine
 
 import (
 	"strconv"
+	"math"
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
@@ -39,7 +40,9 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 
 		cyclos, avg := cyclo.Cyclo(pkgPath)
 		average, _ := strconv.ParseFloat(avg, 64)
-		s.sumAverageCyclo = s.sumAverageCyclo + average
+		if math.IsNaN(average) == false{
+			s.sumAverageCyclo = s.sumAverageCyclo + average
+		}
 
 		for _, val := range cyclos {
 			cyclovalues := strings.Split(val, " ")

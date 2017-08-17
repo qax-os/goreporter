@@ -69,12 +69,12 @@ func Cyclo(packagePath string) ([]string, string) {
 	if avg {
 		packageAvg = getAverage(stats)
 	}
+	result := make([]string, 0)
 
 	if over > 0 {
-		os.Exit(1)
+		return result, packageAvg
 	}
-
-	result := make([]string, 0)
+	
 	for _, stat := range stats {
 		result = append(result, stat.String())
 	}
@@ -118,7 +118,7 @@ func analyzeDir(dirname string, stats []stat) []stat {
 
 func exitError(err error) {
 	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
+	// os.Exit(1)
 }
 
 func writeStats(w io.Writer, sortedStats []stat) int {
