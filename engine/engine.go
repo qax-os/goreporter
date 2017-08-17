@@ -15,6 +15,7 @@ package engine
 
 import (
 	"encoding/json"
+	"math"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -224,7 +225,10 @@ func (r *Reporter) linterCyclo(dirsAll map[string]string) {
 			errors := make([]Error, 0)
 			cyclo, avg := cyclo.Cyclo(pkgPath)
 			avgfloat, _ := strconv.ParseFloat(avg, 64)
-			sumAverageCyclo = sumAverageCyclo + avgfloat
+			if math.IsNaN(avgfloat) == false{
+				sumAverageCyclo = sumAverageCyclo + avgfloat
+			}
+			
 			for _, val := range cyclo {
 				cyclovalues := strings.Split(val, " ")
 				if len(cyclovalues) == 4 {
