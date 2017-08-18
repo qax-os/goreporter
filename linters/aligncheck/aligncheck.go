@@ -24,12 +24,10 @@ import (
 	"golang.org/x/tools/go/loader"
 )
 
-var stdSizes = types.StdSizes{
-	WordSize: int64(unsafe.Sizeof(int(0))),
-	MaxAlign: 8,
+type LinterAligncheck struct {
 }
 
-func AlignCheck(projectPath string) []string {
+func (l *LinterAligncheck) ComputeMetric(projectPath string) []string {
 	importPaths := []string{projectPath}
 	if len(importPaths) == 0 {
 		importPaths = []string{"."}
@@ -113,4 +111,9 @@ func AlignCheck(projectPath string) []string {
 	// }
 	return lines
 	// os.Exit(exitStatus)
+}
+
+var stdSizes = types.StdSizes{
+	WordSize: int64(unsafe.Sizeof(int(0))),
+	MaxAlign: 8,
 }

@@ -74,7 +74,7 @@ func Cyclo(packagePath string) ([]string, string) {
 	if over > 0 {
 		return result, packageAvg
 	}
-
+	
 	for _, stat := range stats {
 		result = append(result, stat.String())
 	}

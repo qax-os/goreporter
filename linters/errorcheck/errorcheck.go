@@ -142,9 +142,7 @@ func (c *Checker) logf(msg string, args ...interface{}) {
 
 func (c *Checker) load(paths ...string) (*loader.Program, error) {
 	ctx := build.Default
-	for _, tag := range c.Tags {
-		ctx.BuildTags = append(ctx.BuildTags, tag)
-	}
+	ctx.BuildTags = append(ctx.BuildTags, c.Tags...)
 	loadcfg := loader.Config{
 		Build: &ctx,
 	}

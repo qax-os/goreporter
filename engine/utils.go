@@ -76,13 +76,6 @@ func ExceptPkg(pkg string) bool {
 	return false
 }
 
-// PackageTest is an intermediate variables.
-type PackageTest struct {
-	IsPass   bool    `json:"is_pass"`
-	Coverage string  `json:"coverage"`
-	Time     float64 `json:"time"`
-}
-
 // PackageAbsPath will gets the absolute path of the specified
 // package from GOPATH's [src].
 func PackageAbsPath(path string) (packagePath string) {
@@ -130,7 +123,7 @@ func ProjectName(projectPath string) (project string) {
 	}
 	projectPathIndex := strings.LastIndex(absPath, string(filepath.Separator))
 	if -1 != projectPathIndex {
-		project = absPath[(projectPathIndex + 1):len(absPath)]
+		project = absPath[(projectPathIndex + 1):]
 	}
 
 	return project
@@ -146,8 +139,8 @@ func AbsPath(path string) string {
 	return absPath
 }
 
-// packageNameFromGoPath is a function that will get package's name from GOPATH.
-func packageNameFromGoPath(path string) string {
+// PackageNameFromGoPath is a function that will get package's name from GOPATH.
+func PackageNameFromGoPath(path string) string {
 	names := strings.Split(path, string(filepath.Separator))
 	if len(names) >= 2 {
 		return names[len(names)-2]
@@ -155,6 +148,8 @@ func packageNameFromGoPath(path string) string {
 	return "null"
 }
 
+// exceptsFilter provides function that filte except string check it's
+// value is not a null string.
 func exceptsFilter(except string) {
 	temp := strings.Split(except, ",")
 	temp = append(temp, "vendor")
@@ -162,5 +157,50 @@ func exceptsFilter(except string) {
 		if temp[i] != "" {
 			excepts = append(excepts, temp[i])
 		}
+	}
+}
+
+// CountPercentage will count all linters' percentage.And rule is
+//
+//    +--------------------------------------------------+
+//    |   issues    |               score                |
+//    +==================================================+
+//    | 5           | 100-issues*2                       |
+//    +--------------------------------------------------+
+//    | [5,10)      | 100 - 10 - (issues-5)*4            |
+//    +--------------------------------------------------+
+//    | [10,20)     | 100 - 10 - 20 - (issues-10)*5      |
+//    +--------------------------------------------------+
+//    | [20,40)     | 100 - 10 - 20 - 50 - (issues-20)*1 |
+//    +--------------------------------------------------+
+//    | [40,*)      | 0                                  |
+//    +--------------------------------------------------+
+//
+// It will return a float64 type score.
+func CountPercentage(issues int) float64 {
+	if issues < 5 {
+		return float64(100 - issues*2)
+	} else if issues < 10 {
+		return float64(100 - 10 - (issues-5)*4)
+	} else if issues < 20 {
+		return float64(100 - 10 - 20 - (issues-10)*5)
+	} else if issues < 40 {
+		return float64(100 - 10 - 20 - 50 - (issues-20)*1)
+	} else {
+		return 0.0
+	}
+}
+
+// GetProcessUnit provides function that will get sumProcessNumber of linter's
+// weight and the number of current linter's case.It will return 1 if
+// sumProcessNumber/int64(number) <= 0 or  sumProcessNumber / int64(number).
+// Just for communication.
+func GetProcessUnit(sumProcessNumber int64, number int) int64 {
+	if number == 0 {
+		return sumProcessNumber
+	} else if sumProcessNumber/int64(number) <= 0 {
+		return int64(1)
+	} else {
+		return sumProcessNumber / int64(number)
 	}
 }

@@ -1,6 +1,6 @@
 ![goreporter](./logo.png)
 
-# goreporter [![Version Status](https://img.shields.io/badge/v2.5-stable-orange.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/tag/version2.5.0)
+# goreporter [![Version Status](https://img.shields.io/badge/v3.0-dev-orange.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/tag/version3.0)
 
 [![Current Release](https://img.shields.io/github/release/360EntSecGroup-Skylar/goreporter.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/latest)
 [![Build Status](https://travis-ci.org/360EntSecGroup-Skylar/goreporter.svg?branch=master)](https://travis-ci.org/360EntSecGroup-Skylar/goreporter)
@@ -39,19 +39,18 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [godepgraph](https://github.com/kisielk/godepgraph) - Godepgraph is a program for generating a dependency graph of Go packages.
 - [misspell](https://github.com/client9/misspell) - Correct commonly misspelled English words... quickly.
 - [countcode](https://github.com/bytbox/sloc) - Count lines and files of project.
+- [interfacer](https://github.com/mvdan/interfacer) - Suggest narrower interfaces that can be used.
+- [depth](https://github.com/360EntSecGroup-Skylar/goreporter/tree/feature-3.0/linters/depth) - Count the maxdepth of go functions.
+- [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 
-
-## Supported template
+## Template
 
 - html template file which can be loaded via `-t <file>`.
 
 ## Todo List
 
-- There are still many shortcomings in the presentation of the report, showing that the model is not perfect, and hope that someone can help optimize it.
-- Bad Practice:the code violates the accepted best practice standards
-- Malicious code vulnerability
-- Performance
-- Security
+- This version will re-design the template.
+- Add interfacer and safesql and gofmt(-s),govet linter.
 
 ## Installing
 

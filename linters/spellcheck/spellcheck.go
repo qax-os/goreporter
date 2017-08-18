@@ -259,7 +259,7 @@ func SpellCheck(projectPath, except string) []string {
 		}
 		err := r.ReplaceReader(os.Stdin, fileout, next)
 		if err != nil {
-			os.Exit(1)
+			return spellCheck
 		}
 		switch format {
 		case "sqlite", "sqlite3":
@@ -305,8 +305,10 @@ func checkExcept(path string, excepts []string) bool {
 }
 
 func setExcept(except string) (excepts []string) {
+	excepts = append(excepts, "vendor")
 	if except == "" || except == " " {
 		return excepts
 	}
+
 	return append(excepts, strings.Split(except, ",")...)
 }

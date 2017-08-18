@@ -14,25 +14,62 @@
 package engine
 
 import (
+	"log"
+	"sync"
 	"testing"
-	"time"
 
-	"github.com/360EntSecGroup-Skylar/goreporter/tools/processbar"
+	"github.com/360EntSecGroup-Skylar/goreporter/engine/processbar"
+	"github.com/facebookgo/inject"
+	"github.com/golang/glog"
 )
 
 func Test_Engine(t *testing.T) {
-	lintersProcessChans := make(chan int64, 20)
-	lintersFinishedSignal := make(chan string, 10)
-	go processbar.LinterProcessBar(lintersProcessChans, lintersFinishedSignal)
-	start := time.Now()
-	reporter := NewReporter(InitConfig{
-		ProjectPath:           "../../../wgliang/logcool",
-		ExceptPackages:        "",
-		LintersProcessChans:   lintersProcessChans,
-		LintersFinishedSignal: lintersFinishedSignal,
-		StartTime:             start,
-	})
-	reporter.Engine()
-	close(lintersFinishedSignal)
-	close(lintersProcessChans)
+	synchronizer := &Synchronizer{
+		LintersProcessChans:   make(chan int64, 20),
+		LintersFinishedSignal: make(chan string, 10),
+	}
+	syncRW := &sync.RWMutex{}
+	waitGW := &WaitGroupWrapper{}
+
+	reporter := NewReporter("../../../wgliang/logcool", "foo", "foo", "baz")
+	strategyCopyCheck := &StrategyCopyCheck{}
+	strategyCountCode := &StrategyCountCode{}
+	strategyCyclo := &StrategyCyclo{}
+	strategyDeadCode := &StrategyDeadCode{}
+	strategyDependGraph := &StrategyDependGraph{}
+	strategyDepth := &StrategyDepth{}
+	strategyImportPackages := &StrategyImportPackages{}
+	strategyInterfacer := &StrategyInterfacer{}
+	strategySimpleCode := &StrategySimpleCode{}
+	strategySpellCheck := &StrategySpellCheck{}
+	strategyUnitTest := &StrategyUnitTest{}
+
+	if err := inject.Populate(
+		reporter,
+		synchronizer,
+		strategyCopyCheck,
+		strategyCountCode,
+		strategyCyclo,
+		strategyDeadCode,
+		strategyDependGraph,
+		strategyDepth,
+		strategyImportPackages,
+		strategyInterfacer,
+		strategySimpleCode,
+		strategySpellCheck,
+		strategyUnitTest,
+		syncRW,
+		waitGW,
+	); err != nil {
+		log.Fatal(err)
+	}
+
+	reporter.AddLinters(strategyCopyCheck, strategyCountCode, strategyCyclo, strategyDeadCode, strategyDependGraph,
+		strategyDepth, strategyImportPackages, strategyInterfacer, strategySimpleCode, strategySpellCheck, strategyUnitTest)
+
+	go processbar.LinterProcessBar(synchronizer.LintersProcessChans, synchronizer.LintersFinishedSignal)
+
+	if err := reporter.Report(); err != nil {
+		glog.Errorln(err)
+	}
 }
