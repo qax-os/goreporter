@@ -124,7 +124,7 @@ func (r *Reporter) compute(strategy StrategyLinter, params StrategyParameter) {
 		Name:        strategy.GetName(),
 		Description: strategy.GetDescription(),
 		Weight:      strategy.GetWeight(),
-		Summaries:   summaries,
+		Summaries:   summaries.Summaries,
 		Percentage:  strategy.Percentage(summaries),
 	}
 
@@ -301,10 +301,13 @@ type Summary struct {
 	Avg         float64
 }
 
-type Summaries map[string]Summary
+type Summaries struct {
+	Summaries map[string]Summary
+	*sync.RWMutex
+}
 
 func NewSummaries() Summaries {
-	return make(Summaries, 0)
+	return Summaries{make(map[string]Summary, 0), new(sync.RWMutex)}
 }
 
 // Metric as template of report and will save all linters result

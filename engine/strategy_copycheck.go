@@ -52,10 +52,12 @@ func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Sum
 
 			errorSlice = append(errorSlice, Error{LineNumber: line, ErrorString: strings.Join(values, ":")})
 		}
-		summaries[string(i)] = Summary{
+		summaries.Lock()
+		summaries.Summaries[string(i)] = Summary{
 			Name:   strconv.Itoa(len(errorSlice)),
 			Errors: errorSlice,
 		}
+		summaries.Unlock()
 		if sumProcessNumber > 0 {
 			s.Sync.LintersProcessChans <- processUnit
 			sumProcessNumber = sumProcessNumber - processUnit
@@ -65,5 +67,7 @@ func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Sum
 }
 
 func (s *StrategyCopyCheck) Percentage(summaries Summaries) float64 {
-	return CountPercentage(len(summaries))
+	summaries.RLock()
+	defer summaries.RUnlock()
+	return CountPercentage(len(summaries.Summaries))
 }

@@ -38,17 +38,19 @@ func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Su
 				LineNumber:  line,
 				ErrorString: AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
 			}
-			if summarie, ok := summaries[packageName]; ok {
+			summaries.Lock()
+			if summarie, ok := summaries.Summaries[packageName]; ok {
 				summarie.Errors = append(summarie.Errors, erroru)
-				summaries[packageName] = summarie
+				summaries.Summaries[packageName] = summarie
 			} else {
 				summarie := Summary{
 					Name:   packageName,
 					Errors: make([]Error, 0),
 				}
 				summarie.Errors = append(summarie.Errors, erroru)
-				summaries[packageName] = summarie
+				summaries.Summaries[packageName] = summarie
 			}
+			summaries.Unlock()
 		}
 		if sumProcessNumber > 0 {
 			s.Sync.LintersProcessChans <- processUnit
@@ -60,5 +62,7 @@ func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Su
 }
 
 func (s *StrategySimpleCode) Percentage(summaries Summaries) float64 {
-	return CountPercentage(len(summaries))
+	summaries.RLock()
+	defer summaries.RUnlock()
+	return CountPercentage(len(summaries.Summaries))
 }

@@ -41,17 +41,19 @@ func (s *StrategyInterfacer) Compute(parameters StrategyParameter) (summaries Su
 				LineNumber:  line,
 				ErrorString: AbsPath(interfaceTips[0]) + ":" + strings.Join(interfaceTips[1:], ":"),
 			}
-			if summarie, ok := summaries[packageName]; ok {
+			summaries.Lock()
+			if summarie, ok := summaries.Summaries[packageName]; ok {
 				summarie.Errors = append(summarie.Errors, erroru)
-				summaries[packageName] = summarie
+				summaries.Summaries[packageName] = summarie
 			} else {
 				summarie := Summary{
 					Name:   packageName,
 					Errors: make([]Error, 0),
 				}
 				summarie.Errors = append(summarie.Errors, erroru)
-				summaries[packageName] = summarie
+				summaries.Summaries[packageName] = summarie
 			}
+			summaries.Unlock()
 		}
 		if sumProcessNumber > 0 {
 			s.Sync.LintersProcessChans <- processUnit

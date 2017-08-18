@@ -28,11 +28,15 @@ func (s *StrategyImportPackages) Compute(parameters StrategyParameter) (summarie
 
 	importPkgs := unittest.GoListWithImportPackages(parameters.ProjectPath)
 	for i := 0; i < len(importPkgs); i++ {
-		summaries[importPkgs[i]] = Summary{Name: importPkgs[i]}
+		summaries.Lock()
+		summaries.Summaries[importPkgs[i]] = Summary{Name: importPkgs[i]}
+		summaries.Unlock()
 	}
 	return
 }
 
 func (s *StrategyImportPackages) Percentage(summaries Summaries) float64 {
-	return CountPercentage(len(summaries))
+	summaries.RLock()
+	defer summaries.RUnlock()
+	return CountPercentage(len(summaries.Summaries))
 }

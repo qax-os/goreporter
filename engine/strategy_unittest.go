@@ -72,11 +72,12 @@ func (s *StrategyUnitTest) Compute(parameters StrategyParameter) (summaries Summ
 			if err != nil {
 				glog.Errorln(err)
 			}
-
-			summaries[pkgName] = Summary{
+			summaries.Lock()
+			summaries.Summaries[pkgName] = Summary{
 				Name:        pkgName,
 				Description: string(jsonStringPackageTest),
 			}
+			summaries.Unlock()
 			pkg.Done()
 		}(pkgName, pkgPath)
 		if sumProcessNumber > 0 {

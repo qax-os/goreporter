@@ -41,17 +41,19 @@ func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summ
 				LineNumber:  line,
 				ErrorString: AbsPath(deadCodeTips[0]) + ":" + strings.Join(deadCodeTips[1:], ":"),
 			}
-			if summary, ok := summaries[packageName]; ok {
+			summaries.Lock()
+			if summary, ok := summaries.Summaries[packageName]; ok {
 				summary.Errors = append(summary.Errors, erroru)
-				summaries[packageName] = summary
+				summaries.Summaries[packageName] = summary
 			} else {
 				summarie := Summary{
 					Name:   PackageAbsPathExceptSuffix(deadCodeTips[0]),
 					Errors: make([]Error, 0),
 				}
 				summarie.Errors = append(summarie.Errors, erroru)
-				summaries[packageName] = summarie
+				summaries.Summaries[packageName] = summarie
 			}
+			summaries.Unlock()
 		}
 		if sumProcessNumber > 0 {
 			s.Sync.LintersProcessChans <- processUnit
@@ -62,5 +64,7 @@ func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summ
 }
 
 func (s *StrategyDeadCode) Percentage(summaries Summaries) float64 {
-	return CountPercentage(len(summaries))
+	summaries.Lock()
+	defer summaries.Unlock()
+	return CountPercentage(len(summaries.Summaries))
 }

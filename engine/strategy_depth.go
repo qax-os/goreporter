@@ -55,12 +55,13 @@ func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries Summari
 				errors = append(errors, erroru)
 			}
 		}
-
-		summaries[pkgName] = Summary{
+		summaries.Lock()
+		summaries.Summaries[pkgName] = Summary{
 			Name:        pkgName,
 			Errors:      errors,
 			Description: avg,
 		}
+		summaries.Unlock()
 		if sumProcessNumber > 0 {
 			s.Sync.LintersProcessChans <- processUnit
 			sumProcessNumber = sumProcessNumber - processUnit

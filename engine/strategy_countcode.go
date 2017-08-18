@@ -29,19 +29,19 @@ func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries Sum
 	summaries = NewSummaries()
 
 	fileCount, codeLines, commentLines, totalLines := countcode.CountCode(parameters.ProjectPath, parameters.ExceptPackages)
-	summaries["FileCount"] = Summary{
+	summaries.Summaries["FileCount"] = Summary{
 		Name:        "FileCount",
 		Description: strconv.Itoa(fileCount),
 	}
-	summaries["CodeLines"] = Summary{
+	summaries.Summaries["CodeLines"] = Summary{
 		Name:        "CodeLines",
 		Description: strconv.Itoa(codeLines),
 	}
-	summaries["CommentLines"] = Summary{
+	summaries.Summaries["CommentLines"] = Summary{
 		Name:        "CommentLines",
 		Description: strconv.Itoa(commentLines),
 	}
-	summaries["TotalLines"] = Summary{
+	summaries.Summaries["TotalLines"] = Summary{
 		Name:        "TotalLines",
 		Description: strconv.Itoa(totalLines),
 	}

@@ -1,8 +1,8 @@
 package engine
 
 import (
-	"strconv"
 	"math"
+	"strconv"
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
@@ -40,7 +40,7 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 
 		cyclos, avg := cyclo.Cyclo(pkgPath)
 		average, _ := strconv.ParseFloat(avg, 64)
-		if math.IsNaN(average) == false{
+		if math.IsNaN(average) == false {
 			s.sumAverageCyclo = s.sumAverageCyclo + average
 		}
 
@@ -58,12 +58,13 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 				errSlice = append(errSlice, erroru)
 			}
 		}
-
-		summaries[pkgName] = Summary{
+		summaries.Lock()
+		summaries.Summaries[pkgName] = Summary{
 			Name:   pkgName,
 			Errors: errSlice,
 			Avg:    average,
 		}
+		summaries.Unlock()
 		if sumProcessNumber > 0 {
 			s.Sync.LintersProcessChans <- processUnit
 			sumProcessNumber = sumProcessNumber - processUnit

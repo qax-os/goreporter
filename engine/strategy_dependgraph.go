@@ -27,10 +27,11 @@ func (s *StrategyDependGraph) Compute(parameters StrategyParameter) (summaries S
 	summaries = NewSummaries()
 
 	graph := depend.Depend(parameters.ProjectPath, parameters.ExceptPackages)
-	summaries["graph"] = Summary{
+	summaries.Summaries["graph"] = Summary{
 		Name:        s.GetName(),
 		Description: graph,
 	}
+
 	return
 }
 
