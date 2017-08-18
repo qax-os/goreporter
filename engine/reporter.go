@@ -303,11 +303,11 @@ type Summary struct {
 
 type Summaries struct {
 	Summaries map[string]Summary
-	*sync.RWMutex
+	sync.RWMutex
 }
 
 func NewSummaries() Summaries {
-	return Summaries{make(map[string]Summary, 0), new(sync.RWMutex)}
+	return Summaries{Summaries: make(map[string]Summary, 0)}
 }
 
 // Metric as template of report and will save all linters result
