@@ -107,7 +107,7 @@ func (r *Reporter) Report() error {
 		r.compute(linter, params)
 	}
 
-	r.TimeStamp = time.Now().Format("2006-01-02 15:04:05")
+	r.TimeStamp = time.Now().Format("2006-01-02-15-04-05")
 
 	// ensure peocessbar quit.
 	r.Sync.LintersProcessChans <- 100
@@ -162,9 +162,9 @@ func (r *Reporter) toJson() (err error) {
 	saveAbsPath := AbsPath(r.ReportPath)
 	projectName := ProjectName(r.ProjectPath)
 
-	jsonpath := projectName + "-" + r.StartTime.String() + ".json"
+	jsonpath := projectName + "-" + r.TimeStamp + ".json"
 	if saveAbsPath != "" && saveAbsPath != r.ReportPath {
-		jsonpath = strings.Replace(saveAbsPath+string(filepath.Separator)+projectName+"-"+r.StartTime.String()+".json", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
+		jsonpath = strings.Replace(saveAbsPath+string(filepath.Separator)+projectName+"-"+r.TimeStamp+".json", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
 	}
 	if err = ioutil.WriteFile(jsonpath, jsonReport, 0666); err != nil {
 		return
@@ -251,7 +251,7 @@ func (r *Reporter) toHtml() (err error) {
 		htmlData.AveragePackageCover = float64(0)
 	}
 
-	SaveAsHtml(htmlData, r.ProjectPath, r.ReportPath, r.StartTime.String(), r.HtmlTemplate)
+	SaveAsHtml(htmlData, r.ProjectPath, r.ReportPath, r.TimeStamp, r.HtmlTemplate)
 
 	return
 }
