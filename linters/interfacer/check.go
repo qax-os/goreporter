@@ -16,7 +16,7 @@ import (
 	"golang.org/x/tools/go/ssa/ssautil"
 
 	"github.com/kisielk/gotool"
-	"github.com/mvdan/lint"
+	"mvdan.cc/lint"
 )
 
 func toDiscard(usage *varUsage) bool {
