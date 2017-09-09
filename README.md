@@ -41,7 +41,6 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [countcode](https://github.com/bytbox/sloc) - Count lines and files of project.
 - [interfacer](https://github.com/mvdan/interfacer) - Suggest narrower interfaces that can be used.
 - [depth](https://github.com/360EntSecGroup-Skylar/goreporter/tree/feature-3.0/linters/depth) - Count the maxdepth of go functions.
-- [staticcheck](https://github.com/dominikh/go-tools/tree/master/cmd/staticcheck) - Statically detect bugs, both obvious and subtle ones.
 - [flen](https://github.com/lafolle/flen) - Flen provides stats on functions/methods lengths in a Golang package.
 
 ## Template
