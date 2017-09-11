@@ -135,3 +135,118 @@ type Depth struct {
 }
 
 type DepthInfo CycloInfo
+
+// CodeTest is a struct that contains Summary and Content. It represents the result data
+// of the project unit test.
+type CodeTest struct {
+	Summary struct {
+		CodeCover    float64 `json:"code_cover"`
+		PackageCover float64 `json:"package_cover"`
+		TotalTime    float64 `json:"total_time"`
+	} `json:"summary"`
+	Content struct {
+		Pkg    []string  `json:"pkg"`
+		Cover  []float64 `json:"cover"`
+		Time   []float64 `json:"time"`
+		NoTest []string  `json:"no_test"`
+	} `json:"content"`
+}
+
+// Item is a struct that contains File and Content. It is the code-based infrastructure.
+type Item struct {
+	File    string `json:"file"`
+	Content string `json:"content"`
+}
+
+// CodeTest is a struct that contains Summary and Content. It represents the result data
+// of the project unit test.
+type StyleItem struct {
+	Label  string `json:"label"`
+	Score  int    `json:"score"`
+	Detail []Item `json:"detail"`
+
+	filesNum  int
+	issuesNum int
+}
+
+// CodeTest is a struct that contains Summary and Content. It represents the result data
+// of the project unit test.
+type CodeStyle struct {
+	Summary struct {
+		IssuesNum int    `json:"issues_num"`
+		FilesNum  int    `json:"files_num"`
+		Quality   string `json:"quality"`
+	} `json:"summary"`
+	Content struct {
+		GoFmt     StyleItem `json:"go_fmt"`
+		GoVet     StyleItem `json:"go_vet"`
+		GoLint    StyleItem `json:"go_lint"`
+		MissSpell StyleItem `json:"miss_spell"`
+	} `json:"content"`
+}
+
+// CodeTest is a struct that contains Summary and Content. It represents the result data
+// of the project unit test.
+type CopyItem struct {
+	Label  string     `json:"label"`
+	Score  int        `json:"score"`
+	Detail [][]string `json:"detail"`
+
+	filesNum  int
+	issuesNum int
+}
+
+// CodeTest is a struct that contains Summary and Content. It represents the result data
+// of the project unit test.
+type CodeOptimization struct {
+	Summary struct {
+		IssuesNum int    `json:"content"`
+		FilesNum  int    `json:"content"`
+		Quality   string `json:"content"`
+	} `json:"content"`
+	Content struct {
+		DeadCode       StyleItem `json:"dead_code"`
+		SimpleCode     StyleItem `json:"simple_code"`
+		StaticCode     StyleItem `json:"static_code"`
+		CopyCode       CopyItem  `json:"copy_code"`
+		InterfacerCode StyleItem `json:"interfacer_code"`
+	}
+}
+
+// CodeCount is a struct that contains Summary and Content. t represents the code
+// statistics of the data, you can understand the project from the perspective
+// of the number of lines.
+type CodeCount struct {
+	Summary struct {
+		LineCount     int `json:"lint_count"`
+		CommentCount  int `json:"comment_count"`
+		FunctionCount int `json:"function_count"`
+		FileCount     int `json:"file_count"`
+	} `json:"summary"`
+	Content struct {
+		Pkg               []string `json:"pkg"`
+		PkgLineCount      []int    `json:"pkg_line_count"`
+		PkgCommentCount   []int    `json:"pkg_comment_count"`
+		PkgFunctionCount  []int    `json:"pkg_function_count"`
+		File              []string `json:"file"`
+		FileLineCount     []int    `json:"file_line_count"`
+		FileCommentCount  []int    `json:"file_comment_count"`
+		FileFunctionCount []int    `json:"file_function_count"`
+	} `json:"content"`
+}
+
+// CodeSmell is a struct that contains Summary and Content. It represents the taste of
+// the code data, you can understand the project from the perspective of complexity.
+type CodeSmell struct {
+	Summary struct {
+		IssuesNum int    `json:"issues_num"`
+		FilesNum  int    `json:"files_num"`
+		Quality   string `json:"quality"`
+	} `json:"summary"`
+	Content struct {
+		Percentage map[string]int `json:"percentage"`
+		Pkg        []string       `json:"pkg"`
+		Cyclo      []int          `json:"cyclo"`
+		List       map[string]int `json:"list"`
+	} `json:"content"`
+}

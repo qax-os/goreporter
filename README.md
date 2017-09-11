@@ -26,6 +26,9 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 ## Supported linters
 
+- [gofmt](https://golang.org/cmd/gofmt) - Checks if the code is properly formatted and could not be further simplified.
+- [govet](https://golang.org/cmd/vet/#hdr-Shadowed_variables) - Reports variables that may have been unintentionally shadowed.
+- [golint](https://github.com/golang/lint) - Golint is a linter for Go source code.
 - [unittest](https://github.com/360EntSecGroup-Skylar/goreporter/tree/master/linters/unittest) - Golang unit test status.
 - [deadcode](https://github.com/tsenart/deadcode) - Finds unused code.
 - [gocyclo](https://github.com/alecthomas/gocyclo) - Computes the cyclomatic complexity of functions.

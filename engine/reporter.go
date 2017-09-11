@@ -216,15 +216,11 @@ func (r *Reporter) toHtml() (err error) {
 	htmlData.Project = r.Project
 	htmlData.Score = int(r.GetFinalScore())
 	// convert all linter's data.
-	htmlData.converterUnitTest(*r)
-	htmlData.converterCopy(*r)
-	htmlData.converterCyclo(*r)
-	htmlData.converterDepth(*r)
-	htmlData.converterInterfacer(*r)
-	htmlData.converterSimple(*r)
-	htmlData.converterSpell(*r)
-	htmlData.converterCount(*r)
-	htmlData.converterDead(*r)
+	htmlData.converterCodeTest(*r)
+	htmlData.converterCodeSmell(*r)
+	htmlData.converterCodeOptimization(*r)
+	htmlData.converterCodeStyle(*r)
+	htmlData.converterCodeCount(*r)
 	htmlData.converterDependGraph(*r)
 
 	noTestPackages := make([]string, 0)
@@ -235,21 +231,8 @@ func (r *Reporter) toHtml() (err error) {
 			noTestPackages = append(noTestPackages, packageName)
 		}
 	}
-	stringNoTestJson, err := jsoniter.Marshal(noTestPackages)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.NoTests = string(stringNoTestJson)
-	htmlData.Issues = issues
+	htmlData.IssuesNum = issues
 	htmlData.Date = r.TimeStamp
-
-	if len(importPackages) > 0 && len(noTestPackages) == 0 {
-		htmlData.AveragePackageCover = float64(100)
-	} else if len(importPackages) > 0 {
-		htmlData.AveragePackageCover = float64(100 * (len(importPackages) - len(noTestPackages)) / len(importPackages))
-	} else {
-		htmlData.AveragePackageCover = float64(0)
-	}
 
 	SaveAsHtml(htmlData, r.ProjectPath, r.ReportPath, r.TimeStamp, r.HtmlTemplate)
 
