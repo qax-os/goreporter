@@ -26,7 +26,7 @@ func (s *StrategySimpleCode) GetWeight() float64 {
 func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Summaries) {
 	summaries = NewSummaries()
 
-	simples := simplecode.Simple(parameters.AllDirs)
+	simples := simplecode.Simple(parameters.AllDirs, parameters.ExceptPackages)
 	sumProcessNumber := int64(10)
 	processUnit := GetProcessUnit(sumProcessNumber, len(simples))
 	for _, simpleTip := range simples {

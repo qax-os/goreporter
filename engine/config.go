@@ -200,9 +200,9 @@ type CopyItem struct {
 // of the project unit test.
 type CodeOptimization struct {
 	Summary struct {
-		IssuesNum int    `json:"content"`
-		FilesNum  int    `json:"content"`
-		Quality   string `json:"content"`
+		IssuesNum int    `json:"issues_num"`
+		FilesNum  int    `json:"files_num"`
+		Quality   string `json:"quality"`
 	} `json:"content"`
 	Content struct {
 		DeadCode       StyleItem `json:"dead_code"`

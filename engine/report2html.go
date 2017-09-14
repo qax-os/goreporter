@@ -145,7 +145,6 @@ func (hd *HtmlData) converterCodeTest(structData Reporter) {
 			} else if srcLastIndex < len(pkgName) && srcLastIndex >= 0 {
 				codeTestHtmlData.Content.Pkg = append(codeTestHtmlData.Content.Pkg, pkgName[srcLastIndex:])
 				codeTestHtmlData.Content.Time = append(codeTestHtmlData.Content.Time, packageUnitTestResult.Time)
-				fmt.Println(packageUnitTestResult.Time)
 				totalTime = totalTime + packageUnitTestResult.Time
 				if len(packageUnitTestResult.Coverage) > 1 {
 					cover, _ := strconv.ParseFloat(packageUnitTestResult.Coverage[:(len(packageUnitTestResult.Coverage)-1)], 64)
@@ -157,7 +156,7 @@ func (hd *HtmlData) converterCodeTest(structData Reporter) {
 		codeTestHtmlData.Summary.CodeCover = result.Percentage
 		codeTestHtmlData.Summary.PackageCover = float64(len(codeTestHtmlData.Content.Pkg)) * 1.0 / float64(len(codeTestHtmlData.Content.Pkg)+len(codeTestHtmlData.Content.NoTest))
 	}
-	fmt.Println(codeTestHtmlData)
+
 	stringCodeTestJson, err := jsoniter.Marshal(codeTestHtmlData)
 	if err != nil {
 		glog.Errorln(err)
@@ -532,7 +531,7 @@ func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp, tpl string)
 		out      bytes.Buffer
 		htmlpath string
 	)
-	fmt.Println(htmlData)
+
 	err = t.Execute(&out, htmlData)
 	if err != nil {
 		glog.Errorln(err)

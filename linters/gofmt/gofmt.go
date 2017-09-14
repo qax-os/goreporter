@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-// GoVet if a function that will run command go tool vet,return all result of
+// GoFmt if a function that will run command go fmt,return all result of
 // warnning issues.
 func GoFmt(packagePath []string) (goFmtData []string, err error) {
 	cmd := exec.Command("gofmt", append([]string{"-l"}, packagePath...)...)

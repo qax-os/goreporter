@@ -74,7 +74,8 @@ func (runner runner) resolveRelative(importPaths []string) (goFiles bool, err er
 	return false, nil
 }
 
-func ProcessArgs(name string, funcs []lint.Func, args []string) []string {
+func ProcessArgs(except, name string, funcs []lint.Func, args []string) []string {
+	excepts = append(excepts, strings.Split(except, ",")...)
 	flags := &flag.FlagSet{}
 	flags.Usage = usage(name, flags)
 	var minConfidence = flags.Float64("min_confidence", 0.8, "minimum confidence of a problem to print it")
