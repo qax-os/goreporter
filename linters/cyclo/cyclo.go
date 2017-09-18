@@ -28,6 +28,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 const usageDoc = `Calculate cyclomatic complexities of Go functions.
@@ -56,13 +57,13 @@ var (
 	avg  = true
 )
 
-func Cyclo(packagePath string) ([]string, string) {
+func Cyclo(packagePath, except string) ([]string, string) {
 	args := []string{packagePath}
 	if len(args) == 0 {
 		usage()
 	}
 
-	stats := analyze(args)
+	stats := analyze(args, except)
 	sort.Sort(byComplexity(stats))
 	// written := writeStats(os.Stdout, stats)
 	packageAvg := "0"
@@ -74,7 +75,7 @@ func Cyclo(packagePath string) ([]string, string) {
 	if over > 0 {
 		return result, packageAvg
 	}
-	
+
 	for _, stat := range stats {
 		result = append(result, stat.String())
 	}
@@ -82,16 +83,31 @@ func Cyclo(packagePath string) ([]string, string) {
 	return result, packageAvg
 }
 
-func analyze(paths []string) []stat {
+func analyze(paths []string, except string) []stat {
 	stats := make([]stat, 0)
 	for _, path := range paths {
-		if isDir(path) {
+		if isDir(path) && !checkExcept(path, except) {
 			stats = analyzeDir(path, stats)
-		} else {
+		} else if !checkExcept(path, except) {
 			stats = analyzeFile(path, stats)
 		}
 	}
 	return stats
+}
+
+func checkExcept(path, except string) bool {
+	if except == "" || except == " " {
+		return false
+	}
+	excepts := strings.Split(except, ",")
+	for _, val := range excepts {
+		if val != "" && val != " " {
+			if strings.Contains(path, val) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func isDir(filename string) bool {

@@ -38,7 +38,7 @@ const (
 	vendorDirInPath = string(filepath.Separator) + "vendor" + string(filepath.Separator)
 )
 
-func CopyCheck(projectPath string, expect string) (result [][]string) {
+func CopyCheck(projectPath string, except string) (result [][]string) {
 	flag.Parse()
 	if html && plumbing {
 		glog.Errorln("you can have either plumbing or HTML output")
@@ -48,7 +48,7 @@ func CopyCheck(projectPath string, expect string) (result [][]string) {
 	if verbose {
 		glog.Errorln("Building suffix tree")
 	}
-	schan := job.Parse(filesFeed(paths, expect))
+	schan := job.Parse(filesFeed(paths, except))
 	t, data, done := job.BuildTree(schan)
 	<-done
 
@@ -72,7 +72,7 @@ func CopyCheck(projectPath string, expect string) (result [][]string) {
 	return printDupls(duplChan)
 }
 
-func filesFeed(paths []string, expect string) chan string {
+func filesFeed(paths []string, except string) chan string {
 	if files {
 		fchan := make(chan string)
 		go func() {
@@ -86,10 +86,10 @@ func filesFeed(paths []string, expect string) chan string {
 		}()
 		return fchan
 	}
-	return crawlPaths(paths, expect)
+	return crawlPaths(paths, except)
 }
 
-func crawlPaths(paths []string, expect string) chan string {
+func crawlPaths(paths []string, except string) chan string {
 	fchan := make(chan string)
 	go func() {
 		for _, path := range paths {
@@ -103,7 +103,7 @@ func crawlPaths(paths []string, expect string) chan string {
 				continue
 			}
 			filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
-				if checkExpect(path, expect) {
+				if checkExcept(path, except) {
 					return nil
 				}
 				if !vendor && (strings.HasPrefix(path, vendorDirPrefix) ||
@@ -121,14 +121,16 @@ func crawlPaths(paths []string, expect string) chan string {
 	return fchan
 }
 
-func checkExpect(path, expect string) bool {
-	if expect == "" || expect == " " {
+func checkExcept(path, except string) bool {
+	if except == "" || except == " " {
 		return false
 	}
-	expects := strings.Split(expect, ",")
-	for _, val := range expects {
+	excepts := strings.Split(except, ",")
+	for _, val := range excepts {
 		if val != "" && val != " " {
-			return strings.Contains(path, val)
+			if strings.Contains(path, val) {
+				return true
+			}
 		}
 	}
 	return false

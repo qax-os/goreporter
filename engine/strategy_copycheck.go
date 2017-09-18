@@ -29,7 +29,7 @@ func (s *StrategyCopyCheck) GetWeight() float64 {
 func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Summaries) {
 	summaries = NewSummaries()
 
-	copyCodeList := copycheck.CopyCheck(parameters.ProjectPath, "_test.go")
+	copyCodeList := copycheck.CopyCheck(parameters.ProjectPath, parameters.ExceptPackages+",_test.go")
 	sumProcessNumber := int64(7)
 	processUnit := GetProcessUnit(sumProcessNumber, len(copyCodeList))
 

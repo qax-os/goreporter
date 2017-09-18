@@ -38,7 +38,7 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 	for pkgName, pkgPath := range s.allDirs {
 		errSlice := make([]Error, 0)
 
-		cyclos, avg := cyclo.Cyclo(pkgPath)
+		cyclos, avg := cyclo.Cyclo(pkgPath, parameters.ExceptPackages)
 		average, _ := strconv.ParseFloat(avg, 64)
 		if math.IsNaN(average) == false {
 			s.sumAverageCyclo = s.sumAverageCyclo + average
