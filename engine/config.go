@@ -210,7 +210,7 @@ type CodeOptimization struct {
 		StaticCode     StyleItem `json:"static_code"`
 		CopyCode       CopyItem  `json:"copy_code"`
 		InterfacerCode StyleItem `json:"interfacer_code"`
-	}
+	} `json:"content"`
 }
 
 // CodeCount is a struct that contains Summary and Content. t represents the code
