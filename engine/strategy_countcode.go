@@ -45,6 +45,7 @@ func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries Sum
 		Name:        "TotalLines",
 		Description: strconv.Itoa(totalLines),
 	}
+	// todo:get all package count
 	return
 }
 

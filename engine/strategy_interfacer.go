@@ -20,7 +20,7 @@ func (s *StrategyInterfacer) GetDescription() string {
 }
 
 func (s *StrategyInterfacer) GetWeight() float64 {
-	return 0.06
+	return 0.05
 }
 
 // linterInterfacer is a function that scan the interface of all packages in the

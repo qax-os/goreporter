@@ -20,7 +20,7 @@ func (s *StrategySpellCheck) GetDescription() string {
 }
 
 func (s *StrategySpellCheck) GetWeight() float64 {
-	return 0.1
+	return 0.05
 }
 
 func (s *StrategySpellCheck) Compute(parameters StrategyParameter) (summaries Summaries) {

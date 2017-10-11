@@ -45,45 +45,21 @@ var (
 //    +-----------------------+----------------------------------------------+
 //    | Score                 | The score of the tested project              |
 //    +-----------------------+----------------------------------------------+
-//    | Tests                 | Unit test results                            |
+//    | CodeTest              | Unit test results                            |
 //    +-----------------------+----------------------------------------------+
-//    | Date                  | Date assessment of the project               |
+//    | IssuesNum             | Issues number of the project                 |
 //    +-----------------------+----------------------------------------------+
-//    | Issues                | Issues number of the project                 |
+//    | CodeCount             | Number of lines of code                      |
 //    +-----------------------+----------------------------------------------+
-//    | FileCount             | Go file number of the peoject                |
+//    | CodeStyle             | Code style check                             |
 //    +-----------------------+----------------------------------------------+
-//    | CodeLines             | Number of lines of code                      |
+//    | CodeOptimization      | Code optimization                            |
 //    +-----------------------+----------------------------------------------+
-//    | CommentLines          | Number of lines of Comment                   |
-//    +-----------------------+----------------------------------------------+
-//    | TestSummaryCoverAvg   | Code cover average of all unit test          |
-//    +-----------------------+----------------------------------------------+
-//    | AveragePackageCover   | Package cover average of all packages        |
-//    +-----------------------+----------------------------------------------+
-//    | SimpleIssues          | Simpled issues number                        |
-//    +-----------------------+----------------------------------------------+
-//    | DeadcodeIssues        | Dead code issues number                      |
-//    +-----------------------+----------------------------------------------+
-//    | CycloBigThan15        | Cyclo more than 15 number                    |
-//    +-----------------------+----------------------------------------------+
-//    | Races                 | Race result of all packages                  |
-//    +-----------------------+----------------------------------------------+
-//    | NoTests               | No unit test packages information            |
-//    +-----------------------+----------------------------------------------+
-//    | Simples               | Simpled cases of all packages information    |
-//    +-----------------------+----------------------------------------------+
-//    | Interfacers           | Warns about types specific  necessary        |
-//    +-----------------------+----------------------------------------------+
-//    | SimpleLevel           | Simple level of path                         |
-//    +-----------------------+----------------------------------------------+
-//    | Deadcodes             | Dead code cases information                  |
-//    +-----------------------+----------------------------------------------+
-//    | Copycodes             | Copy code cases information                  |
-//    +-----------------------+----------------------------------------------+
-//    | Cyclos                | Cyclo of function cases information           |
+//    | CodeSmell             | Code smell                                   |
 //    +-----------------------+----------------------------------------------+
 //    | DepGraph              | Depend graph of all packages in the project  |
+//    +-----------------------+----------------------------------------------+
+//    | Date                  | Date assessment of the project               |
 //    +-----------------------+----------------------------------------------+
 //    | LastRefresh           | Last refresh time of one project             |
 //    +-----------------------+----------------------------------------------+
@@ -101,30 +77,9 @@ type HtmlData struct {
 	CodeOptimization string
 	CodeCount        string
 	CodeSmell        string
-	Date             string
+	DepGraph         template.HTML
 
-	// FileCount           int
-	// CodeLines           int
-	// CommentLines        int
-	// TotalLines          int
-	// TestSummaryCoverAvg string
-	// AveragePackageCover float64
-	// SimpleIssues        int
-	// DeadcodeIssues      int
-	// CycloBigThan15      int
-	// DepthBigThan3       int
-	// Races               []Race
-	// NoTests             string
-	// Simples             string
-	// Interfacers         string
-	// Spells              string
-	// SimpleLevel         int
-	// Deadcodes           string
-	// Copycodes           string
-	// Cyclos              string
-	// Depths              string
-	DepGraph template.HTML
-
+	Date                 string
 	LastRefresh          time.Time `json:"last_refresh"`
 	HumanizedLastRefresh string    `json:"humanized_last_refresh"`
 }
@@ -172,8 +127,23 @@ func (hd *HtmlData) converterCodeStyle(structData Reporter) {
 	codeSpellHtmlData := converterCodeSpell(structData)
 	codeStyleHtmlData.Summary.FilesNum = codeStyleHtmlData.Summary.FilesNum + codeSpellHtmlData.filesNum
 	codeStyleHtmlData.Summary.IssuesNum = codeStyleHtmlData.Summary.IssuesNum + codeSpellHtmlData.issuesNum
-
 	codeStyleHtmlData.Content.MissSpell = codeSpellHtmlData
+
+	codeLintHtmlData := converterCodeLint(structData)
+	codeStyleHtmlData.Summary.FilesNum = codeStyleHtmlData.Summary.FilesNum + codeLintHtmlData.filesNum
+	codeStyleHtmlData.Summary.IssuesNum = codeStyleHtmlData.Summary.IssuesNum + codeLintHtmlData.issuesNum
+	codeStyleHtmlData.Content.MissSpell = codeLintHtmlData
+
+	codeFmtHtmlData := converterCodeFmt(structData)
+	codeStyleHtmlData.Summary.FilesNum = codeStyleHtmlData.Summary.FilesNum + codeFmtHtmlData.filesNum
+	codeStyleHtmlData.Summary.IssuesNum = codeStyleHtmlData.Summary.IssuesNum + codeFmtHtmlData.issuesNum
+	codeStyleHtmlData.Content.MissSpell = codeFmtHtmlData
+
+	codeVetHtmlData := converterCodeVet(structData)
+	codeStyleHtmlData.Summary.FilesNum = codeStyleHtmlData.Summary.FilesNum + codeVetHtmlData.filesNum
+	codeStyleHtmlData.Summary.IssuesNum = codeStyleHtmlData.Summary.IssuesNum + codeVetHtmlData.issuesNum
+	codeStyleHtmlData.Content.MissSpell = codeVetHtmlData
+
 	stringCodeStyleJson, err := jsoniter.Marshal(codeStyleHtmlData)
 	if err != nil {
 		glog.Errorln(err)
@@ -274,6 +244,11 @@ func (hd *HtmlData) converterCodeCount(structData Reporter) {
 		codeCountHtmlData.Summary.LineCount, _ = strconv.Atoi(result.Summaries["CodeLines"].Description)
 		codeCountHtmlData.Summary.CommentCount, _ = strconv.Atoi(result.Summaries["CommentLines"].Description)
 	}
+	stringCodeCountJson, err := jsoniter.Marshal(codeCountHtmlData)
+	if err != nil {
+		glog.Errorln(err)
+	}
+	hd.CodeCount = string(stringCodeCountJson)
 }
 
 // converterCyclo provides function that convert cyclo data into the
@@ -477,12 +452,82 @@ func converterCodeSpell(structData Reporter) (spellHtmlData StyleItem) {
 	return spellHtmlData
 }
 
-// converterSpell provides function that convert spellcheck data into the
+// converterCodeLint provides function that convert spellcheck data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
 func converterCodeLint(structData Reporter) (spellHtmlData StyleItem) {
 	spellHtmlData.Label = `Correct commonly misspelled English words... quickly`
-	if result, ok := structData.Metrics["GoLinterTips"]; ok {
+	if result, ok := structData.Metrics["GoLintTips"]; ok {
+		fileMap := make(map[string]bool, 0)
+		for _, summary := range result.Summaries {
+			spellCodeTips := summary.Errors
+			for i := 0; i < len(spellCodeTips); i++ {
+				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
+				if len(spellCodeTip) == 4 {
+					spellcode := Item{
+						File:    strings.Join(spellCodeTip[0:3], ":"),
+						Content: spellCodeTip[3],
+					}
+					fileMap[spellcode.File] = true
+					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
+				} else if len(spellCodeTip) == 5 {
+					spellcode := Item{
+						File:    strings.Join(spellCodeTip[0:4], ":"),
+						Content: spellCodeTip[4],
+					}
+					fileMap[spellcode.File] = true
+					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
+				}
+			}
+		}
+		spellHtmlData.filesNum = len(fileMap)
+		spellHtmlData.issuesNum = len(spellHtmlData.Detail)
+	}
+
+	return spellHtmlData
+}
+
+// converterCodeFmt provides function that convert spellcheck data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
+func converterCodeFmt(structData Reporter) (spellHtmlData StyleItem) {
+	spellHtmlData.Label = `Correct commonly misspelled English words... quickly`
+	if result, ok := structData.Metrics["GoFmtTips"]; ok {
+		fileMap := make(map[string]bool, 0)
+		for _, summary := range result.Summaries {
+			spellCodeTips := summary.Errors
+			for i := 0; i < len(spellCodeTips); i++ {
+				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
+				if len(spellCodeTip) == 3 {
+					spellcode := Item{
+						File:    strings.Join(spellCodeTip[0:1], ":"),
+						Content: strings.Join(spellCodeTip[1:3], ":"),
+					}
+					fileMap[spellcode.File] = true
+					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
+				} else if len(spellCodeTip) == 4 {
+					spellcode := Item{
+						File:    strings.Join(spellCodeTip[0:2], ":"),
+						Content: strings.Join(spellCodeTip[2:4], ":"),
+					}
+					fileMap[spellcode.File] = true
+					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
+				}
+			}
+		}
+		spellHtmlData.filesNum = len(fileMap)
+		spellHtmlData.issuesNum = len(spellHtmlData.Detail)
+	}
+
+	return spellHtmlData
+}
+
+// converterCodeVet provides function that convert spellcheck data into the
+// format required in the html template.It will extract from the structData
+// need to convert the data.The result will be saved in the hd's attributes.
+func converterCodeVet(structData Reporter) (spellHtmlData StyleItem) {
+	spellHtmlData.Label = `Correct commonly misspelled English words... quickly`
+	if result, ok := structData.Metrics["GoVetTips"]; ok {
 		fileMap := make(map[string]bool, 0)
 		for _, summary := range result.Summaries {
 			spellCodeTips := summary.Errors

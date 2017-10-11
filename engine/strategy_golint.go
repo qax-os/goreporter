@@ -12,7 +12,7 @@ type StrategyLint struct {
 }
 
 func (s *StrategyLint) GetName() string {
-	return "Lint"
+	return "GoLint"
 }
 
 func (s *StrategyLint) GetDescription() string {
@@ -20,7 +20,7 @@ func (s *StrategyLint) GetDescription() string {
 }
 
 func (s *StrategyLint) GetWeight() float64 {
-	return 0.1
+	return 0.05
 }
 
 func (s *StrategyLint) Compute(parameters StrategyParameter) (summaries Summaries) {

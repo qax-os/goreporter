@@ -23,7 +23,7 @@ func (s *StrategyDepth) GetDescription() string {
 }
 
 func (s *StrategyDepth) GetWeight() float64 {
-	return 0.2
+	return 0.05
 }
 
 // Compute all [.go] file's function maximum depth. It is an important indicator

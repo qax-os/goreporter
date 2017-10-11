@@ -20,7 +20,7 @@ func (s *StrategySimpleCode) GetDescription() string {
 }
 
 func (s *StrategySimpleCode) GetWeight() float64 {
-	return 0.1
+	return 0.05
 }
 
 func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Summaries) {

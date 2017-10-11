@@ -20,7 +20,7 @@ func (s *StrategyCopyCheck) GetDescription() string {
 }
 
 func (s *StrategyCopyCheck) GetWeight() float64 {
-	return 0.1
+	return 0.05
 }
 
 // linterCopy provides a function that scans all duplicate code in the project and give

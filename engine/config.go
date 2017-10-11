@@ -218,7 +218,7 @@ type CodeOptimization struct {
 // of the number of lines.
 type CodeCount struct {
 	Summary struct {
-		LineCount     int `json:"lint_count"`
+		LineCount     int `json:"line_count"`
 		CommentCount  int `json:"comment_count"`
 		FunctionCount int `json:"function_count"`
 		FileCount     int `json:"file_count"`

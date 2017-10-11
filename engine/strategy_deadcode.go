@@ -20,7 +20,7 @@ func (s *StrategyDeadCode) GetDescription() string {
 }
 
 func (s *StrategyDeadCode) GetWeight() float64 {
-	return 0.04
+	return 0.05
 }
 
 // linterDead provides a function that will scans all useless code, or never

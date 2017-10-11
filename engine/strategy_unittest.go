@@ -25,7 +25,7 @@ func (s *StrategyUnitTest) GetDescription() string {
 }
 
 func (s *StrategyUnitTest) GetWeight() float64 {
-	return 0.4
+	return 0.3
 }
 
 func (s *StrategyUnitTest) Compute(parameters StrategyParameter) (summaries Summaries) {
