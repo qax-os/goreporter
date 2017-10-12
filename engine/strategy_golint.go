@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/golint"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyLint struct {
@@ -31,15 +32,15 @@ func (s *StrategyLint) Compute(parameters StrategyParameter) (summaries Summarie
 	}
 	lints := golint.GoLinter(slicePackagePaths)
 	sumProcessNumber := int64(10)
-	processUnit := GetProcessUnit(sumProcessNumber, len(lints))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(lints))
 	for _, lintTip := range lints {
 		lintTips := strings.Split(lintTip, ":")
 		if len(lintTips) == 4 {
-			packageName := PackageNameFromGoPath(lintTips[0])
+			packageName := utils.PackageNameFromGoPath(lintTips[0])
 			line, _ := strconv.Atoi(lintTips[1])
 			erroru := Error{
 				LineNumber:  line,
-				ErrorString: AbsPath(lintTips[0]) + ":" + strings.Join(lintTips[1:], ":"),
+				ErrorString: utils.AbsPath(lintTips[0]) + ":" + strings.Join(lintTips[1:], ":"),
 			}
 			summaries.Lock()
 			if summarie, ok := summaries.Summaries[packageName]; ok {
@@ -67,5 +68,5 @@ func (s *StrategyLint) Compute(parameters StrategyParameter) (summaries Summarie
 func (s *StrategyLint) Percentage(summaries Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
-	return CountPercentage(len(summaries.Summaries))
+	return utils.CountPercentage(len(summaries.Summaries))
 }

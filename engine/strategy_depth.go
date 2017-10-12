@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/depth"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyDepth struct {
@@ -34,7 +35,7 @@ func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries Summari
 	s.allDirs = parameters.AllDirs
 
 	sumProcessNumber := int64(10)
-	processUnit := GetProcessUnit(sumProcessNumber, len(s.allDirs))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(s.allDirs))
 
 	for pkgName, pkgPath := range s.allDirs {
 		errors := make([]Error, 0)
@@ -47,7 +48,7 @@ func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries Summari
 				comp, _ := strconv.Atoi(depthvalues[0])
 				erroru := Error{
 					LineNumber:  comp,
-					ErrorString: AbsPath(depthvalues[3]),
+					ErrorString: utils.AbsPath(depthvalues[3]),
 				}
 				if comp >= 3 {
 					s.compBigThan3 = s.compBigThan3 + 1
@@ -72,5 +73,5 @@ func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries Summari
 }
 
 func (s *StrategyDepth) Percentage(summaries Summaries) float64 {
-	return CountPercentage(s.compBigThan3 + int(s.sumAverageDepth/float64(len(s.allDirs))) - 1)
+	return utils.CountPercentage(s.compBigThan3 + int(s.sumAverageDepth/float64(len(s.allDirs))) - 1)
 }

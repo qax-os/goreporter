@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
 	"github.com/golang/glog"
 	"github.com/json-iterator/go"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyUnitTest struct {
@@ -32,7 +34,7 @@ func (s *StrategyUnitTest) Compute(parameters StrategyParameter) (summaries Summ
 	summaries = NewSummaries()
 
 	sumProcessNumber := int64(30)
-	processUnit := GetProcessUnit(sumProcessNumber, len(parameters.UnitTestDirs))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(parameters.UnitTestDirs))
 
 	var pkg sync.WaitGroup
 

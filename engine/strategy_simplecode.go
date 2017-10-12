@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategySimpleCode struct {
@@ -28,15 +29,15 @@ func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Su
 
 	simples := simplecode.Simple(parameters.AllDirs, parameters.ExceptPackages)
 	sumProcessNumber := int64(10)
-	processUnit := GetProcessUnit(sumProcessNumber, len(simples))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(simples))
 	for _, simpleTip := range simples {
 		simpleTips := strings.Split(simpleTip, ":")
 		if len(simpleTips) == 4 {
-			packageName := PackageNameFromGoPath(simpleTips[0])
+			packageName := utils.PackageNameFromGoPath(simpleTips[0])
 			line, _ := strconv.Atoi(simpleTips[1])
 			erroru := Error{
 				LineNumber:  line,
-				ErrorString: AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
+				ErrorString: utils.AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
 			}
 			summaries.Lock()
 			if summarie, ok := summaries.Summaries[packageName]; ok {
@@ -64,5 +65,5 @@ func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Su
 func (s *StrategySimpleCode) Percentage(summaries Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
-	return CountPercentage(len(summaries.Summaries))
+	return utils.CountPercentage(len(summaries.Summaries))
 }

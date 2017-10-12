@@ -25,6 +25,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/golang/glog"
 	"github.com/json-iterator/go"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type Synchronizer struct {
@@ -83,16 +85,16 @@ func (r *Reporter) Report() error {
 	defer r.Close()
 	glog.Infoln("start code quality assessment...")
 
-	r.Project = PackageAbsPath(r.ProjectPath)
+	r.Project = utils.PackageAbsPath(r.ProjectPath)
 
 	// All directory that has _test.go files will be add into.
-	dirsUnitTest, err := DirList(r.ProjectPath, "_test.go", r.ExceptPackages)
+	dirsUnitTest, err := utils.DirList(r.ProjectPath, "_test.go", r.ExceptPackages)
 	if err != nil {
 		return err
 	}
 
 	// All directory that has .go files will be add into.
-	dirsAll, err := DirList(r.ProjectPath, ".go", r.ExceptPackages)
+	dirsAll, err := utils.DirList(r.ProjectPath, ".go", r.ExceptPackages)
 	if err != nil {
 		return err
 	}
@@ -145,7 +147,6 @@ func (r *Reporter) Render() (err error) {
 			glog.Infoln("Json2Html error:", err)
 			return
 		}
-
 	}
 	return
 }
@@ -159,8 +160,8 @@ func (r *Reporter) toJson() (err error) {
 		return
 	}
 
-	saveAbsPath := AbsPath(r.ReportPath)
-	projectName := ProjectName(r.ProjectPath)
+	saveAbsPath := utils.AbsPath(r.ReportPath)
+	projectName := utils.ProjectName(r.ProjectPath)
 
 	jsonpath := projectName + "-" + r.TimeStamp + ".json"
 	if saveAbsPath != "" && saveAbsPath != r.ReportPath {

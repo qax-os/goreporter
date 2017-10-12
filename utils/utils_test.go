@@ -11,14 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package engine
+package utils
 
 import (
 	"testing"
 )
 
 func Test_DirList(t *testing.T) {
-	DirList("../../goreporter", ".go", "_test.go")
+	DirList("../goreporter", ".go", "_test.go")
 }
 
 func Test_ExceptPkg(t *testing.T) {
@@ -26,19 +26,19 @@ func Test_ExceptPkg(t *testing.T) {
 }
 
 func Test_PackageAbsPath(t *testing.T) {
-	PackageAbsPath("../engine")
+	PackageAbsPath("./engine")
 }
 
 func Test_PackageAbsPathExceptSuffix(t *testing.T) {
-	PackageAbsPathExceptSuffix("../engine/engine.go")
+	PackageAbsPathExceptSuffix("./engine/engine.go")
 }
 
 func Test_ProjectName(t *testing.T) {
-	ProjectName("../engine")
+	ProjectName("./engine")
 }
 
 func Test_AbsPath(t *testing.T) {
-	AbsPath("../engine")
+	AbsPath("./engine")
 }
 
 func Test_DirList_NoPath(t *testing.T) {
@@ -54,7 +54,7 @@ func Test_PackageAbsPath_NoPath(t *testing.T) {
 }
 
 func Test_PackageAbsPathExceptSuffix_NoPath(t *testing.T) {
-	PackageAbsPathExceptSuffix("../engine/nopath.go")
+	PackageAbsPathExceptSuffix("./engine/nopath.go")
 }
 
 func Test_ProjectName_NoPath(t *testing.T) {

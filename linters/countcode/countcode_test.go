@@ -5,5 +5,5 @@ import (
 )
 
 func Test_CountCode(t *testing.T) {
-	CountCode("../../../goreporter", "vendor/wgliang,linters,tools")
+	CountCode("../../../goreporter", "")
 }

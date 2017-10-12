@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/copycheck"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyCopyCheck struct {
@@ -31,7 +32,7 @@ func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Sum
 
 	copyCodeList := copycheck.CopyCheck(parameters.ProjectPath, parameters.ExceptPackages+",_test.go")
 	sumProcessNumber := int64(7)
-	processUnit := GetProcessUnit(sumProcessNumber, len(copyCodeList))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(copyCodeList))
 
 	for i := 0; i < len(copyCodeList); i++ {
 		errorSlice := make([]Error, 0)
@@ -47,7 +48,7 @@ func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Sum
 						line = lineright - lineleft + 1
 					}
 				}
-				values[0] = AbsPath(values[0])
+				values[0] = utils.AbsPath(values[0])
 			}
 
 			errorSlice = append(errorSlice, Error{LineNumber: line, ErrorString: strings.Join(values, ":")})
@@ -69,5 +70,5 @@ func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Sum
 func (s *StrategyCopyCheck) Percentage(summaries Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
-	return CountPercentage(len(summaries.Summaries))
+	return utils.CountPercentage(len(summaries.Summaries))
 }

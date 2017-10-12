@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/deadcode"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyDeadCode struct {
@@ -31,15 +32,15 @@ func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summ
 
 	deadcodes := deadcode.DeadCode(parameters.ProjectPath)
 	sumProcessNumber := int64(10)
-	processUnit := GetProcessUnit(sumProcessNumber, len(deadcodes))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(deadcodes))
 	for _, simpleTip := range deadcodes {
 		deadCodeTips := strings.Split(simpleTip, ":")
 		if len(deadCodeTips) == 4 {
-			packageName := PackageNameFromGoPath(deadCodeTips[0])
+			packageName := utils.PackageNameFromGoPath(deadCodeTips[0])
 			line, _ := strconv.Atoi(deadCodeTips[1])
 			erroru := Error{
 				LineNumber:  line,
-				ErrorString: AbsPath(deadCodeTips[0]) + ":" + strings.Join(deadCodeTips[1:], ":"),
+				ErrorString: utils.AbsPath(deadCodeTips[0]) + ":" + strings.Join(deadCodeTips[1:], ":"),
 			}
 			summaries.Lock()
 			if summary, ok := summaries.Summaries[packageName]; ok {
@@ -47,7 +48,7 @@ func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summ
 				summaries.Summaries[packageName] = summary
 			} else {
 				summarie := Summary{
-					Name:   PackageAbsPathExceptSuffix(deadCodeTips[0]),
+					Name:   utils.PackageAbsPathExceptSuffix(deadCodeTips[0]),
 					Errors: make([]Error, 0),
 				}
 				summarie.Errors = append(summarie.Errors, erroru)
@@ -66,5 +67,5 @@ func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summ
 func (s *StrategyDeadCode) Percentage(summaries Summaries) float64 {
 	summaries.Lock()
 	defer summaries.Unlock()
-	return CountPercentage(len(summaries.Summaries))
+	return utils.CountPercentage(len(summaries.Summaries))
 }

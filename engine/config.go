@@ -141,7 +141,7 @@ type DepthInfo CycloInfo
 type CodeTest struct {
 	Summary struct {
 		CodeCover    float64 `json:"code_cover"`
-		PackageCover float64 `json:"package_cover"`
+		PackageCover float64 `json:"pkg_cover"`
 		TotalTime    float64 `json:"total_time"`
 	} `json:"summary"`
 	Content struct {
@@ -154,8 +154,8 @@ type CodeTest struct {
 
 // Item is a struct that contains File and Content. It is the code-based infrastructure.
 type Item struct {
-	File    string `json:"file"`
-	Content string `json:"content"`
+	File    string   `json:"rep"`
+	Content []string `json:"content"`
 }
 
 // CodeTest is a struct that contains Summary and Content. It represents the result data
@@ -173,8 +173,8 @@ type StyleItem struct {
 // of the project unit test.
 type CodeStyle struct {
 	Summary struct {
-		IssuesNum int    `json:"issues_num"`
-		FilesNum  int    `json:"files_num"`
+		IssuesNum int    `json:"issue_num"`
+		FilesNum  int    `json:"file_num"`
 		Quality   string `json:"quality"`
 	} `json:"summary"`
 	Content struct {
@@ -200,10 +200,10 @@ type CopyItem struct {
 // of the project unit test.
 type CodeOptimization struct {
 	Summary struct {
-		IssuesNum int    `json:"issues_num"`
-		FilesNum  int    `json:"files_num"`
+		IssuesNum int    `json:"issue_num"`
+		FilesNum  int    `json:"file_num"`
 		Quality   string `json:"quality"`
-	} `json:"content"`
+	} `json:"summary"`
 	Content struct {
 		DeadCode       StyleItem `json:"dead_code"`
 		SimpleCode     StyleItem `json:"simple_code"`
@@ -235,18 +235,24 @@ type CodeCount struct {
 	} `json:"content"`
 }
 
+// CodeSmellItem is a struct that contains path and cyclo.
+type CodeSmellItem struct {
+	Path  string `json:"path"`
+	Cyclo int    `json:"cyclo"`
+}
+
 // CodeSmell is a struct that contains Summary and Content. It represents the taste of
 // the code data, you can understand the project from the perspective of complexity.
 type CodeSmell struct {
 	Summary struct {
-		IssuesNum int    `json:"issues_num"`
-		FilesNum  int    `json:"files_num"`
-		Quality   string `json:"quality"`
+		CycloAvg   int `json:"cyclo_avg"`
+		CycloHigh  int `json:"cyclo_high"`
+		CycloGrave int `json:"cyclo_grave"`
 	} `json:"summary"`
 	Content struct {
-		Percentage map[string]int `json:"percentage"`
-		Pkg        []string       `json:"pkg"`
-		Cyclo      []int          `json:"cyclo"`
-		List       map[string]int `json:"list"`
+		Percentage map[string]int  `json:"percentage"`
+		Pkg        []string        `json:"pkg"`
+		Cyclo      []int           `json:"cyclo"`
+		List       []CodeSmellItem `json:"list"`
 	} `json:"content"`
 }

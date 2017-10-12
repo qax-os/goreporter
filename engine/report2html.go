@@ -29,6 +29,8 @@ import (
 
 	"github.com/golang/glog"
 	"github.com/json-iterator/go"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 var (
@@ -107,9 +109,9 @@ func (hd *HtmlData) converterCodeTest(structData Reporter) {
 				}
 			}
 		}
-		codeTestHtmlData.Summary.TotalTime = totalTime
-		codeTestHtmlData.Summary.CodeCover = result.Percentage
-		codeTestHtmlData.Summary.PackageCover = float64(len(codeTestHtmlData.Content.Pkg)) * 1.0 / float64(len(codeTestHtmlData.Content.Pkg)+len(codeTestHtmlData.Content.NoTest))
+		codeTestHtmlData.Summary.TotalTime, _ = strconv.ParseFloat(strconv.FormatFloat(totalTime, 'f', 1, 64), 64)
+		codeTestHtmlData.Summary.CodeCover, _ = strconv.ParseFloat(strconv.FormatFloat(result.Percentage, 'f', 1, 64), 64)
+		codeTestHtmlData.Summary.PackageCover, _ = strconv.ParseFloat(strconv.FormatFloat(float64(len(codeTestHtmlData.Content.Pkg))*1.0/float64(len(codeTestHtmlData.Content.Pkg)+len(codeTestHtmlData.Content.NoTest)), 'f', 1, 64), 64)
 	}
 
 	stringCodeTestJson, err := jsoniter.Marshal(codeTestHtmlData)
@@ -189,11 +191,12 @@ func (hd *HtmlData) converterCodeOptimization(structData Reporter) {
 func (hd *HtmlData) converterCodeSmell(structData Reporter) {
 	var codeSmellHtmlData CodeSmell
 	codeSmellHtmlData.Content.Percentage = make(map[string]int, 0)
-	codeSmellHtmlData.Content.List = make(map[string]int, 0)
+	codeSmellHtmlData.Content.List = make([]CodeSmellItem, 0)
 	codeSmellHtmlData.Content.Percentage["1-15"] = 0
 	codeSmellHtmlData.Content.Percentage["15-50"] = 0
-	codeSmellHtmlData.Content.Percentage["50-"] = 0
+	codeSmellHtmlData.Content.Percentage["50+"] = 0
 
+	sumComp, sumNum := 0, 0
 	if result, ok := structData.Metrics["CycloTips"]; ok {
 		filesMap := make(map[string]bool, 0)
 		for pkgName, summary := range result.Summaries {
@@ -203,13 +206,23 @@ func (hd *HtmlData) converterCodeSmell(structData Reporter) {
 				if len(cycloTip) >= 3 {
 					if summary.Errors[i].LineNumber < 15 {
 						codeSmellHtmlData.Content.Percentage["1-15"]++
+						smellItem := CodeSmellItem{
+							Path:  strings.Join(cycloTip[0:], ":"),
+							Cyclo: summary.Errors[i].LineNumber,
+						}
+						codeSmellHtmlData.Content.List = append(codeSmellHtmlData.Content.List, smellItem)
+						filesMap[strings.Join(cycloTip[0:], ":")] = true
 					} else if summary.Errors[i].LineNumber >= 15 {
-						codeSmellHtmlData.Content.List[strings.Join(cycloTip[0:], ":")] = summary.Errors[i].LineNumber
+						smellItem := CodeSmellItem{
+							Path:  strings.Join(cycloTip[0:], ":"),
+							Cyclo: summary.Errors[i].LineNumber,
+						}
+						codeSmellHtmlData.Content.List = append(codeSmellHtmlData.Content.List, smellItem)
 						filesMap[strings.Join(cycloTip[0:], ":")] = true
 						if summary.Errors[i].LineNumber < 50 {
 							codeSmellHtmlData.Content.Percentage["15-50"]++
 						} else {
-							codeSmellHtmlData.Content.Percentage["50-"]++
+							codeSmellHtmlData.Content.Percentage["50+"]++
 						}
 					}
 					compNum++
@@ -221,10 +234,15 @@ func (hd *HtmlData) converterCodeSmell(structData Reporter) {
 				codeSmellHtmlData.Content.Pkg = append(codeSmellHtmlData.Content.Pkg, pkgName)
 				codeSmellHtmlData.Content.Cyclo = append(codeSmellHtmlData.Content.Cyclo, compSum/compNum)
 			}
-
+			sumComp = sumComp + compSum
+			sumNum = sumNum + compNum
 		}
-		codeSmellHtmlData.Summary.FilesNum = len(filesMap)
-		codeSmellHtmlData.Summary.IssuesNum = len(codeSmellHtmlData.Content.List)
+
+		sortCycloByComp(codeSmellHtmlData.Content.List, 0, len(codeSmellHtmlData.Content.List))
+
+		codeSmellHtmlData.Summary.CycloAvg = sumComp / sumNum
+		codeSmellHtmlData.Summary.CycloHigh = codeSmellHtmlData.Content.Percentage["15-50"]
+		codeSmellHtmlData.Summary.CycloGrave = codeSmellHtmlData.Content.Percentage["50+"]
 	}
 
 	stringCodeSmellJson, err := jsoniter.Marshal(codeSmellHtmlData)
@@ -234,15 +252,59 @@ func (hd *HtmlData) converterCodeSmell(structData Reporter) {
 	hd.CodeSmell = string(stringCodeSmellJson)
 }
 
+// sortCycloByComp implements the quick sorting algorithm sort list by complexity.
+func sortCycloByComp(input []CodeSmellItem, l, u int) {
+	if l < u {
+		m := partition(input, l, u)
+		sortCycloByComp(input, l, m-1)
+		sortCycloByComp(input, m, u)
+	}
+}
+
+func partition(input []CodeSmellItem, l, u int) int {
+	var (
+		pivot = input[l]
+		left  = l
+		right = l + 1
+	)
+	for ; right < u; right++ {
+		if input[right].Cyclo <= pivot.Cyclo {
+			left++
+			input[left], input[right] = input[right], input[left]
+		}
+	}
+	input[l], input[left] = input[left], input[l]
+	return left + 1
+}
+
 // converterCount provides function that convert countcode data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
 func (hd *HtmlData) converterCodeCount(structData Reporter) {
 	var codeCountHtmlData CodeCount
 	if result, ok := structData.Metrics["CountCodeTips"]; ok {
-		codeCountHtmlData.Summary.FileCount, _ = strconv.Atoi(result.Summaries["FileCount"].Description)
-		codeCountHtmlData.Summary.LineCount, _ = strconv.Atoi(result.Summaries["CodeLines"].Description)
-		codeCountHtmlData.Summary.CommentCount, _ = strconv.Atoi(result.Summaries["CommentLines"].Description)
+		for packageName, codeCount := range result.Summaries {
+			if strings.HasSuffix(packageName, hd.Project) {
+				counts := strings.Split(codeCount.Description, ";")
+				if len(counts) == 4 {
+					codeCountHtmlData.Summary.FileCount, _ = strconv.Atoi(counts[0])
+					codeCountHtmlData.Summary.LineCount, _ = strconv.Atoi(counts[1])
+					codeCountHtmlData.Summary.CommentCount, _ = strconv.Atoi(counts[2])
+					codeCountHtmlData.Summary.FunctionCount, _ = strconv.Atoi(counts[0])
+				}
+			} else {
+				counts := strings.Split(codeCount.Description, ";")
+				if len(counts) == 4 {
+					codeCountHtmlData.Content.Pkg = append(codeCountHtmlData.Content.Pkg, packageName)
+					pkgCommentCount, _ := strconv.Atoi(counts[2])
+					codeCountHtmlData.Content.PkgCommentCount = append(codeCountHtmlData.Content.PkgCommentCount, pkgCommentCount)
+					pkgFunctionCount, _ := strconv.Atoi(counts[0])
+					codeCountHtmlData.Content.PkgFunctionCount = append(codeCountHtmlData.Content.PkgFunctionCount, pkgFunctionCount)
+					pkgLineCount, _ := strconv.Atoi(counts[1])
+					codeCountHtmlData.Content.PkgLineCount = append(codeCountHtmlData.Content.PkgLineCount, pkgLineCount)
+				}
+			}
+		}
 	}
 	stringCodeCountJson, err := jsoniter.Marshal(codeCountHtmlData)
 	if err != nil {
@@ -295,29 +357,40 @@ func (hd *HtmlData) converterCodeCount(structData Reporter) {
 func converterCodeSimple(structData Reporter) (simpleHtmlData StyleItem) {
 	simpleHtmlData.Label = `gosimple is a linter for Go source code that specialises on simplifying code.`
 	if result, ok := structData.Metrics["SimpleTips"]; ok {
-		filesMap := make(map[string]bool, 0)
+		fileMap := make(map[string]bool, 0)
+		mapItem2DetailIndex := make(map[string]int, 0)
 		for _, summary := range result.Summaries {
 			simpleCodeTips := summary.Errors
 			for i := 0; i < len(simpleCodeTips); i++ {
 				simpleCodeTip := strings.Split(simpleCodeTips[i].ErrorString, ":")
 				if len(simpleCodeTip) == 4 {
-					simpecode := Item{
-						File:    strings.Join(simpleCodeTip[0:3], ":"),
-						Content: simpleCodeTip[3],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(simpleCodeTip[0:2], ":")]; ok {
+						simpleHtmlData.Detail[fileIndex].Content = append(simpleHtmlData.Detail[fileIndex].Content, strings.Join(simpleCodeTip[2:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(simpleCodeTip[0:2], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(simpleCodeTip[2:], ":"))
+						fileMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(simpleCodeTip[0:2], ":")] = len(simpleHtmlData.Detail)
+						simpleHtmlData.Detail = append(simpleHtmlData.Detail, spellcode)
 					}
-					filesMap[simpecode.File] = true
-					simpleHtmlData.Detail = append(simpleHtmlData.Detail, simpecode)
 				} else if len(simpleCodeTip) == 5 {
-					simpecode := Item{
-						File:    strings.Join(simpleCodeTip[0:4], ":"),
-						Content: simpleCodeTip[4],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(simpleCodeTip[0:3], ":")]; ok {
+						simpleHtmlData.Detail[fileIndex].Content = append(simpleHtmlData.Detail[fileIndex].Content, strings.Join(simpleCodeTip[3:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(simpleCodeTip[0:3], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(simpleCodeTip[3:], ":"))
+						fileMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(simpleCodeTip[0:3], ":")] = len(simpleHtmlData.Detail)
+						simpleHtmlData.Detail = append(simpleHtmlData.Detail, spellcode)
 					}
-					filesMap[simpecode.File] = true
-					simpleHtmlData.Detail = append(simpleHtmlData.Detail, simpecode)
 				}
 			}
 		}
-		simpleHtmlData.filesNum = len(filesMap)
+		simpleHtmlData.filesNum = len(fileMap)
 		simpleHtmlData.issuesNum = len(simpleHtmlData.Detail)
 	}
 
@@ -331,24 +404,35 @@ func converterCodeInterfacer(structData Reporter) (interfacerHtmlData StyleItem)
 	interfacerHtmlData.Label = `A linter that suggests interface types. In other words, it warns about the usage of types that are more specific than necessary.`
 	if result, ok := structData.Metrics["InterfacerTips"]; ok {
 		filesMap := make(map[string]bool, 0)
+		mapItem2DetailIndex := make(map[string]int, 0)
 		for _, summary := range result.Summaries {
 			interfacerCodeTips := summary.Errors
 			for i := 0; i < len(interfacerCodeTips); i++ {
 				interfacerCodeTip := strings.Split(interfacerCodeTips[i].ErrorString, ":")
 				if len(interfacerCodeTip) == 4 {
-					interfacer := Item{
-						File:    strings.Join(interfacerCodeTip[0:3], ":"),
-						Content: interfacerCodeTip[3],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(interfacerCodeTip[0:2], ":")]; ok {
+						interfacerHtmlData.Detail[fileIndex].Content = append(interfacerHtmlData.Detail[fileIndex].Content, strings.Join(interfacerCodeTip[2:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(interfacerCodeTip[0:2], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(interfacerCodeTip[2:], ":"))
+						filesMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(interfacerCodeTip[0:2], ":")] = len(interfacerHtmlData.Detail)
+						interfacerHtmlData.Detail = append(interfacerHtmlData.Detail, spellcode)
 					}
-					filesMap[interfacer.File] = true
-					interfacerHtmlData.Detail = append(interfacerHtmlData.Detail, interfacer)
 				} else if len(interfacerCodeTip) == 5 {
-					interfacer := Item{
-						File:    strings.Join(interfacerCodeTip[0:4], ":"),
-						Content: interfacerCodeTip[4],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(interfacerCodeTip[0:3], ":")]; ok {
+						interfacerHtmlData.Detail[fileIndex].Content = append(interfacerHtmlData.Detail[fileIndex].Content, strings.Join(interfacerCodeTip[3:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(interfacerCodeTip[0:3], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(interfacerCodeTip[3:], ":"))
+						filesMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(interfacerCodeTip[0:3], ":")] = len(interfacerHtmlData.Detail)
+						interfacerHtmlData.Detail = append(interfacerHtmlData.Detail, spellcode)
 					}
-					filesMap[interfacer.File] = true
-					interfacerHtmlData.Detail = append(interfacerHtmlData.Detail, interfacer)
 				}
 			}
 		}
@@ -391,24 +475,35 @@ func converterCodeDead(structData Reporter) (deadHtmlData StyleItem) {
 	deadHtmlData.Label = `Unused code.`
 	if result, ok := structData.Metrics["DeadCodeTips"]; ok {
 		filesMap := make(map[string]bool, 0)
+		mapItem2DetailIndex := make(map[string]int, 0)
 		for _, deadCodeResult := range result.Summaries {
 			deadCodeTips := deadCodeResult.Errors
 			for i := 0; i < len(deadCodeTips); i++ {
 				deadCodeTip := strings.Split(deadCodeTips[i].ErrorString, ":")
 				if len(deadCodeTip) == 4 {
-					deadcode := Item{
-						File:    strings.Join(deadCodeTip[0:3], ":"),
-						Content: deadCodeTip[3],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(deadCodeTip[0:2], ":")]; ok {
+						deadHtmlData.Detail[fileIndex].Content = append(deadHtmlData.Detail[fileIndex].Content, strings.Join(deadCodeTip[2:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(deadCodeTip[0:2], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(deadCodeTip[2:], ":"))
+						filesMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(deadCodeTip[0:2], ":")] = len(deadHtmlData.Detail)
+						deadHtmlData.Detail = append(deadHtmlData.Detail, spellcode)
 					}
-					filesMap[deadcode.File] = true
-					deadHtmlData.Detail = append(deadHtmlData.Detail, deadcode)
 				} else if len(deadCodeTip) == 5 {
-					deadcode := Item{
-						File:    strings.Join(deadCodeTip[0:4], ":"),
-						Content: deadCodeTip[4],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(deadCodeTip[0:3], ":")]; ok {
+						deadHtmlData.Detail[fileIndex].Content = append(deadHtmlData.Detail[fileIndex].Content, strings.Join(deadCodeTip[3:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(deadCodeTip[0:3], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(deadCodeTip[3:], ":"))
+						filesMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(deadCodeTip[0:3], ":")] = len(deadHtmlData.Detail)
+						deadHtmlData.Detail = append(deadHtmlData.Detail, spellcode)
 					}
-					filesMap[deadcode.File] = true
-					deadHtmlData.Detail = append(deadHtmlData.Detail, deadcode)
 				}
 			}
 		}
@@ -423,29 +518,40 @@ func converterCodeDead(structData Reporter) (deadHtmlData StyleItem) {
 func converterCodeSpell(structData Reporter) (spellHtmlData StyleItem) {
 	spellHtmlData.Label = `Correct commonly misspelled English words... quickly`
 	if result, ok := structData.Metrics["SpellCheckTips"]; ok {
-		fileMap := make(map[string]bool, 0)
+		filesMap := make(map[string]bool, 0)
+		mapItem2DetailIndex := make(map[string]int, 0)
 		for _, summary := range result.Summaries {
 			spellCodeTips := summary.Errors
 			for i := 0; i < len(spellCodeTips); i++ {
 				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
 				if len(spellCodeTip) == 4 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:3], ":"),
-						Content: spellCodeTip[3],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(spellCodeTip[0:2], ":")]; ok {
+						spellHtmlData.Detail[fileIndex].Content = append(spellHtmlData.Detail[fileIndex].Content, strings.Join(spellCodeTip[2:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(spellCodeTip[0:2], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(spellCodeTip[2:], ":"))
+						filesMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(spellCodeTip[0:2], ":")] = len(spellHtmlData.Detail)
+						spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
 				} else if len(spellCodeTip) == 5 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:4], ":"),
-						Content: spellCodeTip[4],
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(spellCodeTip[0:3], ":")]; ok {
+						spellHtmlData.Detail[fileIndex].Content = append(spellHtmlData.Detail[fileIndex].Content, strings.Join(spellCodeTip[3:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(spellCodeTip[0:3], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(spellCodeTip[3:], ":"))
+						filesMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(spellCodeTip[0:3], ":")] = len(spellHtmlData.Detail)
+						spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
 				}
 			}
 		}
-		spellHtmlData.filesNum = len(fileMap)
+		spellHtmlData.filesNum = len(filesMap)
 		spellHtmlData.issuesNum = len(spellHtmlData.Detail)
 	}
 
@@ -455,106 +561,139 @@ func converterCodeSpell(structData Reporter) (spellHtmlData StyleItem) {
 // converterCodeLint provides function that convert spellcheck data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func converterCodeLint(structData Reporter) (spellHtmlData StyleItem) {
-	spellHtmlData.Label = `Correct commonly misspelled English words... quickly`
+func converterCodeLint(structData Reporter) (lintHtmlData StyleItem) {
+	lintHtmlData.Label = `Correct commonly misspelled English words... quickly`
 	if result, ok := structData.Metrics["GoLintTips"]; ok {
 		fileMap := make(map[string]bool, 0)
+		mapItem2DetailIndex := make(map[string]int, 0)
 		for _, summary := range result.Summaries {
 			spellCodeTips := summary.Errors
 			for i := 0; i < len(spellCodeTips); i++ {
-				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
-				if len(spellCodeTip) == 4 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:3], ":"),
-						Content: spellCodeTip[3],
+				lintCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
+				if len(lintCodeTip) == 4 {
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(lintCodeTip[0:2], ":")]; ok {
+						lintHtmlData.Detail[fileIndex].Content = append(lintHtmlData.Detail[fileIndex].Content, strings.Join(lintCodeTip[2:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(lintCodeTip[0:2], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(lintCodeTip[2:], ":"))
+						fileMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(lintCodeTip[0:2], ":")] = len(lintHtmlData.Detail)
+						lintHtmlData.Detail = append(lintHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
-				} else if len(spellCodeTip) == 5 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:4], ":"),
-						Content: spellCodeTip[4],
+				} else if len(lintCodeTip) == 5 {
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(lintCodeTip[0:3], ":")]; ok {
+						lintHtmlData.Detail[fileIndex].Content = append(lintHtmlData.Detail[fileIndex].Content, strings.Join(lintCodeTip[3:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(lintCodeTip[0:3], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(lintCodeTip[3:], ":"))
+						fileMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(lintCodeTip[0:3], ":")] = len(lintHtmlData.Detail)
+						lintHtmlData.Detail = append(lintHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
 				}
 			}
 		}
-		spellHtmlData.filesNum = len(fileMap)
-		spellHtmlData.issuesNum = len(spellHtmlData.Detail)
+		lintHtmlData.filesNum = len(fileMap)
+		lintHtmlData.issuesNum = len(lintHtmlData.Detail)
 	}
 
-	return spellHtmlData
+	return lintHtmlData
 }
 
 // converterCodeFmt provides function that convert spellcheck data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func converterCodeFmt(structData Reporter) (spellHtmlData StyleItem) {
-	spellHtmlData.Label = `Correct commonly misspelled English words... quickly`
+func converterCodeFmt(structData Reporter) (fmtHtmlData StyleItem) {
+	fmtHtmlData.Label = `Correct commonly misspelled English words... quickly`
 	if result, ok := structData.Metrics["GoFmtTips"]; ok {
-		fileMap := make(map[string]bool, 0)
+		filesMap := make(map[string]bool, 0)
+		mapItem2DetailIndex := make(map[string]int, 0)
 		for _, summary := range result.Summaries {
-			spellCodeTips := summary.Errors
-			for i := 0; i < len(spellCodeTips); i++ {
-				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
-				if len(spellCodeTip) == 3 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:1], ":"),
-						Content: strings.Join(spellCodeTip[1:3], ":"),
+			fmtCodeTips := summary.Errors
+			for i := 0; i < len(fmtCodeTips); i++ {
+				fmtCodeTip := strings.Split(fmtCodeTips[i].ErrorString, ":")
+				if len(fmtCodeTip) == 3 {
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(fmtCodeTip[0:1], ":")]; ok {
+						fmtHtmlData.Detail[fileIndex].Content = append(fmtHtmlData.Detail[fileIndex].Content, strings.Join(fmtCodeTip[1:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(fmtCodeTip[0:1], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(fmtCodeTip[1:], ":"))
+						filesMap[spellcode.File] = true
+						fmtHtmlData.Detail = append(fmtHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
-				} else if len(spellCodeTip) == 4 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:2], ":"),
-						Content: strings.Join(spellCodeTip[2:4], ":"),
+				} else if len(fmtCodeTip) == 4 {
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(fmtCodeTip[0:2], ":")]; ok {
+						fmtHtmlData.Detail[fileIndex].Content = append(fmtHtmlData.Detail[fileIndex].Content, strings.Join(fmtCodeTip[2:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(fmtCodeTip[0:2], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(fmtCodeTip[2:], ":"))
+						filesMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(fmtCodeTip[0:3], ":")] = len(fmtHtmlData.Detail)
+						fmtHtmlData.Detail = append(fmtHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
 				}
 			}
 		}
-		spellHtmlData.filesNum = len(fileMap)
-		spellHtmlData.issuesNum = len(spellHtmlData.Detail)
+		fmtHtmlData.filesNum = len(filesMap)
+		fmtHtmlData.issuesNum = len(fmtHtmlData.Detail)
 	}
 
-	return spellHtmlData
+	return fmtHtmlData
 }
 
 // converterCodeVet provides function that convert spellcheck data into the
 // format required in the html template.It will extract from the structData
 // need to convert the data.The result will be saved in the hd's attributes.
-func converterCodeVet(structData Reporter) (spellHtmlData StyleItem) {
-	spellHtmlData.Label = `Correct commonly misspelled English words... quickly`
+func converterCodeVet(structData Reporter) (vetHtmlData StyleItem) {
+	vetHtmlData.Label = `Correct commonly misspelled English words... quickly`
 	if result, ok := structData.Metrics["GoVetTips"]; ok {
 		fileMap := make(map[string]bool, 0)
+		mapItem2DetailIndex := make(map[string]int, 0)
 		for _, summary := range result.Summaries {
-			spellCodeTips := summary.Errors
-			for i := 0; i < len(spellCodeTips); i++ {
-				spellCodeTip := strings.Split(spellCodeTips[i].ErrorString, ":")
-				if len(spellCodeTip) == 4 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:3], ":"),
-						Content: spellCodeTip[3],
+			vetCodeTips := summary.Errors
+			for i := 0; i < len(vetCodeTips); i++ {
+				vetCodeTip := strings.Split(vetCodeTips[i].ErrorString, ":")
+				if len(vetCodeTip) == 4 {
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(vetCodeTip[0:2], ":")]; ok {
+						vetHtmlData.Detail[fileIndex].Content = append(vetHtmlData.Detail[fileIndex].Content, strings.Join(vetCodeTip[2:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(vetCodeTip[0:2], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(vetCodeTip[2:], ":"))
+						fileMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(vetCodeTip[0:2], ":")] = len(vetHtmlData.Detail)
+						vetHtmlData.Detail = append(vetHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
-				} else if len(spellCodeTip) == 5 {
-					spellcode := Item{
-						File:    strings.Join(spellCodeTip[0:4], ":"),
-						Content: spellCodeTip[4],
+				} else if len(vetCodeTip) == 5 {
+					if fileIndex, ok := mapItem2DetailIndex[strings.Join(vetCodeTip[0:3], ":")]; ok {
+						vetHtmlData.Detail[fileIndex].Content = append(vetHtmlData.Detail[fileIndex].Content, strings.Join(vetCodeTip[3:], ":"))
+					} else {
+						spellcode := Item{
+							File: strings.Join(vetCodeTip[0:3], ":"),
+						}
+						spellcode.Content = append(spellcode.Content, strings.Join(vetCodeTip[3:], ":"))
+						fileMap[spellcode.File] = true
+						mapItem2DetailIndex[strings.Join(vetCodeTip[0:3], ":")] = len(vetHtmlData.Detail)
+						vetHtmlData.Detail = append(vetHtmlData.Detail, spellcode)
 					}
-					fileMap[spellcode.File] = true
-					spellHtmlData.Detail = append(spellHtmlData.Detail, spellcode)
 				}
+
 			}
 		}
-		spellHtmlData.filesNum = len(fileMap)
-		spellHtmlData.issuesNum = len(spellHtmlData.Detail)
+		vetHtmlData.filesNum = len(fileMap)
+		vetHtmlData.issuesNum = len(vetHtmlData.Detail)
 	}
 
-	return spellHtmlData
+	return vetHtmlData
 }
 
 // converterDependGraph provides function that convert depend graph data into the
@@ -581,7 +720,7 @@ func SaveAsHtml(htmlData HtmlData, projectPath, savePath, timestamp, tpl string)
 	if err != nil {
 		glog.Errorln(err)
 	}
-	projectName := ProjectName(projectPath)
+	projectName := utils.ProjectName(projectPath)
 	if savePath != "" {
 		htmlpath = strings.Replace(savePath+string(filepath.Separator)+projectName+"-"+timestamp+".html", string(filepath.Separator)+string(filepath.Separator), string(filepath.Separator), -1)
 		err = ioutil.WriteFile(htmlpath, out.Bytes(), 0666)

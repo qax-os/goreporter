@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/gofmt"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyGoFmt struct {
@@ -33,12 +34,12 @@ func (s *StrategyGoFmt) Compute(parameters StrategyParameter) (summaries Summari
 		fmt.Println(err)
 	}
 	sumProcessNumber := int64(10)
-	processUnit := GetProcessUnit(sumProcessNumber, len(lints))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(lints))
 	for _, lintTip := range lints {
-		packageName := PackageNameFromGoPath(lintTip)
+		packageName := utils.PackageNameFromGoPath(lintTip)
 		erroru := Error{
 			LineNumber:  1,
-			ErrorString: AbsPath(lintTip) + ":warning: file is not gofmted with -s (gofmt)",
+			ErrorString: utils.AbsPath(lintTip) + ":warning: file is not gofmted with -s (gofmt)",
 		}
 		summaries.Lock()
 		if summarie, ok := summaries.Summaries[packageName]; ok {
@@ -66,5 +67,5 @@ func (s *StrategyGoFmt) Compute(parameters StrategyParameter) (summaries Summari
 func (s *StrategyGoFmt) Percentage(summaries Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
-	return CountPercentage(len(summaries.Summaries))
+	return utils.CountPercentage(len(summaries.Summaries))
 }

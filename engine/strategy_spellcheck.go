@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/spellcheck"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategySpellCheck struct {
@@ -28,16 +29,16 @@ func (s *StrategySpellCheck) Compute(parameters StrategyParameter) (summaries Su
 
 	spelltips := spellcheck.SpellCheck(parameters.ProjectPath, parameters.ExceptPackages)
 	sumProcessNumber := int64(10)
-	processUnit := GetProcessUnit(sumProcessNumber, len(spelltips))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(spelltips))
 
 	for _, simpleTip := range spelltips {
 		simpleTips := strings.Split(simpleTip, ":")
 		if len(simpleTips) == 4 {
-			packageName := PackageNameFromGoPath(simpleTips[0])
+			packageName := utils.PackageNameFromGoPath(simpleTips[0])
 			line, _ := strconv.Atoi(simpleTips[1])
 			erroru := Error{
 				LineNumber:  line,
-				ErrorString: AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
+				ErrorString: utils.AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
 			}
 			summaries.Lock()
 			if summarie, ok := summaries.Summaries[packageName]; ok {
@@ -45,7 +46,7 @@ func (s *StrategySpellCheck) Compute(parameters StrategyParameter) (summaries Su
 				summaries.Summaries[packageName] = summarie
 			} else {
 				summarie := Summary{
-					Name:   PackageAbsPathExceptSuffix(simpleTips[0]),
+					Name:   utils.PackageAbsPathExceptSuffix(simpleTips[0]),
 					Errors: make([]Error, 0),
 				}
 				summarie.Errors = append(summarie.Errors, erroru)
@@ -64,5 +65,5 @@ func (s *StrategySpellCheck) Compute(parameters StrategyParameter) (summaries Su
 func (s *StrategySpellCheck) Percentage(summaries Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
-	return CountPercentage(len(summaries.Summaries))
+	return utils.CountPercentage(len(summaries.Summaries))
 }
