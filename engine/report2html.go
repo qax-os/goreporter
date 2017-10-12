@@ -268,7 +268,7 @@ func partition(input []CodeSmellItem, l, u int) int {
 		right = l + 1
 	)
 	for ; right < u; right++ {
-		if input[right].Cyclo <= pivot.Cyclo {
+		if input[right].Cyclo >= pivot.Cyclo {
 			left++
 			input[left], input[right] = input[right], input[left]
 		}
