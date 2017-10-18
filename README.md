@@ -80,6 +80,7 @@ You have to confirm that your project is operational. In particular, the problem
 $ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html/text]  {-t templatePathIfHtml}
 ```
 
+- -version Version of GoReporter.
 - -p Must be a valid Golang project path.
 - -r Save the path to the report.
 - -e Exceptional packages (multiple separated by commas, for example: "linters/aligncheck,linters/cyclo" ).
