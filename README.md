@@ -94,10 +94,6 @@ By default, the default template is used to generate reports in html format.
 
 you can see result detail:[online-example-report](http://fiisio.me/pages/goreporter-report.html)
 
-example:github.com/wgliang/logcool
-
-![github.com/wgliang/logcool](./doc/github-com-wgliang-goreporter-logcool.png)
-
 ## Credits
 
 Logo is designed by [Ri Xu](https://github.com/xuri)
