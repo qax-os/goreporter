@@ -26,7 +26,7 @@ var (
 
 const (
 	// Note for gometalinter it must be "File:Line:Column: Msg"
-	//  note space beteen ": Msg"
+	//  note space between ": Msg"
 	defaultWriteTmpl = `{{ .Filename }}:{{ .Line }}:{{ .Column }}: corrected "{{ .Original }}" to "{{ .Corrected }}"`
 	defaultReadTmpl  = `{{ .Filename }}:{{ .Line }}:{{ .Column }}: "{{ .Original }}" is a misspelling of "{{ .Corrected }}"`
 	csvTmpl          = `{{ printf "%q" .Filename }},{{ .Line }},{{ .Column }},{{ .Original }},{{ .Corrected }}`

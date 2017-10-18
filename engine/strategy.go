@@ -1,6 +1,6 @@
 package engine
 
-type StrategyLinter interface{
+type StrategyLinter interface {
 	Compute(parameters StrategyParameter) Summaries
 	Percentage(summaries Summaries) float64
 	GetName() string

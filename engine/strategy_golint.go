@@ -4,40 +4,43 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/360EntSecGroup-Skylar/goreporter/linters/simplecode"
+	"github.com/360EntSecGroup-Skylar/goreporter/linters/golint"
 	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
-type StrategySimpleCode struct {
+type StrategyLint struct {
 	Sync *Synchronizer `inject:""`
 }
 
-func (s *StrategySimpleCode) GetName() string {
-	return "Simple"
+func (s *StrategyLint) GetName() string {
+	return "GoLint"
 }
 
-func (s *StrategySimpleCode) GetDescription() string {
+func (s *StrategyLint) GetDescription() string {
 	return "All golang code hints that can be optimized and give suggestions for changes."
 }
 
-func (s *StrategySimpleCode) GetWeight() float64 {
+func (s *StrategyLint) GetWeight() float64 {
 	return 0.05
 }
 
-func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyLint) Compute(parameters StrategyParameter) (summaries Summaries) {
 	summaries = NewSummaries()
-
-	simples := simplecode.Simple(parameters.AllDirs, parameters.ExceptPackages)
+	slicePackagePaths := make([]string, 0)
+	for _, packagePath := range parameters.AllDirs {
+		slicePackagePaths = append(slicePackagePaths, packagePath)
+	}
+	lints := golint.GoLinter(slicePackagePaths)
 	sumProcessNumber := int64(10)
-	processUnit := utils.GetProcessUnit(sumProcessNumber, len(simples))
-	for _, simpleTip := range simples {
-		simpleTips := strings.Split(simpleTip, ":")
-		if len(simpleTips) == 4 {
-			packageName := utils.PackageNameFromGoPath(simpleTips[0])
-			line, _ := strconv.Atoi(simpleTips[1])
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(lints))
+	for _, lintTip := range lints {
+		lintTips := strings.Split(lintTip, ":")
+		if len(lintTips) == 4 {
+			packageName := utils.PackageNameFromGoPath(lintTips[0])
+			line, _ := strconv.Atoi(lintTips[1])
 			erroru := Error{
 				LineNumber:  line,
-				ErrorString: utils.AbsPath(simpleTips[0]) + ":" + strings.Join(simpleTips[1:], ":"),
+				ErrorString: utils.AbsPath(lintTips[0]) + ":" + strings.Join(lintTips[1:], ":"),
 			}
 			summaries.Lock()
 			if summarie, ok := summaries.Summaries[packageName]; ok {
@@ -62,7 +65,7 @@ func (s *StrategySimpleCode) Compute(parameters StrategyParameter) (summaries Su
 	return summaries
 }
 
-func (s *StrategySimpleCode) Percentage(summaries Summaries) float64 {
+func (s *StrategyLint) Percentage(summaries Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
 	return utils.CountPercentage(len(summaries.Summaries))

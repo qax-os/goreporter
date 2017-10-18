@@ -118,6 +118,9 @@ func main() {
 	strategySimpleCode := &engine.StrategySimpleCode{}
 	strategySpellCheck := &engine.StrategySpellCheck{}
 	strategyUnitTest := &engine.StrategyUnitTest{}
+	strategyLint := &engine.StrategyLint{}
+	strategyGoVet := &engine.StrategyGoVet{}
+	strategyGoFmt := &engine.StrategyGoFmt{}
 
 	if err := inject.Populate(
 		reporter,
@@ -132,6 +135,9 @@ func main() {
 		strategySimpleCode,
 		strategySpellCheck,
 		strategyUnitTest,
+		strategyLint,
+		strategyGoVet,
+		strategyGoFmt,
 		syncRW,
 		waitGW,
 	); err != nil {
@@ -139,7 +145,8 @@ func main() {
 	}
 
 	reporter.AddLinters(strategyCountCode, strategyCyclo, strategyDeadCode, strategyDependGraph,
-		strategyDepth, strategyImportPackages, strategyInterfacer, strategySimpleCode, strategySpellCheck, strategyUnitTest)
+		strategyDepth, strategyImportPackages, strategyInterfacer, strategySimpleCode,
+		strategySpellCheck, strategyUnitTest, strategyLint, strategyGoVet, strategyGoFmt)
 
 	go processbar.LinterProcessBar(synchronizer.LintersProcessChans, synchronizer.LintersFinishedSignal)
 

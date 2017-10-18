@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/interfacer"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyInterfacer struct {
@@ -20,7 +21,7 @@ func (s *StrategyInterfacer) GetDescription() string {
 }
 
 func (s *StrategyInterfacer) GetWeight() float64 {
-	return 0.06
+	return 0.05
 }
 
 // linterInterfacer is a function that scan the interface of all packages in the
@@ -31,15 +32,15 @@ func (s *StrategyInterfacer) Compute(parameters StrategyParameter) (summaries Su
 
 	interfacers := interfacer.Interfacer(parameters.AllDirs)
 	sumProcessNumber := int64(5)
-	processUnit := GetProcessUnit(sumProcessNumber, len(interfacers))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(interfacers))
 	for _, interfaceTip := range interfacers {
 		interfaceTips := strings.Split(interfaceTip, ":")
 		if len(interfaceTips) == 4 {
-			packageName := PackageNameFromGoPath(interfaceTips[0])
+			packageName := utils.PackageNameFromGoPath(interfaceTips[0])
 			line, _ := strconv.Atoi(interfaceTips[1])
 			erroru := Error{
 				LineNumber:  line,
-				ErrorString: AbsPath(interfaceTips[0]) + ":" + strings.Join(interfaceTips[1:], ":"),
+				ErrorString: utils.AbsPath(interfaceTips[0]) + ":" + strings.Join(interfaceTips[1:], ":"),
 			}
 			summaries.Lock()
 			if summarie, ok := summaries.Summaries[packageName]; ok {

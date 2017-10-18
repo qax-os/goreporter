@@ -1,9 +1,11 @@
 package engine
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/countcode"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyCountCode struct {
@@ -28,22 +30,15 @@ func (s *StrategyCountCode) GetWeight() float64 {
 func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries Summaries) {
 	summaries = NewSummaries()
 
-	fileCount, codeLines, commentLines, totalLines := countcode.CountCode(parameters.ProjectPath, parameters.ExceptPackages)
-	summaries.Summaries["FileCount"] = Summary{
-		Name:        "FileCount",
-		Description: strconv.Itoa(fileCount),
-	}
-	summaries.Summaries["CodeLines"] = Summary{
-		Name:        "CodeLines",
-		Description: strconv.Itoa(codeLines),
-	}
-	summaries.Summaries["CommentLines"] = Summary{
-		Name:        "CommentLines",
-		Description: strconv.Itoa(commentLines),
-	}
-	summaries.Summaries["TotalLines"] = Summary{
-		Name:        "TotalLines",
-		Description: strconv.Itoa(totalLines),
+	codeCounts := countcode.CountCode(parameters.ProjectPath, parameters.ExceptPackages)
+	for packageName, codeCount := range codeCounts {
+		if len(codeCount) == 4 {
+			absDirPath := utils.AbsPath(packageName)
+			summaries.Summaries[absDirPath] = Summary{
+				Name:        absDirPath,
+				Description: fmt.Sprintf("%s;%s;%s;%s", strconv.Itoa(codeCount[0]), strconv.Itoa(codeCount[1]), strconv.Itoa(codeCount[2]), strconv.Itoa(codeCount[3])),
+			}
+		}
 	}
 	return
 }

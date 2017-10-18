@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/cyclo"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyCyclo struct {
@@ -33,12 +34,12 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 	s.allDirs = parameters.AllDirs
 
 	sumProcessNumber := int64(10)
-	processUnit := GetProcessUnit(sumProcessNumber, len(s.allDirs))
+	processUnit := utils.GetProcessUnit(sumProcessNumber, len(s.allDirs))
 
 	for pkgName, pkgPath := range s.allDirs {
 		errSlice := make([]Error, 0)
 
-		cyclos, avg := cyclo.Cyclo(pkgPath)
+		cyclos, avg := cyclo.Cyclo(pkgPath, parameters.ExceptPackages)
 		average, _ := strconv.ParseFloat(avg, 64)
 		if math.IsNaN(average) == false {
 			s.sumAverageCyclo = s.sumAverageCyclo + average
@@ -50,7 +51,7 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 				comp, _ := strconv.Atoi(cyclovalues[0])
 				erroru := Error{
 					LineNumber:  comp,
-					ErrorString: AbsPath(cyclovalues[3]),
+					ErrorString: utils.AbsPath(cyclovalues[3]),
 				}
 				if comp >= 15 {
 					s.compBigThan15 = s.compBigThan15 + 1
@@ -74,5 +75,5 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 }
 
 func (s *StrategyCyclo) Percentage(summaries Summaries) float64 {
-	return CountPercentage(s.compBigThan15 + int(s.sumAverageCyclo/float64(len(s.allDirs))) - 1)
+	return utils.CountPercentage(s.compBigThan15 + int(s.sumAverageCyclo/float64(len(s.allDirs))) - 1)
 }

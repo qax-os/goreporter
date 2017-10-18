@@ -26,6 +26,9 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 ## Supported linters
 
+- [gofmt](https://golang.org/cmd/gofmt) - Checks if the code is properly formatted and could not be further simplified.
+- [govet](https://golang.org/cmd/vet/#hdr-Shadowed_variables) - Reports variables that may have been unintentionally shadowed.
+- [golint](https://github.com/golang/lint) - Golint is a linter for Go source code.
 - [unittest](https://github.com/360EntSecGroup-Skylar/goreporter/tree/master/linters/unittest) - Golang unit test status.
 - [deadcode](https://github.com/tsenart/deadcode) - Finds unused code.
 - [gocyclo](https://github.com/alecthomas/gocyclo) - Computes the cyclomatic complexity of functions.
@@ -77,6 +80,7 @@ You have to confirm that your project is operational. In particular, the problem
 $ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html/text]  {-t templatePathIfHtml}
 ```
 
+- -version Version of GoReporter.
 - -p Must be a valid Golang project path.
 - -r Save the path to the report.
 - -e Exceptional packages (multiple separated by commas, for example: "linters/aligncheck,linters/cyclo" ).
@@ -90,10 +94,6 @@ By default, the default template is used to generate reports in html format.
 ![goreporter-display](./DISPLAY.gif)
 
 you can see result detail:[online-example-report](http://fiisio.me/pages/goreporter-report.html)
-
-example:github.com/wgliang/logcool
-
-![github.com/wgliang/logcool](./doc/github-com-wgliang-goreporter-logcool.png)
 
 ## Credits
 

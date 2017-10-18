@@ -25,6 +25,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/golang/glog"
 	"github.com/json-iterator/go"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type Synchronizer struct {
@@ -83,16 +85,16 @@ func (r *Reporter) Report() error {
 	defer r.Close()
 	glog.Infoln("start code quality assessment...")
 
-	r.Project = PackageAbsPath(r.ProjectPath)
+	r.Project = utils.PackageAbsPath(r.ProjectPath)
 
 	// All directory that has _test.go files will be add into.
-	dirsUnitTest, err := DirList(r.ProjectPath, "_test.go", r.ExceptPackages)
+	dirsUnitTest, err := utils.DirList(r.ProjectPath, "_test.go", r.ExceptPackages)
 	if err != nil {
 		return err
 	}
 
 	// All directory that has .go files will be add into.
-	dirsAll, err := DirList(r.ProjectPath, ".go", r.ExceptPackages)
+	dirsAll, err := utils.DirList(r.ProjectPath, ".go", r.ExceptPackages)
 	if err != nil {
 		return err
 	}
@@ -145,7 +147,6 @@ func (r *Reporter) Render() (err error) {
 			glog.Infoln("Json2Html error:", err)
 			return
 		}
-
 	}
 	return
 }
@@ -159,8 +160,8 @@ func (r *Reporter) toJson() (err error) {
 		return
 	}
 
-	saveAbsPath := AbsPath(r.ReportPath)
-	projectName := ProjectName(r.ProjectPath)
+	saveAbsPath := utils.AbsPath(r.ReportPath)
+	projectName := utils.ProjectName(r.ProjectPath)
 
 	jsonpath := projectName + "-" + r.TimeStamp + ".json"
 	if saveAbsPath != "" && saveAbsPath != r.ReportPath {
@@ -216,15 +217,11 @@ func (r *Reporter) toHtml() (err error) {
 	htmlData.Project = r.Project
 	htmlData.Score = int(r.GetFinalScore())
 	// convert all linter's data.
-	htmlData.converterUnitTest(*r)
-	htmlData.converterCopy(*r)
-	htmlData.converterCyclo(*r)
-	htmlData.converterDepth(*r)
-	htmlData.converterInterfacer(*r)
-	htmlData.converterSimple(*r)
-	htmlData.converterSpell(*r)
-	htmlData.converterCount(*r)
-	htmlData.converterDead(*r)
+	htmlData.converterCodeTest(*r)
+	htmlData.converterCodeSmell(*r)
+	htmlData.converterCodeOptimization(*r)
+	htmlData.converterCodeStyle(*r)
+	htmlData.converterCodeCount(*r)
 	htmlData.converterDependGraph(*r)
 
 	noTestPackages := make([]string, 0)
@@ -235,21 +232,8 @@ func (r *Reporter) toHtml() (err error) {
 			noTestPackages = append(noTestPackages, packageName)
 		}
 	}
-	stringNoTestJson, err := jsoniter.Marshal(noTestPackages)
-	if err != nil {
-		glog.Errorln(err)
-	}
-	htmlData.NoTests = string(stringNoTestJson)
-	htmlData.Issues = issues
+	htmlData.IssuesNum = issues
 	htmlData.Date = r.TimeStamp
-
-	if len(importPackages) > 0 && len(noTestPackages) == 0 {
-		htmlData.AveragePackageCover = float64(100)
-	} else if len(importPackages) > 0 {
-		htmlData.AveragePackageCover = float64(100 * (len(importPackages) - len(noTestPackages)) / len(importPackages))
-	} else {
-		htmlData.AveragePackageCover = float64(0)
-	}
 
 	SaveAsHtml(htmlData, r.ProjectPath, r.ReportPath, r.TimeStamp, r.HtmlTemplate)
 

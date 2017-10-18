@@ -587,7 +587,7 @@ func (c *Checker) CheckTimeSleepConstant(j *lint.Job) {
 			return true
 		}
 		if n == 0 || n > 120 {
-			// time.Sleep(0) is a seldomly used pattern in concurrency
+			// time.Sleep(0) is a seldom used pattern in concurrency
 			// tests. >120 might be intentional. 120 was chosen
 			// because the user could've meant 2 minutes.
 			return true

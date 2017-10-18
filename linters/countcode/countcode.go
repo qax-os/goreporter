@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 	"strings"
+
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 var languages = []Language{
@@ -264,8 +266,13 @@ func printInfo() (fileCount, codeLines, commentLines, totalLines int) {
 	return 0, 0, 0, 0
 }
 
-func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, totalLines int) {
-	args := []string{projectPath}
+func CountCode(projectPath, except string) (codeCounts map[string][]int) {
+	codeCounts = make(map[string][]int, 0)
+
+	allPackagesPath, err := utils.DirList(projectPath, ".go", except)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	temp := strings.Split(except, ",")
 	temp = append(temp, "vendor")
@@ -276,13 +283,21 @@ func CountCode(projectPath, except string) (fileCount, codeLines, commentLines, 
 		}
 	}
 
-	for _, n := range args {
-		add(n)
+	for _, dirPath := range allPackagesPath {
+		args := []string{dirPath}
+		files = make([]string, 0)
+		excepts = make([]string, 0)
+		info = make(map[string]*Stats, 0)
+		for _, n := range args {
+			add(n)
+		}
+		for _, f := range files {
+			handleFile(f)
+		}
+		fileCount, codeLines, commentLines, totalLines := printInfo()
+		codeCounts[dirPath] = append(codeCounts[dirPath], fileCount, codeLines, commentLines, totalLines)
 	}
-	for _, f := range files {
-		handleFile(f)
-	}
-	return printInfo()
+	return codeCounts
 }
 
 // exceptPkg is a function that will determine whether the package is an exception.

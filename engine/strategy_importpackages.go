@@ -2,6 +2,7 @@ package engine
 
 import (
 	"github.com/360EntSecGroup-Skylar/goreporter/linters/unittest"
+	"github.com/360EntSecGroup-Skylar/goreporter/utils"
 )
 
 type StrategyImportPackages struct {
@@ -38,5 +39,5 @@ func (s *StrategyImportPackages) Compute(parameters StrategyParameter) (summarie
 func (s *StrategyImportPackages) Percentage(summaries Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
-	return CountPercentage(len(summaries.Summaries))
+	return utils.CountPercentage(len(summaries.Summaries))
 }

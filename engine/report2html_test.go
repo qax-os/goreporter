@@ -14,7 +14,6 @@
 package engine
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/json-iterator/go"
@@ -24,9 +23,9 @@ const structJson = `{"project":"github.com/wgliang/logcool","score":0,"grade":0,
 
 func Test_Json2Html(t *testing.T) {
 	var r Reporter
-	err := jsoniter.Unmarshal([]byte(structJson), r)
+	err := jsoniter.Unmarshal([]byte(structJson), &r)
 	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 	}
 
 	r.ReportFormat = "html"
@@ -40,9 +39,9 @@ func Test_Json2Html(t *testing.T) {
 
 func Test_SaveAsJson(t *testing.T) {
 	var r Reporter
-	err := jsoniter.Unmarshal([]byte(structJson), r)
+	err := jsoniter.Unmarshal([]byte(structJson), &r)
 	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 	}
 
 	r.ReportFormat = "json"
@@ -56,9 +55,9 @@ func Test_SaveAsJson(t *testing.T) {
 
 func Test_DisplayAsText(t *testing.T) {
 	var r Reporter
-	err := jsoniter.Unmarshal([]byte(structJson), r)
+	err := jsoniter.Unmarshal([]byte(structJson), &r)
 	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 	}
 
 	r.ReportFormat = "text"
