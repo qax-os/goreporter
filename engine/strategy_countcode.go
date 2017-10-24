@@ -33,9 +33,9 @@ func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries Sum
 	codeCounts := countcode.CountCode(parameters.ProjectPath, parameters.ExceptPackages)
 	for packageName, codeCount := range codeCounts {
 		if len(codeCount) == 4 {
-			absDirPath := utils.AbsPath(packageName)
-			summaries.Summaries[absDirPath] = Summary{
-				Name:        absDirPath,
+			absFilePath := utils.AbsPath(packageName)
+			summaries.Summaries[absFilePath] = Summary{
+				Name:        absFilePath,
 				Description: fmt.Sprintf("%s;%s;%s;%s", strconv.Itoa(codeCount[0]), strconv.Itoa(codeCount[1]), strconv.Itoa(codeCount[2]), strconv.Itoa(codeCount[3])),
 			}
 		}

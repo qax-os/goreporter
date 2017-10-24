@@ -299,35 +299,42 @@ func (hd *HtmlData) converterCodeCount(structData Reporter) {
 			}
 		}
 	}
+	pkgCommentCount := make(map[string]int, 0)
+	pkgLineCount := make(map[string]int, 0)
 
 	if result, ok := structData.Metrics["CountCodeTips"]; ok {
-		for packageName, codeCount := range result.Summaries {
-			if strings.HasSuffix(packageName, hd.Project) {
-				counts := strings.Split(codeCount.Description, ";")
-				if len(counts) == 4 {
-					codeCountHtmlData.Summary.FileCount, _ = strconv.Atoi(counts[0])
-					codeCountHtmlData.Summary.LineCount, _ = strconv.Atoi(counts[1])
-					codeCountHtmlData.Summary.CommentCount, _ = strconv.Atoi(counts[2])
-				}
-			} else {
-				counts := strings.Split(codeCount.Description, ";")
-				if len(counts) == 4 {
-					codeCountHtmlData.Content.Pkg = append(codeCountHtmlData.Content.Pkg, packageName)
-					pkgCommentCount, _ := strconv.Atoi(counts[2])
-					codeCountHtmlData.Content.PkgCommentCount = append(codeCountHtmlData.Content.PkgCommentCount, pkgCommentCount)
-					codeCountHtmlData.Content.PkgFunctionCount = append(codeCountHtmlData.Content.PkgFunctionCount, pkgFuncsCount[packageName])
-					codeCountHtmlData.Summary.FunctionCount = codeCountHtmlData.Summary.FunctionCount + pkgFuncsCount[packageName]
-					pkgLineCount, _ := strconv.Atoi(counts[1])
-					codeCountHtmlData.Content.PkgLineCount = append(codeCountHtmlData.Content.PkgLineCount, pkgLineCount)
+		for fileName, codeCount := range result.Summaries {
+			counts := strings.Split(codeCount.Description, ";")
+			if len(counts) == 4 {
+				codeCountHtmlData.Content.File = append(codeCountHtmlData.Content.File, fileName)
+				fileCommentCount, _ := strconv.Atoi(counts[2])
+				codeCountHtmlData.Content.FileCommentCount = append(codeCountHtmlData.Content.FileCommentCount, fileCommentCount)
 
+				codeCountHtmlData.Content.FileFunctionCount = append(codeCountHtmlData.Content.FileFunctionCount, fileFuncsCount[fileName])
+				// Add into summary.
+				codeCountHtmlData.Summary.FunctionCount = codeCountHtmlData.Summary.FunctionCount + fileFuncsCount[fileName]
+				fileLineCount, _ := strconv.Atoi(counts[1])
+				codeCountHtmlData.Content.FileLineCount = append(codeCountHtmlData.Content.FileLineCount, fileLineCount)
+
+				sepPkgIndex := strings.LastIndex(fileName, string(filepath.Separator))
+				if sepPkgIndex >= 0 && sepPkgIndex < len(fileName) {
+					pkgCommentCount[string(fileName[0:sepPkgIndex])] = pkgCommentCount[string(fileName[0:sepPkgIndex])] + fileCommentCount
+					pkgLineCount[string(fileName[0:sepPkgIndex])] = pkgLineCount[string(fileName[0:sepPkgIndex])] + fileLineCount
 				}
 			}
 		}
-	}
 
-	for fileName, funcsNum := range fileFuncsCount {
-		codeCountHtmlData.Content.File = append(codeCountHtmlData.Content.File, fileName)
-		codeCountHtmlData.Content.FileFunctionCount = append(codeCountHtmlData.Content.FileFunctionCount, funcsNum)
+		for pkgName, commentCount := range pkgCommentCount {
+			codeCountHtmlData.Content.Pkg = append(codeCountHtmlData.Content.Pkg, pkgName)
+			codeCountHtmlData.Content.PkgCommentCount = append(codeCountHtmlData.Content.PkgCommentCount, commentCount)
+			codeCountHtmlData.Content.PkgFunctionCount = append(codeCountHtmlData.Content.PkgFunctionCount, pkgFuncsCount[pkgName])
+			codeCountHtmlData.Content.PkgLineCount = append(codeCountHtmlData.Content.PkgLineCount, pkgLineCount[pkgName])
+
+			codeCountHtmlData.Summary.LineCount = codeCountHtmlData.Summary.LineCount + pkgLineCount[pkgName]
+			codeCountHtmlData.Summary.CommentCount = codeCountHtmlData.Summary.CommentCount + commentCount
+			codeCountHtmlData.Summary.FunctionCount = codeCountHtmlData.Summary.FunctionCount + pkgFuncsCount[pkgName]
+		}
+		codeCountHtmlData.Summary.FileCount = len(result.Summaries)
 	}
 
 	stringCodeCountJson, err := jsoniter.Marshal(codeCountHtmlData)

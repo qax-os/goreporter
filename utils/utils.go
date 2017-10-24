@@ -66,6 +66,38 @@ func DirList(projectPath string, suffix, except string) (dirs map[string]string,
 	return dirs, nil
 }
 
+// FileList is a function that traverse the file is the specified file format
+// according to the specified rule.
+func FileList(projectPath string, suffix, except string) (files []string, err error) {
+	_, err = os.Stat(projectPath)
+	if err != nil {
+		glog.Errorln("project path is invalid")
+	}
+	exceptsFilter(except)
+	err = filepath.Walk(projectPath, func(subPath string, f os.FileInfo, err error) error {
+		if f == nil {
+			return err
+		}
+		if f.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(subPath, suffix) {
+
+			if ExceptPkg(subPath) {
+				return nil
+			}
+			files = append(files, subPath)
+			return nil
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return files, nil
+}
+
 // ExceptPkg is a function that will determine whether the package is an exception.
 func ExceptPkg(pkg string) bool {
 	for _, va := range excepts {

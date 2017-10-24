@@ -269,7 +269,7 @@ func printInfo() (fileCount, codeLines, commentLines, totalLines int) {
 func CountCode(projectPath, except string) (codeCounts map[string][]int) {
 	codeCounts = make(map[string][]int, 0)
 
-	allPackagesPath, err := utils.DirList(projectPath, ".go", except)
+	allFilesPath, err := utils.FileList(projectPath, ".go", except)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -283,7 +283,7 @@ func CountCode(projectPath, except string) (codeCounts map[string][]int) {
 		}
 	}
 
-	for _, dirPath := range allPackagesPath {
+	for _, dirPath := range allFilesPath {
 		args := []string{dirPath}
 		files = make([]string, 0)
 		excepts = make([]string, 0)
