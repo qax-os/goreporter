@@ -1,10 +1,9 @@
 package depth
 
 import (
-"testing"
+	"testing"
 )
 
 func Test_Depth(t *testing.T) {
 	Depth("../copycheck")
 }
-

@@ -20,8 +20,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/reconquest/loreley"
 	"github.com/reconquest/barely"
+	"github.com/reconquest/loreley"
 )
 
 // LinterProcessBar provides a function to display the current progress of

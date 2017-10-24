@@ -2,8 +2,8 @@ package pkg
 
 func fn(s string) {
 	_ = string([]byte(s)) // MATCH "should use s instead of string([]byte(s))"
-	_ = "" + s // MATCH /should use s instead of "" \+ s/
-	_ = s + "" // MATCH /should use s instead of s \+ ""/
+	_ = "" + s            // MATCH /should use s instead of "" \+ s/
+	_ = s + ""            // MATCH /should use s instead of s \+ ""/
 
 	_ = s
 	_ = s + "foo"
