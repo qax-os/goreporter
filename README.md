@@ -1,6 +1,6 @@
 ![goreporter](./logo.png)
 
-# goreporter [![Version Status](https://img.shields.io/badge/v3.0-dev-orange.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/tag/version3.0)
+# goreporter [![Version Status](https://img.shields.io/badge/v3.0-release-blue.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/tag/version3.0)
 
 [![Current Release](https://img.shields.io/github/release/360EntSecGroup-Skylar/goreporter.svg)](https://github.com/360EntSecGroup-Skylar/goreporter/releases/latest)
 [![Build Status](https://travis-ci.org/360EntSecGroup-Skylar/goreporter.svg?branch=master)](https://travis-ci.org/360EntSecGroup-Skylar/goreporter)
