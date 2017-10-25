@@ -43,7 +43,7 @@ import (
 // -f:Set the format to generate reports, support text, html and json,not
 //    necessarily using the default formate-html.
 
-const VERSION = "3.0.0-dev"
+const VERSION = "v3.0.0"
 
 var (
 	version        = flag.Bool("version", false, "print GoReporter version.")
