@@ -111,7 +111,11 @@ func (hd *HtmlData) converterCodeTest(structData Reporter) {
 		}
 		codeTestHtmlData.Summary.TotalTime, _ = strconv.ParseFloat(strconv.FormatFloat(totalTime, 'f', 1, 64), 64)
 		codeTestHtmlData.Summary.CodeCover, _ = strconv.ParseFloat(strconv.FormatFloat(result.Percentage, 'f', 1, 64), 64)
-		codeTestHtmlData.Summary.PackageCover, _ = strconv.ParseFloat(strconv.FormatFloat(100*float64(len(codeTestHtmlData.Content.Pkg))*1.0/float64(len(codeTestHtmlData.Content.Pkg)+len(codeTestHtmlData.Content.NoTest)), 'f', 1, 64), 64)
+		if (len(codeTestHtmlData.Content.Pkg) + len(codeTestHtmlData.Content.NoTest)) == 0 {
+			codeTestHtmlData.Summary.PackageCover = 0
+		} else {
+			codeTestHtmlData.Summary.PackageCover, _ = strconv.ParseFloat(strconv.FormatFloat(100*float64(len(codeTestHtmlData.Content.Pkg))*1.0/float64(len(codeTestHtmlData.Content.Pkg)+len(codeTestHtmlData.Content.NoTest)), 'f', 1, 64), 64)
+		}
 	}
 
 	stringCodeTestJson, err := jsoniter.Marshal(codeTestHtmlData)
