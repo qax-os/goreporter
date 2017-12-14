@@ -138,17 +138,17 @@ func (hd *HtmlData) converterCodeStyle(structData Reporter) {
 	codeLintHtmlData := converterCodeLint(structData)
 	codeStyleHtmlData.Summary.FilesNum = codeStyleHtmlData.Summary.FilesNum + codeLintHtmlData.filesNum
 	codeStyleHtmlData.Summary.IssuesNum = codeStyleHtmlData.Summary.IssuesNum + codeLintHtmlData.issuesNum
-	codeStyleHtmlData.Content.MissSpell = codeLintHtmlData
+	codeStyleHtmlData.Content.GoLint = codeLintHtmlData
 
 	codeFmtHtmlData := converterCodeFmt(structData)
 	codeStyleHtmlData.Summary.FilesNum = codeStyleHtmlData.Summary.FilesNum + codeFmtHtmlData.filesNum
 	codeStyleHtmlData.Summary.IssuesNum = codeStyleHtmlData.Summary.IssuesNum + codeFmtHtmlData.issuesNum
-	codeStyleHtmlData.Content.MissSpell = codeFmtHtmlData
+	codeStyleHtmlData.Content.GoFmt = codeFmtHtmlData
 
 	codeVetHtmlData := converterCodeVet(structData)
 	codeStyleHtmlData.Summary.FilesNum = codeStyleHtmlData.Summary.FilesNum + codeVetHtmlData.filesNum
 	codeStyleHtmlData.Summary.IssuesNum = codeStyleHtmlData.Summary.IssuesNum + codeVetHtmlData.issuesNum
-	codeStyleHtmlData.Content.MissSpell = codeVetHtmlData
+	codeStyleHtmlData.Content.GoVet = codeVetHtmlData
 
 	stringCodeStyleJson, err := jsoniter.Marshal(codeStyleHtmlData)
 	if err != nil {
