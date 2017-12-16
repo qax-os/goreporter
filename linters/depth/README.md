@@ -5,7 +5,7 @@ purpose.
 
 To install, run
 
-    $ go get github.com/360EntSecGroup-Skylar/godepth
+    $ go get github.com/arthurgustin/godepth
 
 # examples:
 
