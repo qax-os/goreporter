@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -52,11 +53,14 @@ var (
 	exceptPackages = flag.String("e", "", "except packages.")
 	templatePath   = flag.String("t", "", "report html template path.")
 	reportFormat   = flag.String("f", "", "project report format(text/json/html).")
+	coresOfCPU     = flag.Int("c", -1, "cores of CPU.")
 )
 
 func main() {
 	flag.Parse()
-
+	if *coresOfCPU != -1 && *coresOfCPU <= runtime.NumCPU() {
+		runtime.GOMAXPROCS(*coresOfCPU)
+	}
 	if *version {
 		fmt.Printf("GoReporter %s\r\n", VERSION)
 		os.Exit(0)
