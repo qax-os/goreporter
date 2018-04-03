@@ -43,6 +43,8 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 		average, _ := strconv.ParseFloat(avg, 64)
 		if math.IsNaN(average) == false {
 			s.sumAverageCyclo = s.sumAverageCyclo + average
+		} else {
+			average = 0
 		}
 
 		for _, val := range cyclos {
