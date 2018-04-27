@@ -19,6 +19,8 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	"go/build"
+	"fmt"
 )
 
 var (
@@ -28,10 +30,15 @@ var (
 // DirList is a function that traverse the file directory containing the
 // specified file format according to the specified rule.
 func DirList(projectPath string, suffix, except string) (dirs map[string]string, err error) {
+	var relativePath string = ""
 	dirs = make(map[string]string, 0)
 	_, err = os.Stat(projectPath)
 	if err != nil {
 		glog.Errorln("dir path is invalid")
+	}
+	if build.IsLocalImport(projectPath) {
+		toPos := strings.LastIndex(projectPath, string(filepath.Separator))
+		relativePath = projectPath[0:toPos+1]
 	}
 	exceptsFilter(except)
 	err = filepath.Walk(projectPath, func(subPath string, f os.FileInfo, err error) error {
@@ -49,6 +56,7 @@ func DirList(projectPath string, suffix, except string) (dirs map[string]string,
 			} else {
 				if len(subPath) > sepIdx {
 					dir = subPath[0:sepIdx]
+					dir = fmt.Sprintf("%s%s", relativePath, dir)
 				}
 			}
 			if ExceptPkg(dir) {
