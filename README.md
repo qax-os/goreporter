@@ -60,7 +60,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 ### Requirements
 
 - [Go](https://golang.org/dl/) 1.6+
-- [Graphviz](http://www.graphviz.org/Download..php)
+- [Graphviz](http://www.graphviz.org/download/)
 
 ## Quickstart
 
