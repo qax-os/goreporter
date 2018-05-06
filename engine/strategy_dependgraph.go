@@ -23,7 +23,7 @@ func (s *StrategyDependGraph) GetWeight() float64 {
 // linterDependGraph is a function that builds the dependency graph of all packages in the
 // project helps you optimize the project architecture.It will extract from the linter need
 // to convert the data.The result will be saved in the r's attributes.
-func (s *StrategyDependGraph) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyDependGraph) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	graph := depend.Depend(parameters.ProjectPath, parameters.ExceptPackages)
@@ -35,6 +35,6 @@ func (s *StrategyDependGraph) Compute(parameters StrategyParameter) (summaries S
 	return
 }
 
-func (s *StrategyDependGraph) Percentage(summaries Summaries) float64 {
+func (s *StrategyDependGraph) Percentage(summaries *Summaries) float64 {
 	return 0.
 }

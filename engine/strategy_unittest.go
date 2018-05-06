@@ -30,7 +30,7 @@ func (s *StrategyUnitTest) GetWeight() float64 {
 	return 0.3
 }
 
-func (s *StrategyUnitTest) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyUnitTest) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	sumProcessNumber := int64(30)
@@ -93,7 +93,7 @@ func (s *StrategyUnitTest) Compute(parameters StrategyParameter) (summaries Summ
 	return
 }
 
-func (s *StrategyUnitTest) Percentage(summaries Summaries) float64 {
+func (s *StrategyUnitTest) Percentage(summaries *Summaries) float64 {
 	if s.countCover == 0 {
 		return 0.0
 	} else {

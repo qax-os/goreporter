@@ -27,7 +27,7 @@ func (s *StrategyCopyCheck) GetWeight() float64 {
 // linterCopy provides a function that scans all duplicate code in the project and give
 // duplicate code locations and rows.It will extract from the linter need to convert the
 // data.The result will be saved in the r's attributes.
-func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	copyCodeList := copycheck.CopyCheck(parameters.ProjectPath, parameters.ExceptPackages+",_test.go")
@@ -67,7 +67,7 @@ func (s *StrategyCopyCheck) Compute(parameters StrategyParameter) (summaries Sum
 	return
 }
 
-func (s *StrategyCopyCheck) Percentage(summaries Summaries) float64 {
+func (s *StrategyCopyCheck) Percentage(summaries *Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
 	return utils.CountPercentage(len(summaries.Summaries))

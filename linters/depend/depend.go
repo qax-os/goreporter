@@ -77,7 +77,7 @@ func Depend(path, expect string) string {
 		glog.Errorf("failed to get cwd: %s", err)
 		return ""
 	}
-	if err := processPackage(cwd, strings.Replace(args[0], `\`, "/", -1)); err != nil {
+	if err := processPackage(cwd, strings.Replace(args[0], `\`, "/", -1), path); err != nil {
 		glog.Errorln(err)
 		return ""
 	}
@@ -157,9 +157,16 @@ func Depend(path, expect string) string {
 	return string(svg)
 }
 
-func processPackage(root string, pkgName string) error {
+func processPackage(root string, pkgName, path string) error {
 	if ignored[pkgName] {
 		return nil
+	}
+	var err error
+	if !build.IsLocalImport(pkgName) {
+		root, err = filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf("failed to convert path to absolute path %s ", err)
+		}
 	}
 
 	pkg, err := buildContext.Import(pkgName, root, 0)
@@ -190,7 +197,7 @@ func processPackage(root string, pkgName string) error {
 
 	for _, imp := range getImports(pkg) {
 		if _, ok := pkgs[imp]; !ok {
-			if err := processPackage(root, imp); err != nil {
+			if err := processPackage(root, imp, path); err != nil {
 				return err
 			}
 		}

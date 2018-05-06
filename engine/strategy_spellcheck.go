@@ -24,7 +24,7 @@ func (s *StrategySpellCheck) GetWeight() float64 {
 	return 0.05
 }
 
-func (s *StrategySpellCheck) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategySpellCheck) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	spelltips := spellcheck.SpellCheck(parameters.ProjectPath, parameters.ExceptPackages)
@@ -62,7 +62,7 @@ func (s *StrategySpellCheck) Compute(parameters StrategyParameter) (summaries Su
 	return
 }
 
-func (s *StrategySpellCheck) Percentage(summaries Summaries) float64 {
+func (s *StrategySpellCheck) Percentage(summaries *Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
 	return utils.CountPercentage(len(summaries.Summaries))

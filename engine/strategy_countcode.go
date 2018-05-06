@@ -27,7 +27,7 @@ func (s *StrategyCountCode) GetWeight() float64 {
 // linterCount is a function that counts go files and go code lines of
 // project.It will extract from the linter need to convert the data.
 // The result will be saved in the r's attributes.
-func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	codeCounts := countcode.CountCode(parameters.ProjectPath, parameters.ExceptPackages)
@@ -43,6 +43,6 @@ func (s *StrategyCountCode) Compute(parameters StrategyParameter) (summaries Sum
 	return
 }
 
-func (s *StrategyCountCode) Percentage(summaries Summaries) float64 {
+func (s *StrategyCountCode) Percentage(summaries *Summaries) float64 {
 	return 0.
 }

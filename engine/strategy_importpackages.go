@@ -24,7 +24,7 @@ func (s *StrategyImportPackages) GetWeight() float64 {
 // linterImportPackages is a function that scan the project contains all the
 // package lists.It will extract from the linter need to convert
 // the data.The result will be saved in the r's attributes.
-func (s *StrategyImportPackages) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyImportPackages) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	importPkgs := unittest.GoListWithImportPackages(parameters.ProjectPath)
@@ -36,7 +36,7 @@ func (s *StrategyImportPackages) Compute(parameters StrategyParameter) (summarie
 	return
 }
 
-func (s *StrategyImportPackages) Percentage(summaries Summaries) float64 {
+func (s *StrategyImportPackages) Percentage(summaries *Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
 	return utils.CountPercentage(len(summaries.Summaries))
