@@ -18,7 +18,8 @@ func Interfacer(packagesPath map[string]string) []string {
 	}
 	lines, err := CheckArgs(packages)
 	if err != nil {
-		log.Println(os.Stderr, err)
+		l := log.New(os.Stderr, "", log.LstdFlags)
+		l.Println(err)
 	}
 	return lines
 }

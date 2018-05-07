@@ -25,7 +25,7 @@ func (s *StrategyGoVet) GetWeight() float64 {
 	return 0.1
 }
 
-func (s *StrategyGoVet) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyGoVet) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 	slicePackagePaths := make([]string, 0)
 	for _, packagePath := range parameters.AllDirs {
@@ -69,7 +69,7 @@ func (s *StrategyGoVet) Compute(parameters StrategyParameter) (summaries Summari
 	return summaries
 }
 
-func (s *StrategyGoVet) Percentage(summaries Summaries) float64 {
+func (s *StrategyGoVet) Percentage(summaries *Summaries) float64 {
 	summaries.RLock()
 	defer summaries.RUnlock()
 	return utils.CountPercentage(len(summaries.Summaries))

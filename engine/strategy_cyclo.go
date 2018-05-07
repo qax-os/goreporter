@@ -28,7 +28,7 @@ func (s *StrategyCyclo) GetWeight() float64 {
 	return 0.2
 }
 
-func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	s.allDirs = parameters.AllDirs
@@ -76,6 +76,6 @@ func (s *StrategyCyclo) Compute(parameters StrategyParameter) (summaries Summari
 	return
 }
 
-func (s *StrategyCyclo) Percentage(summaries Summaries) float64 {
+func (s *StrategyCyclo) Percentage(summaries *Summaries) float64 {
 	return utils.CountPercentage(s.compBigThan15 + int(s.sumAverageCyclo/float64(len(s.allDirs))) - 1)
 }

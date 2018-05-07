@@ -290,8 +290,8 @@ type Summaries struct {
 	sync.RWMutex
 }
 
-func NewSummaries() Summaries {
-	return Summaries{Summaries: make(map[string]Summary, 0)}
+func NewSummaries() *Summaries {
+	return &Summaries{Summaries: make(map[string]Summary, 0)}
 }
 
 // Metric as template of report and will save all linters result

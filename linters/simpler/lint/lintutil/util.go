@@ -143,7 +143,8 @@ func ProcessFlagSet(c lint.Checker, fs *flag.FlagSet) (results []string) {
 		GoVersion: version,
 	})
 	if err != nil {
-		log.Println(os.Stderr, err)
+		l := log.New(os.Stderr, "", log.LstdFlags)
+		l.Println(err)
 	}
 
 	for _, p := range ps {

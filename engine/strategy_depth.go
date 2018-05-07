@@ -29,7 +29,7 @@ func (s *StrategyDepth) GetWeight() float64 {
 
 // Compute all [.go] file's function maximum depth. It is an important indicator
 // that allows developer to see whether a function needs to be splitted into smaller functions for readability purpose
-func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	s.allDirs = parameters.AllDirs
@@ -72,6 +72,6 @@ func (s *StrategyDepth) Compute(parameters StrategyParameter) (summaries Summari
 	return
 }
 
-func (s *StrategyDepth) Percentage(summaries Summaries) float64 {
+func (s *StrategyDepth) Percentage(summaries *Summaries) float64 {
 	return utils.CountPercentage(s.compBigThan3 + int(s.sumAverageDepth/float64(len(s.allDirs))) - 1)
 }

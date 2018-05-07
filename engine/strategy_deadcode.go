@@ -27,7 +27,7 @@ func (s *StrategyDeadCode) GetWeight() float64 {
 // linterDead provides a function that will scans all useless code, or never
 // obsolete obsolete code.It will extract from the linter need to convert
 // the data.The result will be saved in the r's attributes.
-func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	deadcodes := deadcode.DeadCode(parameters.ProjectPath)
@@ -64,7 +64,7 @@ func (s *StrategyDeadCode) Compute(parameters StrategyParameter) (summaries Summ
 	return
 }
 
-func (s *StrategyDeadCode) Percentage(summaries Summaries) float64 {
+func (s *StrategyDeadCode) Percentage(summaries *Summaries) float64 {
 	summaries.Lock()
 	defer summaries.Unlock()
 	return utils.CountPercentage(len(summaries.Summaries))

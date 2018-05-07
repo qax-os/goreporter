@@ -27,7 +27,7 @@ func (s *StrategyInterfacer) GetWeight() float64 {
 // linterInterfacer is a function that scan the interface of all packages in the
 // project helps you optimize the project architecture.It will extract from the
 // linter need to convert the data.The result will be saved in the r's attributes.
-func (s *StrategyInterfacer) Compute(parameters StrategyParameter) (summaries Summaries) {
+func (s *StrategyInterfacer) Compute(parameters StrategyParameter) (summaries *Summaries) {
 	summaries = NewSummaries()
 
 	interfacers := interfacer.Interfacer(parameters.AllDirs)
@@ -64,6 +64,6 @@ func (s *StrategyInterfacer) Compute(parameters StrategyParameter) (summaries Su
 	return
 }
 
-func (s *StrategyInterfacer) Percentage(summaries Summaries) float64 {
+func (s *StrategyInterfacer) Percentage(summaries *Summaries) float64 {
 	return 0.
 }
