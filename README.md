@@ -15,7 +15,7 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 - [Supported template](#supported-template)
 - [Todo List](#todo-list)
 - [Installing](#installing)
-	- [Requirements](#requirements)
+  - [Requirements](#requirements)
 - [Run it](#run-it)
 - [Quickstart](#quickstart)
 - [Example](#example)
@@ -66,8 +66,8 @@ A Golang tool that does static analysis, unit testing, code review and generate 
 
 Install goreporter (see above).
 
-```
-$ go get -u github.com/360EntSecGroup-Skylar/goreporter
+```bash
+go get -u github.com/360EntSecGroup-Skylar/goreporter
 ```
 
 ## Run it:
@@ -76,8 +76,8 @@ $ go get -u github.com/360EntSecGroup-Skylar/goreporter
 
 You have to confirm that your project is operational. In particular, the problem with vendor, when the package is not found in the default path, goreporter will look again from the possible vendor path.
 
-```
-$ goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html/text]  {-t templatePathIfHtml}
+```bash
+goreporter -p [projectRelativePath] -r [reportPath] -e [exceptPackagesName] -f [json/html/text]  {-t templatePathIfHtml}
 ```
 
 - -version Version of GoReporter.
@@ -93,7 +93,7 @@ By default, the default template is used to generate reports in html format.
 
 ![goreporter-display](./DISPLAY.gif)
 
-you can see result detail:[online-example-report](http://fiisio.me/pages/goreporter-report.html)
+you can see result detail:[online-example-report](http://wgliang.github.io/pages/goreporter-report.html)
 
 ## Credits
 
