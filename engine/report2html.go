@@ -243,8 +243,11 @@ func (hd *HtmlData) converterCodeSmell(structData Reporter) {
 		}
 
 		sortCycloByComp(codeSmellHtmlData.Content.List, 0, len(codeSmellHtmlData.Content.List))
-
-		codeSmellHtmlData.Summary.CycloAvg = sumComp / sumNum
+		if sumNum == 0 {
+			codeSmellHtmlData.Summary.CycloAvg = 0
+		} else {
+			codeSmellHtmlData.Summary.CycloAvg = sumComp / sumNum
+		}
 		codeSmellHtmlData.Summary.CycloHigh = codeSmellHtmlData.Content.Percentage["15-50"]
 		codeSmellHtmlData.Summary.CycloGrave = codeSmellHtmlData.Content.Percentage["50+"]
 	}
