@@ -71,7 +71,7 @@ func main() {
 	} else {
 		_, err := os.Stat(*projectPath)
 		if err != nil {
-			log.Fatal("project path is invalid")
+			log.Fatal("project path is invalid"+err.Error())
 		}
 	}
 
